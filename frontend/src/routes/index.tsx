@@ -67,7 +67,7 @@ export default function AppRoutes() {
       />
 
       <Route
-        path="/create"
+        path="/resume/create"
         element={
           <ProtectedRoute>
             <TemplateSelectionPage />
@@ -76,7 +76,7 @@ export default function AppRoutes() {
       />
 
       <Route
-        path="/wizard"
+        path="/resume/wizard"
         element={
           <ProtectedRoute>
             <ResumeWizardPage />

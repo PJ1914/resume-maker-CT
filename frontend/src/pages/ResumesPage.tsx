@@ -105,7 +105,7 @@ export default function ResumesPage() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/create')}
+              onClick={() => navigate('/resume/create')}
               className="px-5 py-2.5 bg-white border-2 border-secondary-200 text-secondary-700 rounded-lg font-medium hover:border-primary-900 hover:text-primary-900 transition-colors flex items-center gap-2"
             >
               <Sparkles className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default function ResumesPage() {
           </p>
           <div className="flex items-center justify-center gap-3 mt-6">
             <button
-              onClick={() => navigate('/create')}
+              onClick={() => navigate('/resume/create')}
               className="px-5 py-2.5 bg-white border-2 border-secondary-200 text-secondary-700 rounded-lg font-medium hover:border-primary-900 hover:text-primary-900 transition-colors flex items-center gap-2"
             >
               <Sparkles className="h-4 w-4" />
@@ -174,7 +174,7 @@ export default function ResumesPage() {
                     <div className="flex items-center gap-3 text-sm text-secondary-600">
                       <span>{formatFileSize(resume.file_size)}</span>
                       <span>•</span>
-                      <span>Uploaded {formatDate(resume.uploaded_at)}</span>
+                      <span>Uploaded {formatDate(resume.created_at)}</span>
                       <span>•</span>
                       {getStatusBadge(resume.status)}
                     </div>

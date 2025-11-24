@@ -1,7 +1,9 @@
 import { CheckCircle, User, FileText, Briefcase, GraduationCap, Code, Folder } from 'lucide-react'
+import { TemplateRenderer } from '../TemplateRenderer'
 
 interface ReviewStepProps {
   data: {
+    template?: string
     contact: {
       name: string
       email: string
@@ -22,47 +24,71 @@ interface ReviewStepProps {
 }
 
 export default function ReviewStep({ data }: ReviewStepProps) {
+  // Defensive data validation
+  const contact = data?.contact || {}
+  const summary = data?.summary || ''
+  const experience = Array.isArray(data?.experience) ? data.experience : []
+  const education = Array.isArray(data?.education) ? data.education : []
+  const skills = {
+    technical: Array.isArray(data?.skills?.technical) ? data.skills.technical : [],
+    soft: Array.isArray(data?.skills?.soft) ? data.skills.soft : [],
+  }
+  const projects = Array.isArray(data?.projects) ? data.projects : []
+  const template = data?.template || 'modern'
+
+  // Create a resume object for TemplateRenderer
+  const templateData = {
+    template,
+    contact_info: contact,
+    summary,
+    parsed_text: summary,
+    experience,
+    education,
+    skills,
+    projects,
+  } as any
+
   const sections = [
     {
       icon: User,
       title: 'Contact Information',
-      complete: data.contact.name && data.contact.email,
+      complete: contact.name && contact.email,
       items: [
-        data.contact.name,
-        data.contact.email,
-        data.contact.phone,
-        data.contact.location,
+        contact.name,
+        contact.email,
+        contact.phone,
+        contact.location,
       ].filter(Boolean).length,
     },
     {
       icon: FileText,
       title: 'Professional Summary',
-      complete: data.summary.length > 0,
-      items: data.summary.length > 0 ? 1 : 0,
+      complete: summary.length > 0,
+      items: summary.length > 0 ? 1 : 0,
     },
     {
       icon: Briefcase,
       title: 'Work Experience',
-      complete: data.experience.length > 0,
-      items: data.experience.length,
+      complete: experience.length > 0,
+      items: experience.length,
     },
     {
       icon: GraduationCap,
       title: 'Education',
-      complete: data.education.length > 0,
-      items: data.education.length,
+      complete: education.length > 0,
+      items: education.length,
     },
     {
       icon: Code,
       title: 'Skills',
-      complete: data.skills.technical.length > 0 || data.skills.soft.length > 0,
-      items: data.skills.technical.length + data.skills.soft.length,
+      complete: skills.technical.length > 0 || skills.soft.length > 0,
+      items: skills.technical.length + skills.soft.length,
     },
     {
       icon: Folder,
       title: 'Projects',
-      complete: data.projects.length > 0,
-      items: data.projects.length,
+      complete: projects.length > 0,
+      items: projects.length,
     },
   ]
 
@@ -157,57 +183,18 @@ export default function ReviewStep({ data }: ReviewStepProps) {
         })}
       </div>
 
-      {/* Contact Info Preview */}
-      {data.contact.name && (
+      {/* Full Resume Preview with Selected Template */}
+      {contact.name && (
         <div className="border-t border-secondary-200 pt-6">
-          <h3 className="font-semibold text-secondary-900 mb-4">Resume Preview</h3>
-          <div className="bg-white border border-secondary-200 rounded-lg p-6">
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-bold text-secondary-900 mb-2">{data.contact.name}</h2>
-              <div className="flex items-center justify-center gap-4 text-sm text-secondary-600 flex-wrap">
-                {data.contact.email && <span>{data.contact.email}</span>}
-                {data.contact.phone && <span>•</span>}
-                {data.contact.phone && <span>{data.contact.phone}</span>}
-                {data.contact.location && <span>•</span>}
-                {data.contact.location && <span>{data.contact.location}</span>}
-              </div>
-            </div>
-
-            {data.summary && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-secondary-900 mb-2">
-                  Professional Summary
-                </h3>
-                <p className="text-secondary-700">{data.summary}</p>
-              </div>
-            )}
-
-            {data.skills.technical.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-secondary-900 mb-2">Skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {data.skills.technical.slice(0, 10).map((skill, index) => (
-                    <span
-                      key={index}
-                      className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                  {data.skills.technical.length > 10 && (
-                    <span className="text-sm text-secondary-600 px-3 py-1">
-                      +{data.skills.technical.length - 10} more
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+          <h3 className="font-semibold text-secondary-900 mb-4">Resume Preview ({template} template)</h3>
+          <div className="border border-secondary-200 rounded-lg overflow-hidden shadow-sm">
+            <TemplateRenderer resume={templateData} />
           </div>
         </div>
       )}
 
       {/* Warning if missing required fields */}
-      {(!data.contact.name || !data.contact.email) && (
+      {(!contact.name || !contact.email) && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-sm text-yellow-800">
             <strong>Note:</strong> Make sure to fill in at least your name and email address before

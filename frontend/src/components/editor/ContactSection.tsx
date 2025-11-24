@@ -31,7 +31,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           <input
             type="text"
             className="input"
-            value={contact.fullName}
+            value={contact.fullName || ''}
             onChange={(e) => handleChange('fullName', e.target.value)}
             placeholder="John Doe"
             required

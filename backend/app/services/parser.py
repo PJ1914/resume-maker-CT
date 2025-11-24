@@ -25,8 +25,8 @@ class TextNormalizer:
         if not text:
             return ""
         
-        # Replace multiple whitespace with single space
-        text = re.sub(r'\s+', ' ', text)
+        # Replace multiple spaces/tabs with single space (preserve newlines)
+        text = re.sub(r'[ \t]+', ' ', text)
         
         # Remove zero-width characters
         text = re.sub(r'[\u200b-\u200f\u202a-\u202e\ufeff]', '', text)
@@ -90,7 +90,7 @@ class SectionDetector:
         'experience': r'\b(experience|work\s+history|employment|professional\s+experience)\b',
         'education': r'\b(education|academic|qualifications|academic\s+background)\b',
         'skills': r'\b(skills|technical\s+skills|core\s+competencies|expertise)\b',
-        'projects': r'\b(projects|portfolio|key\s+projects)\b',
+        'projects': r'\b(projects|key\s+projects)\b|^portfolio$',
         'certifications': r'\b(certifications?|licenses?|credentials)\b',
         'awards': r'\b(awards?|honors?|achievements?|recognition)\b',
         'publications': r'\b(publications?|papers?|research)\b',
@@ -132,7 +132,12 @@ class SectionDetector:
             if detected_section:
                 # Save previous section
                 if current_content:
-                    sections[current_section] = '\n'.join(current_content).strip()
+                    existing_content = sections.get(current_section, '')
+                    new_content = '\n'.join(current_content).strip()
+                    if existing_content:
+                        sections[current_section] = existing_content + '\n\n' + new_content
+                    else:
+                        sections[current_section] = new_content
                 
                 # Start new section
                 current_section = detected_section
@@ -143,7 +148,12 @@ class SectionDetector:
         
         # Save last section
         if current_content:
-            sections[current_section] = '\n'.join(current_content).strip()
+            existing_content = sections.get(current_section, '')
+            new_content = '\n'.join(current_content).strip()
+            if existing_content:
+                sections[current_section] = existing_content + '\n\n' + new_content
+            else:
+                sections[current_section] = new_content
         
         return sections
     
@@ -159,6 +169,7 @@ class SectionDetector:
             Dictionary with email, phone, location, linkedin, github
         """
         contact_info = {
+            'name': None,
             'email': None,
             'phone': None,
             'location': None,
@@ -166,6 +177,32 @@ class SectionDetector:
             'github': None,
             'portfolio': None,
         }
+        
+        # Name - extract from first line (before any contact details)
+        # The first non-empty line is usually the name
+        first_lines = text.split('\n')[:5]  # Check first 5 lines
+        for line in first_lines:
+            line_stripped = line.strip()
+            # Skip empty lines
+            if not line_stripped:
+                continue
+            # Skip if it contains email, phone patterns, or URLs
+            if '@' in line_stripped or 'http' in line_stripped.lower() or '|' in line_stripped:
+                continue
+            # Skip if mostly digits (like phone number line)
+            digit_ratio = sum(c.isdigit() for c in line_stripped) / len(line_stripped) if line_stripped else 0
+            if digit_ratio > 0.3:
+                continue
+            # Skip if it's too long (probably not a name)
+            if len(line_stripped) > 50:
+                continue
+            # Skip if it contains common section headers
+            if any(header in line_stripped.upper() for header in ['SUMMARY', 'OBJECTIVE', 'EXPERIENCE', 'EDUCATION', 'SKILLS', 'PROFESSIONAL']):
+                continue
+            # This is likely a name
+            if len(line_stripped) > 2 and ' ' in line_stripped:  # Names usually have space
+                contact_info['name'] = line_stripped
+                break
         
         # Email
         email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
@@ -213,38 +250,266 @@ class SectionDetector:
         return contact_info
     
     @staticmethod
-    def extract_skills(text: str) -> List[str]:
+    def extract_skills(text: str) -> Dict[str, List[str]]:
         """
-        Extract skills from skills section or entire resume.
+        Extract skills from skills section, organized by category.
         
         Args:
-            text: Skills section text or full resume
+            text: Skills section text
             
         Returns:
-            List of extracted skills
+            Dictionary mapping category names to skill lists
         """
-        skills = []
+        skills_dict = {}
         
-        # Common skill separators
-        # Try bullet points first
-        bullet_pattern = r'[•●○■□▪▫-]\s*([^\n•●○■□▪▫-]+)'
-        bullet_matches = re.findall(bullet_pattern, text)
+        lines = text.split('\n')
+        current_category = None
         
-        if bullet_matches:
-            skills.extend([skill.strip() for skill in bullet_matches if skill.strip()])
-        else:
-            # Try comma/pipe separated
-            for line in text.split('\n'):
-                if ',' in line or '|' in line:
-                    separator = ',' if ',' in line else '|'
-                    line_skills = [s.strip() for s in line.split(separator)]
-                    skills.extend([s for s in line_skills if s and len(s.split()) <= 5])
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Check if line is a category header (ends with colon)
+            if ':' in line:
+                parts = line.split(':', 1)
+                category = parts[0].strip()
+                skills_text = parts[1].strip() if len(parts) > 1 else ''
+                
+                # Parse skills from the same line
+                if skills_text:
+                    # Split by comma
+                    skills = [s.strip() for s in skills_text.split(',') if s.strip()]
+                    skills_dict[category] = skills
+                    current_category = category
+                else:
+                    current_category = category
+                    skills_dict[category] = []
+            
+            elif current_category:
+                # Continue adding to current category
+                if ',' in line:
+                    skills = [s.strip() for s in line.split(',') if s.strip()]
+                    skills_dict[current_category].extend(skills)
         
-        # Remove duplicates and clean
-        skills = list(dict.fromkeys(skills))  # Preserves order
-        skills = [s for s in skills if len(s) > 1 and len(s) < 50]
+        return skills_dict
+
+    @staticmethod
+    def extract_experience_details(text: str) -> List[Dict[str, str]]:
+        """
+        Extract structured experience details.
+        """
+        experiences = []
+        if not text:
+            return experiences
+            
+        lines = text.split('\n')
+        current_exp = None
+        i = 0
         
-        return skills[:50]  # Limit to 50 skills
+        # Date pattern: 2023-2027, Jan 2020 - Present, etc.
+        date_pattern = r'(\d{4})\s*(?:-|–|to)\s*(\d{4}|present|current|now)'
+        
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            if not line:
+                i += 1
+                continue
+            
+            # Check for date range at the start of line (like "2025 – Present")
+            date_match = re.search(date_pattern, line, re.IGNORECASE)
+            
+            if date_match and i + 1 < len(lines):
+                # Save previous experience
+                if current_exp and current_exp.get('position'):
+                    experiences.append(current_exp)
+                
+                # Next line should be position title
+                position_line = lines[i + 1].strip()
+                company_line = lines[i + 2].strip() if i + 2 < len(lines) else ''
+                
+                current_exp = {
+                    'company': company_line,
+                    'position': position_line,
+                    'startDate': date_match.group(1),
+                    'endDate': date_match.group(2),
+                    'description': [],
+                    'location': ''
+                }
+                
+                i += 3  # Skip date, position, and company lines
+                
+            elif line.startswith('•') or line.startswith('-'):
+                if current_exp:
+                    current_exp['description'].append(line.lstrip('•- ').strip())
+                i += 1
+                
+            else:
+                # Check if it looks like a position title (not a bullet point)
+                if current_exp and not current_exp.get('description') and not line.startswith('•'):
+                    # Might be additional info like location
+                    if '(' in line and ')' in line:
+                        # Extract location from parentheses
+                        location_match = re.search(r'\((.*?)\)', line)
+                        if location_match:
+                            current_exp['location'] = location_match.group(1)
+                i += 1
+
+        if current_exp and current_exp.get('position'):
+            experiences.append(current_exp)
+            
+        # Post-process descriptions
+        for exp in experiences:
+            exp['description'] = '\n'.join(exp['description'])
+            
+        return experiences
+
+    @staticmethod
+    def extract_project_details(text: str) -> List[Dict[str, str]]:
+        """
+        Extract structured project details.
+        """
+        projects = []
+        if not text:
+            return projects
+            
+        lines = text.split('\n')
+        current_proj = None
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Check if line starts with bullet point
+            if line.startswith('•') or line.startswith('-'):
+                bullet_text = line.lstrip('•- ').strip()
+                
+                # Check if this is a new project (contains "–" dash separating name and description)
+                if '–' in bullet_text or '-' in bullet_text:
+                    # Save previous project
+                    if current_proj:
+                        projects.append(current_proj)
+                    
+                    # Split into name and description
+                    separator = '–' if '–' in bullet_text else '-'
+                    parts = bullet_text.split(separator, 1)
+                    project_name = parts[0].strip()
+                    project_desc = parts[1].strip() if len(parts) > 1 else ''
+                    
+                    # Extract technologies from parentheses in project name
+                    tech = ''
+                    if '(' in project_name and ')' in project_name:
+                        tech_match = re.search(r'\((.*?)\)', project_name)
+                        if tech_match:
+                            tech = tech_match.group(1)
+                            project_name = re.sub(r'\s*\(.*?\)', '', project_name).strip()
+                    
+                    current_proj = {
+                        'name': project_name,
+                        'description': project_desc,
+                        'technologies': tech,
+                        'highlights': []
+                    }
+                
+                elif current_proj:
+                    # This is a sub-bullet for the current project
+                    current_proj['highlights'].append(bullet_text)
+            
+            else:
+                # Non-bullet line - might be a project name without bullet
+                if not current_proj or (current_proj and current_proj['description']):
+                    # Start new project
+                    if current_proj:
+                        projects.append(current_proj)
+                    
+                    current_proj = {
+                        'name': line,
+                        'description': '',
+                        'technologies': '',
+                        'highlights': []
+                    }
+        
+        if current_proj:
+            projects.append(current_proj)
+            
+        # Post-process: combine description and highlights
+        for proj in projects:
+            if proj['highlights']:
+                full_desc = proj['description']
+                if full_desc:
+                    full_desc += '\n'
+                full_desc += '\n'.join(proj['highlights'])
+                proj['description'] = full_desc
+            del proj['highlights']
+            
+        return projects
+
+    @staticmethod
+    def extract_education_details(text: str) -> List[Dict[str, str]]:
+        """
+        Extract structured education details.
+        """
+        education = []
+        if not text:
+            return education
+            
+        lines = text.split('\n')
+        i = 0
+        
+        # Date pattern: 2023-2027
+        date_pattern = r'(\d{4})\s*(?:-|–|to)\s*(\d{4}|present|current|now)'
+        
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            if not line:
+                i += 1
+                continue
+            
+            # Check for date range
+            date_match = re.search(date_pattern, line, re.IGNORECASE)
+            
+            if date_match and i + 1 < len(lines):
+                # Next line should be degree
+                degree_line = lines[i + 1].strip()
+                school_line = lines[i + 2].strip() if i + 2 < len(lines) else ''
+                
+                # Extract GPA if present
+                gpa = None
+                if 'CGPA' in school_line or 'GPA' in school_line:
+                    gpa_match = re.search(r'(?:CGPA|GPA)[:\s]*([0-9.]+)', school_line)
+                    if gpa_match:
+                        gpa = gpa_match.group(1)
+                
+                # Extract school name (before |)
+                school_parts = school_line.split('|')
+                school = school_parts[0].strip() if school_parts else school_line
+                
+                # Extract location if present
+                location = ''
+                if ',' in school:
+                    parts = school.split(',')
+                    if len(parts) >= 2:
+                        location = parts[-1].strip()
+                
+                edu = {
+                    'school': school,
+                    'degree': degree_line,
+                    'field': '',
+                    'startDate': date_match.group(1),
+                    'endDate': date_match.group(2),
+                    'gpa': gpa,
+                    'location': location
+                }
+                
+                education.append(edu)
+                i += 3
+            else:
+                i += 1
+        
+        return education
 
 
 class LayoutDetector:
@@ -358,13 +623,21 @@ class ResumeParser:
             skills_text = text
         skills = self.section_detector.extract_skills(skills_text)
         
-        # 7. Build structured result
+        # 7. Extract structured sections
+        experience = self.section_detector.extract_experience_details(sections.get('experience', ''))
+        projects = self.section_detector.extract_project_details(sections.get('projects', ''))
+        education = self.section_detector.extract_education_details(sections.get('education', ''))
+        
+        # 8. Build structured result
         result = {
             'parsed_text': text,
             'layout_type': layout_type,
             'sections': sections,
             'contact_info': contact_info,
             'skills': skills,
+            'experience': experience,
+            'projects': projects,
+            'education': education,
             'parsed_at': datetime.utcnow().isoformat(),
             'metadata': metadata or {},
         }

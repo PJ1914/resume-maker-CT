@@ -101,9 +101,15 @@ PROJECT_COMPLETE.md
 QUICK_REFERENCE.md
 QUICK_START.md
 SETUP.md
+SETUP_GUIDE.md
 STORAGE_SETUP.md
 VISUAL_TESTING_GUIDE.md
 BACKEND_FIXED.md
+
+# Batch files and scripts
+start.bat
+start-backend.bat
+to-do.txt
 
 # Python cache
 .pytest_cache/

@@ -1,4 +1,5 @@
 export { default as WizardProgress } from './WizardProgress'
+export { default as ResumeDumpStep } from './ResumeDumpStep'
 export { default as ContactStepForm } from './ContactStepForm'
 export { default as SummaryStepForm } from './SummaryStepForm'
 export { default as ExperienceStepForm } from './ExperienceStepForm'

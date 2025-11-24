@@ -86,6 +86,7 @@ class ProjectEntry(BaseModel):
 
 class CreateResumeRequest(BaseModel):
     """Request to create resume from wizard data"""
+    template: Optional[str] = "modern"  # Template ID: modern, classic, minimalist, or custom_xxxxx
     contact: ContactInfo
     summary: str
     experience: List[ExperienceEntry] = []
@@ -106,12 +107,16 @@ class ResumeMetadata(BaseModel):
     status: ResumeStatus = ResumeStatus.UPLOADED
     created_at: datetime
     updated_at: datetime
+    template: Optional[str] = "modern"  # Template ID used for this resume
     
     # Parsing results (populated after parsing)
     parsed_text: Optional[str] = None
     contact_info: Optional[dict] = None
     skills: Optional[dict] = None  # Changed from Optional[list] to Optional[dict]
     sections: Optional[dict] = None
+    experience: Optional[List[dict]] = None
+    projects: Optional[List[dict]] = None
+    education: Optional[List[dict]] = None
     layout_type: Optional[str] = None
     parsed_at: Optional[datetime] = None
     
@@ -126,6 +131,7 @@ class ResumeListItem(BaseModel):
     """Resume item in list view"""
     resume_id: str
     filename: str
+    original_filename: str
     file_size: int
     status: ResumeStatus
     created_at: datetime
@@ -151,7 +157,11 @@ class ResumeDetailResponse(BaseModel):
     contact_info: Optional[dict] = None
     skills: Optional[dict] = None  # Changed from Optional[list] to Optional[dict]
     sections: Optional[dict] = None
+    experience: Optional[List[dict]] = None
+    projects: Optional[List[dict]] = None
+    education: Optional[List[dict]] = None
     layout_type: Optional[str] = None
     parsed_at: Optional[datetime] = None
     latest_score: Optional[float] = None
+    template: Optional[str] = "modern"
     error_message: Optional[str] = None

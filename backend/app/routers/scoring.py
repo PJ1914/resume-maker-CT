@@ -8,7 +8,7 @@ from typing import Dict
 from app.schemas.scoring import ScoringRequest, ScoringResponse
 from app.dependencies import get_current_user
 from app.services.firestore import get_resume_metadata
-from app.services.gemini_scorer import HybridScorer
+from app.services.ats_scorer import ATSScorer
 from app.services.cache import get_cached_score, set_cached_score
 from app.services.audit import log_scoring_request, check_rate_limit
 from app.config import settings
@@ -47,11 +47,20 @@ async def score_resume(
             )
         
         # Check if resume has been parsed
-        if not hasattr(resume_metadata, 'parsed_text') or not resume_metadata.parsed_text:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Resume must be parsed before scoring. Status: " + resume_metadata.status
-            )
+        parsed_text = getattr(resume_metadata, 'parsed_text', None)
+        if not parsed_text:
+            # For wizard-created resumes, check if we have contact info or sections as fallback
+            contact_info = getattr(resume_metadata, 'contact_info', {})
+            sections = getattr(resume_metadata, 'sections', {})
+            
+            if not contact_info and not sections:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Resume must be parsed before scoring. Status: " + resume_metadata.status
+                )
+            
+            # Use contact info and sections as fallback for parsed text
+            parsed_text = f"Resume for {contact_info.get('name', 'Unknown')} from {contact_info.get('location', 'Unknown')}"
         
         # Check cache if enabled
         cached_result = None
@@ -82,20 +91,26 @@ async def score_resume(
         
         # Prepare parsed data
         parsed_data = {
-            'parsed_text': resume_metadata.parsed_text,
+            'parsed_text': parsed_text,
             'sections': getattr(resume_metadata, 'sections', {}),
             'contact_info': getattr(resume_metadata, 'contact_info', {}),
-            'skills': getattr(resume_metadata, 'skills', []),
+            'skills': getattr(resume_metadata, 'skills', {}),
+            'experience': getattr(resume_metadata, 'experience', []),
+            'education': getattr(resume_metadata, 'education', []),
+            'projects': getattr(resume_metadata, 'projects', []),
             'layout_type': getattr(resume_metadata, 'layout_type', 'unknown'),
         }
         
-        # Score resume
-        scorer = HybridScorer()
+        # Score resume using new ATS Scorer
+        scorer = ATSScorer()
         score_result = scorer.score_resume(
             parsed_data,
-            job_description=request.job_description,
-            prefer_gemini=request.prefer_gemini
+            job_description=request.job_description
         )
+        
+        # Add scoring method
+        score_result['scoring_method'] = 'ats_advanced'
+        score_result['model_name'] = 'ATS Evaluation Engine v2.0'
         
         # Calculate latency
         latency_ms = int((time.time() - start_time) * 1000)
@@ -118,6 +133,13 @@ async def score_resume(
         # Cache result
         if request.use_cache:
             await set_cached_score(resume_id, score_result, request.job_description)
+        
+        # Update latest_score in Firestore
+        try:
+            from app.services.firestore import update_resume_latest_score
+            update_resume_latest_score(resume_id, uid, score_result.get('total_score', 0))
+        except Exception as e:
+            logger.warning(f"Failed to update latest_score in Firestore: {e}")
         
         # Add resume_id and cached flag
         score_result['resume_id'] = resume_id

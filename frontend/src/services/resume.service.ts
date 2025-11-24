@@ -12,7 +12,7 @@ export interface ResumeListItem {
   original_filename: string
   file_size: number
   status: string
-  uploaded_at: string
+  created_at: string
   latest_score: number | null
 }
 
@@ -28,7 +28,14 @@ export interface ResumeDetail {
   updated_at: string
   parsed_text: string | null
   contact_info: any | null
+  skills: any | null
+  sections: any | null
+  experience: any[] | null
+  projects: any[] | null
+  education: any[] | null
+  layout_type: string | null
   latest_score: number | null
+  template: string | null
   error_message: string | null
 }
 
@@ -122,6 +129,13 @@ export const resumeService = {
    */
   async deleteResume(resumeId: string): Promise<void> {
     return apiClient.delete(`/api/resumes/${resumeId}`)
+  },
+
+  /**
+   * Re-parse an existing resume with updated extraction logic
+   */
+  async reparseResume(resumeId: string): Promise<any> {
+    return apiClient.post(`/api/resumes/${resumeId}/reparse`, {})
   },
 
   /**

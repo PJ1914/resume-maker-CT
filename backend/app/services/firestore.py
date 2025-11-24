@@ -84,11 +84,30 @@ def get_resume_metadata(resume_id: str, user_id: str) -> Optional[ResumeMetadata
                     elif isinstance(ts, datetime):
                         # Already a datetime object, keep as is
                         pass
+                    elif isinstance(ts, str):
+                        # Parse ISO format string (e.g., '2025-11-20T18:41:57.311298')
+                        try:
+                            data[date_field] = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                        except:
+                            # Try parsing without microseconds
+                            data[date_field] = datetime.fromisoformat(ts.split('.')[0])
                     else:
                         # Try to parse as Unix timestamp (float/int)
                         data[date_field] = datetime.utcfromtimestamp(float(ts))
                 except Exception as e:
                     print(f"Warning: Could not convert {date_field}: {e}")
+                    # If all conversions fail, set to None
+                    data[date_field] = None
+        
+        # Convert skills from list to dict format if needed
+        # This handles legacy data where skills were stored as a list
+        if 'skills' in data and isinstance(data['skills'], list):
+            # Convert list of skills to dict format: {"technical": [...], "soft": [...]}
+            skills_list = data['skills']
+            data['skills'] = {
+                "technical": skills_list,
+                "soft": []
+            }
         
         return ResumeMetadata(**data)
     except Exception as e:
@@ -107,6 +126,7 @@ def list_user_resumes(user_id: str, limit: int = 50) -> List[ResumeListItem]:
             ResumeListItem(
                 resume_id="mock-resume-1",
                 filename="sample-resume.pdf",
+                original_filename="sample-resume.pdf",
                 file_size=1024000,
                 status=ResumeStatus.UPLOADED,
                 created_at=datetime.utcnow(),
@@ -130,6 +150,7 @@ def list_user_resumes(user_id: str, limit: int = 50) -> List[ResumeListItem]:
             resumes.append(ResumeListItem(
                 resume_id=data['resume_id'],
                 filename=data['filename'],
+                original_filename=data.get('original_filename', data['filename']),
                 file_size=data['file_size'],
                 status=ResumeStatus(data['status']),
                 created_at=data['created_at'],
@@ -234,6 +255,9 @@ async def update_resume_parsed_data(
             'contact_info': parsed_data.get('contact_info', {}),
             'skills': parsed_data.get('skills', []),
             'sections': parsed_data.get('sections', {}),
+            'experience': parsed_data.get('experience', []),
+            'projects': parsed_data.get('projects', []),
+            'education': parsed_data.get('education', []),
             'layout_type': parsed_data.get('layout_type', 'unknown'),
             'parsed_at': parsed_data.get('parsed_at'),
             'updated_at': datetime.utcnow(),
@@ -362,3 +386,48 @@ def get_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
     except Exception as e:
         print(f"Error getting resume data: {e}")
         return None
+
+
+def update_resume_latest_score(
+    resume_id: str,
+    user_id: str,
+    score: float
+) -> bool:
+    """
+    Update the latest_score field in resume metadata for dashboard display.
+    
+    Args:
+        resume_id: Resume ID
+        user_id: User ID
+        score: ATS score value (0-100)
+        
+    Returns:
+        Success boolean
+    """
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        print(f"[DEV] Would update resume {resume_id} latest_score to {score}")
+        return True
+    
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        update_data = {
+            'latest_score': score,
+            'updated_at': datetime.utcnow(),
+        }
+        
+        # Update both locations
+        db.collection('users').document(user_id)\
+          .collection('resumes').document(resume_id)\
+          .update(update_data)
+        
+        db.collection('resumes').document(resume_id)\
+          .update(update_data)
+        
+        return True
+    except Exception as e:
+        print(f"Error updating latest_score: {e}")
+        return False

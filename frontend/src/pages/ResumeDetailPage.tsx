@@ -14,7 +14,8 @@ import {
 import { resumeService, type ResumeDetail } from '@/services/resume.service'
 import toast from 'react-hot-toast'
 import PdfExportModal from '@/components/PdfExportModal'
-import ATSScoreDisplay from '@/components/ATSScoreDisplay'
+import ComprehensiveATSScore from '@/components/ComprehensiveATSScore'
+import { TemplateRenderer } from '@/components/TemplateRenderer'
 
 // Helper function to format resume text into HTML
 function formatResumeText(text: string): string {
@@ -114,6 +115,7 @@ export default function ResumeDetailPage() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [scoreData, setScoreData] = useState<any>(null)
   const [scoring, setScoring] = useState(false)
+  const [reparsing, setReparsing] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -136,8 +138,13 @@ export default function ResumeDetailPage() {
           clearInterval(interval)
           toast.success('Resume processing complete!')
         }
-      } catch (error) {
-        console.error('Polling error:', error)
+      } catch (error: any) {
+        // If 404, the resume was deleted - stop polling and clear state
+        if (error.response?.status === 404) {
+          clearInterval(interval)
+          setResume(null)
+        }
+        // Silently ignore network errors during polling - resume will update when available
       }
     }, 3000) // Poll every 3 seconds
 
@@ -180,10 +187,12 @@ export default function ResumeDetailPage() {
       console.error('Scoring error:', error)
       const errorMessage = error.response?.data?.detail || error.message || 'Failed to generate ATS score'
       
-      if (errorMessage.includes('parsed')) {
-        toast.error('Resume is still being processed. Please wait a moment and try again.', {
+      if (errorMessage.includes('parsed') || errorMessage.includes('parsing')) {
+        toast.error('Resume is being parsed. Please wait a moment and try again.', {
           duration: 5000
         })
+      } else if (errorMessage.includes('Network')) {
+        toast.error('Network error. Please ensure the backend is running.')
       } else {
         toast.error(errorMessage)
       }
@@ -192,12 +201,41 @@ export default function ResumeDetailPage() {
     }
   }
 
+  const handleReparse = async () => {
+    if (!resume) return
+
+    try {
+      setReparsing(true)
+      await resumeService.reparseResume(resume.resume_id)
+      toast.success('Re-parsing triggered! Extracting data with updated parser...')
+      
+      // Reload resume data after a delay to show the update
+      setTimeout(async () => {
+        try {
+          const data = await resumeService.getResume(resume.resume_id)
+          setResume(data)
+          toast.success('Resume parsing complete! Updated data loaded.')
+        } catch (error) {
+          console.error('Error reloading resume:', error)
+        }
+      }, 3000)
+    } catch (error: any) {
+      console.error('Reparse error:', error)
+      toast.error('Failed to trigger re-parsing')
+    } finally {
+      setReparsing(false)
+    }
+  }
+
   const handleDelete = async () => {
     if (!resume || !confirm(`Delete "${resume.original_filename}"?`)) return
 
     try {
       await resumeService.deleteResume(resume.resume_id)
+      // Clear the resume state immediately to stop polling
+      setResume(null)
       toast.success('Resume deleted successfully')
+      // Navigate after clearing state to prevent polling from running
       navigate('/resumes')
     } catch (error: any) {
       console.error('Delete error:', error)
@@ -301,8 +339,8 @@ export default function ResumeDetailPage() {
 
   const statusInfo = getStatusInfo(resume.status)
   const StatusIcon = statusInfo.icon
-  const isParsing = resume.status === 'PARSING' || resume.status === 'UPLOADED'
-  const canScore = resume.status === 'PARSED' || resume.status === 'SCORED'
+  const isParsing = resume.status === 'PARSING'
+  const canScore = resume.status === 'PARSED' || resume.status === 'SCORED' || resume.status === 'UPLOADED'
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -417,13 +455,17 @@ export default function ResumeDetailPage() {
           {/* ATS Score Card */}
           {scoreData ? (
             <div className="bg-white rounded-lg border border-secondary-200 p-6">
-              <ATSScoreDisplay
+              <ComprehensiveATSScore
                 score={scoreData.total_score}
                 rating={scoreData.rating}
                 breakdown={scoreData.breakdown}
-                suggestions={scoreData.suggestions}
-                strengths={scoreData.strengths}
-                weaknesses={scoreData.weaknesses}
+                strengths={scoreData.strengths || []}
+                weaknesses={scoreData.weaknesses || []}
+                missing_keywords={scoreData.missing_keywords || []}
+                section_feedback={scoreData.section_feedback || {}}
+                recommendations={scoreData.recommendations || []}
+                improved_bullets={scoreData.improved_bullets || []}
+                job_description_provided={scoreData.job_description_provided || false}
                 loading={scoring}
               />
             </div>
@@ -438,9 +480,9 @@ export default function ResumeDetailPage() {
               </p>
               <button
                 onClick={handleCheckScore}
-                disabled={scoring || !canScore}
+                disabled={scoring || isParsing}
                 className="px-5 py-2.5 bg-success-600 text-white rounded-lg font-medium hover:bg-success-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={!canScore ? 'Resume must be parsed before scoring' : ''}
+                title={isParsing ? 'Resume is being parsed. Try again in a moment.' : ''}
               >
                 {scoring ? (
                   <>
@@ -462,11 +504,11 @@ export default function ResumeDetailPage() {
             </div>
           )}
 
-          {/* Extracted Text */}
-          {resume.parsed_text ? (
+          {/* Resume Preview - Template Format */}
+          {resume.parsed_text || resume.contact_info ? (
             <div className="bg-white rounded-lg border border-secondary-200 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-secondary-900">Resume Content</h2>
+                <h2 className="text-lg font-semibold text-secondary-900">Resume Preview</h2>
                 <button
                   onClick={() => navigate(`/editor/${resume.resume_id}`)}
                   className="px-4 py-2 bg-primary-900 text-white rounded-lg text-sm font-medium hover:bg-primary-800 transition-colors flex items-center gap-2"
@@ -478,140 +520,17 @@ export default function ResumeDetailPage() {
                 </button>
               </div>
               
-              {/* Resume Preview - Formatted */}
-              <div className="bg-white border border-secondary-200 rounded-lg p-8 max-h-[800px] overflow-y-auto resume-content">
-                <style>{`
-                  .resume-content h1 {
-                    font-size: 1.875rem;
-                    font-weight: 700;
-                    color: #1f2937;
-                    margin-bottom: 0.5rem;
-                  }
-                  .resume-content h2 {
-                    font-size: 1.25rem;
-                    font-weight: 600;
-                    color: #374151;
-                    margin-top: 1.5rem;
-                    margin-bottom: 0.75rem;
-                    padding-bottom: 0.5rem;
-                    border-bottom: 2px solid #8b2635;
-                  }
-                  .resume-content h3 {
-                    font-size: 1.125rem;
-                    font-weight: 600;
-                    color: #1f2937;
-                    margin-top: 1rem;
-                    margin-bottom: 0.25rem;
-                  }
-                  .resume-content p {
-                    color: #4b5563;
-                    line-height: 1.6;
-                    margin-bottom: 0.5rem;
-                  }
-                  .resume-content ul {
-                    list-style-type: disc;
-                    margin-left: 1.5rem;
-                    margin-bottom: 0.75rem;
-                  }
-                  .resume-content li {
-                    color: #374151;
-                    line-height: 1.7;
-                    margin-bottom: 0.375rem;
-                  }
-                  .resume-content .section {
-                    margin-bottom: 1.5rem;
-                  }
-                  .resume-content .contact-info {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 1rem;
-                    color: #6b7280;
-                    font-size: 0.875rem;
-                    margin-bottom: 1.5rem;
-                  }
-                  .resume-content .contact-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.25rem;
-                  }
-                  .resume-content .job-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: baseline;
-                    margin-bottom: 0.25rem;
-                  }
-                  .resume-content .job-title {
-                    font-weight: 600;
-                    color: #1f2937;
-                  }
-                  .resume-content .job-date {
-                    color: #6b7280;
-                    font-size: 0.875rem;
-                  }
-                  .resume-content .company {
-                    color: #8b2635;
-                    font-weight: 500;
-                  }
-                  .resume-content .location {
-                    color: #6b7280;
-                    font-size: 0.875rem;
-                  }
-                `}</style>
-                
-                {/* Name */}
-                <h1>{resume.contact_info?.name || 'Professional Resume'}</h1>
-                
-                {/* Contact Info */}
-                {resume.contact_info && (
-                  <div className="contact-info">
-                    {resume.contact_info.phone && (
-                      <div className="contact-item">
-                        <span>📱</span>
-                        <span>{resume.contact_info.phone}</span>
-                      </div>
-                    )}
-                    {resume.contact_info.email && (
-                      <div className="contact-item">
-                        <span>✉️</span>
-                        <span>{resume.contact_info.email}</span>
-                      </div>
-                    )}
-                    {resume.contact_info.linkedin && (
-                      <div className="contact-item">
-                        <span>🔗</span>
-                        <span>{resume.contact_info.linkedin}</span>
-                      </div>
-                    )}
-                    {resume.contact_info.github && (
-                      <div className="contact-item">
-                        <span>💻</span>
-                        <span>{resume.contact_info.github}</span>
-                      </div>
-                    )}
-                    {resume.contact_info.location && (
-                      <div className="contact-item">
-                        <span>📍</span>
-                        <span>{resume.contact_info.location}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Formatted Resume Sections */}
-                <div 
-                  className="formatted-resume"
-                  dangerouslySetInnerHTML={{ 
-                    __html: formatResumeText(resume.parsed_text) 
-                  }}
-                />
+              {/* Professional Resume Template */}
+              <div className="bg-white border border-secondary-200 rounded-lg max-h-[900px] overflow-y-auto">
+                <TemplateRenderer resume={resume} />
               </div>
             </div>
           ) : resume.status === 'PARSING' || resume.status === 'UPLOADED' ? (
             <div className="bg-white rounded-lg border border-secondary-200 p-6">
-              <h2 className="text-lg font-semibold text-secondary-900 mb-4">Extracted Text</h2>
+              <h2 className="text-lg font-semibold text-secondary-900 mb-4">Resume Preview</h2>
               <div className="bg-secondary-50 rounded-lg p-4 text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-900 border-t-transparent mx-auto mb-3"></div>
-                <p className="text-sm text-secondary-600">Extracting text from your resume...</p>
+                <p className="text-sm text-secondary-600">Extracting and formatting your resume...</p>
               </div>
             </div>
           ) : null}
@@ -665,8 +584,9 @@ export default function ResumeDetailPage() {
                   ✓ Resume data parsed and ready to edit
                 </p>
               ) : isParsing ? (
-                <p className="text-xs text-warning-600 px-2 py-1 bg-warning-50 rounded">
-                  ⏳ Parsing in progress. Editor will load parsed data soon.
+                <p className="text-xs text-warning-600 px-2 py-1 bg-warning-50 rounded flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" />
+                  Parsing in progress. Editor will load parsed data soon.
                 </p>
               ) : null}
 

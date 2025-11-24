@@ -68,7 +68,8 @@ export default function TemplateSelectionPage() {
   const handleContinue = () => {
     // Store selected template in localStorage or context
     localStorage.setItem('selectedTemplate', selectedTemplate)
-    navigate('/wizard')
+    console.log('Navigating to wizard with template:', selectedTemplate)
+    navigate('/resume/wizard', { state: { templateId: selectedTemplate } })
   }
 
   return (

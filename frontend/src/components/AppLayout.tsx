@@ -24,7 +24,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'My Resumes', href: '/resumes', icon: FileText },
     { name: 'Upload Resume', href: '/upload', icon: Upload },
-    { name: 'Create New', href: '/create', icon: Sparkles },
+    { name: 'Create New', href: '/resume/create', icon: Sparkles },
   ]
 
   const handleLogout = async () => {
@@ -149,7 +149,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </h3>
             <div className="space-y-2">
               <button
-                onClick={() => navigate('/create')}
+                onClick={() => navigate('/resume/create')}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               >
                 <Sparkles className="h-4 w-4" />

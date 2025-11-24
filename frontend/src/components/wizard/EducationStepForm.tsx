@@ -63,7 +63,7 @@ export default function EducationStepForm({ data, onChange }: EducationStepFormP
         <div className="space-y-6">
           {data.map((education, index) => (
             <div
-              key={education.id}
+              key={education.id || `edu-${index}`}
               className="bg-secondary-50 border border-secondary-200 rounded-lg p-6"
             >
               <div className="flex items-center justify-between mb-4">

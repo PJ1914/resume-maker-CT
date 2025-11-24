@@ -12,14 +12,20 @@ interface SkillsStepFormProps {
 }
 
 export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) {
+  // Ensure data has proper structure
+  const safeData = {
+    technical: Array.isArray(data?.technical) ? data.technical : [],
+    soft: Array.isArray(data?.soft) ? data.soft : [],
+  }
+  
   const [technicalInput, setTechnicalInput] = useState('')
   const [softInput, setSoftInput] = useState('')
 
   const addTechnicalSkill = () => {
     if (technicalInput.trim()) {
       onChange({
-        ...data,
-        technical: [...data.technical, technicalInput.trim()],
+        ...safeData,
+        technical: [...safeData.technical, technicalInput.trim()],
       })
       setTechnicalInput('')
     }
@@ -27,16 +33,16 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
 
   const removeTechnicalSkill = (index: number) => {
     onChange({
-      ...data,
-      technical: data.technical.filter((_, i) => i !== index),
+      ...safeData,
+      technical: safeData.technical.filter((_, i) => i !== index),
     })
   }
 
   const addSoftSkill = () => {
     if (softInput.trim()) {
       onChange({
-        ...data,
-        soft: [...data.soft, softInput.trim()],
+        ...safeData,
+        soft: [...safeData.soft, softInput.trim()],
       })
       setSoftInput('')
     }
@@ -44,8 +50,8 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
 
   const removeSoftSkill = (index: number) => {
     onChange({
-      ...data,
-      soft: data.soft.filter((_, i) => i !== index),
+      ...safeData,
+      soft: safeData.soft.filter((_, i) => i !== index),
     })
   }
 
@@ -72,10 +78,10 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
   ]
 
   const addSuggested = (skill: string, type: 'technical' | 'soft') => {
-    if (type === 'technical' && !data.technical.includes(skill)) {
-      onChange({ ...data, technical: [...data.technical, skill] })
-    } else if (type === 'soft' && !data.soft.includes(skill)) {
-      onChange({ ...data, soft: [...data.soft, skill] })
+    if (type === 'technical' && !safeData.technical.includes(skill)) {
+      onChange({ ...safeData, technical: [...safeData.technical, skill] })
+    } else if (type === 'soft' && !safeData.soft.includes(skill)) {
+      onChange({ ...safeData, soft: [...safeData.soft, skill] })
     }
   }
 
@@ -120,9 +126,9 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
         </div>
 
         {/* Skills List */}
-        {data.technical.length > 0 && (
+        {safeData.technical.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {data.technical.map((skill, index) => (
+            {safeData.technical.map((skill, index) => (
               <div
                 key={index}
                 className="bg-primary-100 text-primary-700 px-3 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium"
@@ -144,7 +150,7 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
           <p className="text-xs text-secondary-600 mb-2">Popular technical skills:</p>
           <div className="flex flex-wrap gap-2">
             {suggestedTechnical
-              .filter((skill) => !data.technical.includes(skill))
+              .filter((skill) => !safeData.technical.includes(skill))
               .map((skill) => (
                 <button
                   key={skill}
@@ -190,9 +196,9 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
         </div>
 
         {/* Skills List */}
-        {data.soft.length > 0 && (
+        {safeData.soft.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {data.soft.map((skill, index) => (
+            {safeData.soft.map((skill, index) => (
               <div
                 key={index}
                 className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium"
@@ -214,7 +220,7 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
           <p className="text-xs text-secondary-600 mb-2">Common soft skills:</p>
           <div className="flex flex-wrap gap-2">
             {suggestedSoft
-              .filter((skill) => !data.soft.includes(skill))
+              .filter((skill) => !safeData.soft.includes(skill))
               .map((skill) => (
                 <button
                   key={skill}

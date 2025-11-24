@@ -254,7 +254,7 @@ async def create_resume(
     Create a new resume from wizard-entered data.
     
     This endpoint saves resume data entered through the wizard form
-    directly to Firestore without file upload.
+    directly to Firestore without file upload. Includes template selection.
     """
     user_id = current_user["uid"]
     resume_id = generate_resume_id()
@@ -263,6 +263,7 @@ async def create_resume(
         print(f"Creating resume for user: {user_id}")
         print(f"Resume ID: {resume_id}")
         print(f"Contact name: {request.contact.name}")
+        print(f"Template: {request.template}")
         
         # Build sections dict safely
         sections = {
@@ -325,6 +326,7 @@ async def create_resume(
             status=ResumeStatus.PARSED,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
+            template=request.template,  # Store template ID
             parsed_text=request.summary,
             contact_info={
                 'name': request.contact.name,
@@ -338,7 +340,44 @@ async def create_resume(
                 'technical': request.skills.technical,
                 'soft': request.skills.soft,
             },
-            sections=sections
+            sections=sections,
+            # Also set individual fields for easier access
+            experience=[
+                {
+                    'company': e.company,
+                    'position': e.position,
+                    'title': e.title,
+                    'location': e.location,
+                    'startDate': e.startDate,
+                    'endDate': e.endDate,
+                    'description': e.description,
+                }
+                for e in request.experience
+            ],
+            education=[
+                {
+                    'school': e.school,
+                    'degree': e.degree,
+                    'field': e.field,
+                    'location': e.location,
+                    'startDate': e.startDate,
+                    'endDate': e.endDate,
+                    'gpa': e.gpa,
+                    'description': e.description,
+                }
+                for e in request.education
+            ],
+            projects=[
+                {
+                    'name': p.name,
+                    'description': p.description,
+                    'technologies': p.technologies,
+                    'url': p.url,
+                    'startDate': p.startDate,
+                    'endDate': p.endDate,
+                }
+                for p in request.projects
+            ],
         )
         
         print(f"Metadata created successfully")
@@ -424,9 +463,13 @@ async def get_resume(
             contact_info=metadata.contact_info,
             skills=metadata.skills,
             sections=metadata.sections,
+            experience=metadata.experience,
+            projects=metadata.projects,
+            education=metadata.education,
             layout_type=metadata.layout_type,
             parsed_at=metadata.parsed_at,
             latest_score=metadata.latest_score,
+            template=metadata.template,
             error_message=metadata.error_message,
         )
     except HTTPException:
@@ -472,4 +515,38 @@ async def delete_resume(
     return {
         "status": "success",
         "message": "Resume deleted successfully"
+    }
+
+@router.post("/resumes/{resume_id}/reparse")
+async def reparse_resume(
+    resume_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Manually trigger re-parsing of an existing resume.
+    Useful for testing parser updates without re-uploading.
+    """
+    user_id = current_user["uid"]
+    
+    # Get metadata
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+    
+    # Trigger parsing in background
+    trigger_resume_parsing(
+        resume_id=resume_id,
+        uid=user_id,
+        storage_path=metadata.storage_path,
+        content_type=metadata.content_type
+    )
+    
+    return {
+        "status": "success",
+        "message": "Resume re-parsing triggered",
+        "resume_id": resume_id
     }

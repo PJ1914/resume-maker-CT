@@ -1,6 +1,6 @@
 """
 Pydantic schemas for ATS scoring responses.
-Ensures strict validation of Gemini responses.
+Updated for comprehensive ATS Evaluation Engine.
 """
 
 from pydantic import BaseModel, Field, field_validator
@@ -12,52 +12,83 @@ from enum import Enum
 class ScoreRating(str, Enum):
     """Score rating levels"""
     EXCELLENT = "Excellent"
+    VERY_GOOD = "Very Good"
     GOOD = "Good"
     FAIR = "Fair"
     NEEDS_IMPROVEMENT = "Needs Improvement"
+    POOR = "Poor"
 
 
-class ComponentScore(BaseModel):
-    """Individual scoring component"""
-    score: float = Field(..., ge=0, description="Score value")
-    analysis: str = Field(..., min_length=1, max_length=500, description="Analysis text")
+class CategoryScore(BaseModel):
+    """Score for individual category"""
+    score: float = Field(..., ge=0, description="Category score")
+    max_score: float = Field(..., ge=0, description="Maximum possible score")
+    percentage: float = Field(..., ge=0, le=100, description="Percentage score")
 
 
 class ScoreBreakdown(BaseModel):
-    """Detailed score breakdown"""
-    keywords: ComponentScore
-    sections: ComponentScore
-    formatting: ComponentScore
-    quantification: ComponentScore
-    readability: ComponentScore
+    """Detailed score breakdown by category"""
+    format_ats_compatibility: CategoryScore
+    keyword_match: CategoryScore
+    skills_relevance: CategoryScore
+    experience_quality: CategoryScore
+    achievements_impact: CategoryScore
+    grammar_clarity: CategoryScore
+
+
+class SectionFeedback(BaseModel):
+    """Feedback for a specific resume section"""
+    good: str = ""
+    missing: str = ""
+    improve: str = ""
+
+
+class ImprovedBullet(BaseModel):
+    """Original and improved bullet point"""
+    original: str
+    suggestion: str
 
 
 class ScoringRequest(BaseModel):
     """Request to score a resume"""
-    job_description: Optional[str] = Field(None, max_length=5000, description="Optional job description for matching")
+    job_description: Optional[str] = Field(None, max_length=10000, description="Optional job description for matching")
     use_cache: bool = Field(True, description="Whether to use cached results")
-    prefer_gemini: bool = Field(True, description="Prefer Gemini over local scorer")
+    prefer_gemini: bool = Field(False, description="Use Gemini (deprecated, now using ATS Engine)")
 
 
 class ScoringResponse(BaseModel):
-    """Complete scoring response"""
+    """Complete ATS scoring response"""
     resume_id: str
     total_score: float = Field(..., ge=0, le=100, description="Total ATS score 0-100")
     rating: ScoreRating
     breakdown: ScoreBreakdown
-    suggestions: List[str] = Field(..., min_items=0, max_items=20)
     
-    # Optional Gemini-specific fields
-    strengths: Optional[List[str]] = Field(None, max_items=10)
-    weaknesses: Optional[List[str]] = Field(None, max_items=10)
-    keyword_matches: Optional[List[str]] = Field(None, max_items=50)
-    ats_compatibility: Optional[str] = Field(None, max_length=50)
+    # Comprehensive feedback
+    strengths: List[str] = Field(..., min_items=0, max_items=15)
+    weaknesses: List[str] = Field(..., min_items=0, max_items=15)
+    missing_keywords: List[str] = Field(default_factory=list, max_items=30)
+    
+    # Section-by-section feedback
+    section_feedback: Dict[str, SectionFeedback] = Field(default_factory=dict)
+    
+    # Recommendations
+    recommendations: List[str] = Field(..., min_items=0, max_items=20)
+    
+    # Improved examples
+    improved_bullets: List[ImprovedBullet] = Field(default_factory=list, max_items=10)
     
     # Metadata
-    scoring_method: str = Field(..., pattern="^(local|gemini)$")
-    model_name: Optional[str] = Field(None, description="Gemini model used for scoring")
-    scored_at: datetime
+    scoring_method: str = Field(default="ats_advanced")
+    model_name: Optional[str] = Field(None, description="Scoring engine version")
+    scored_at: str
+    job_description_provided: bool = False
     cached: bool = False
+    
+    # Legacy compatibility
+    suggestions: Optional[List[str]] = None
+    keyword_matches: Optional[List[str]] = None
+    ats_compatibility: Optional[str] = None
+    tokens_used: Optional[int] = None
     
     model_config = {"protected_namespaces": ()}
     

@@ -64,7 +64,7 @@ export default function ExperienceStepForm({ data, onChange }: ExperienceStepFor
         <div className="space-y-6">
           {data.map((experience, index) => (
             <div
-              key={experience.id}
+              key={experience.id || `exp-${index}`}
               className="bg-secondary-50 border border-secondary-200 rounded-lg p-6"
             >
               <div className="flex items-center justify-between mb-4">

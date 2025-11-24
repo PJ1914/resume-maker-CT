@@ -353,77 +353,118 @@ export const ResumeEditorPage: React.FC = () => {
             const { resumeService } = await import('../services/resume.service');
             const resumeDetail = await resumeService.getResume(resumeId);
             
-            console.log('Resume Detail:', resumeDetail);
-            console.log('Full Resume Detail JSON:', JSON.stringify(resumeDetail, null, 2));
-            console.log('Sections:', (resumeDetail as any).sections);
-            console.log('Parsed Data:', (resumeDetail as any).parsed_data);
-            console.log('Contact Info:', resumeDetail.contact_info);
+              console.log('Resume Detail:', resumeDetail);
+              console.log('Full Resume Detail JSON:', JSON.stringify(resumeDetail, null, 2));
+              console.log('Sections:', (resumeDetail as any).sections);
+              console.log('Parsed Data:', (resumeDetail as any).parsed_data);
+              console.log('Contact Info:', resumeDetail.contact_info);
+              console.log('🎯 EXTRACTED FIELDS CHECK:');
+              console.log('Projects from API:', (resumeDetail as any).projects);
+              console.log('Experience from API:', (resumeDetail as any).experience);
+              console.log('Education from API:', (resumeDetail as any).education);
+              console.log('Skills from API:', (resumeDetail as any).skills);
             
             // If we have parsed data, create initial resume data
             if (resumeDetail.parsed_text) {
               const newResume = createEmptyResume();
               
-              // Populate contact info
+              // Populate contact info - handle all possible field name variations
               if (resumeDetail.contact_info) {
+                const contactInfo = resumeDetail.contact_info;
                 newResume.contact = {
-                  fullName: resumeDetail.contact_info.name || resumeDetail.contact_info.full_name || '',
-                  email: resumeDetail.contact_info.email || '',
-                  phone: resumeDetail.contact_info.phone || '',
-                  location: resumeDetail.contact_info.location || resumeDetail.contact_info.address || '',
-                  linkedin: resumeDetail.contact_info.linkedin || '',
-                  github: resumeDetail.contact_info.github || '',
-                  portfolio: resumeDetail.contact_info.website || resumeDetail.contact_info.portfolio || '',
+                  fullName: contactInfo.name || contactInfo.full_name || contactInfo.fullName || '',
+                  email: contactInfo.email || '',
+                  phone: contactInfo.phone || '',
+                  location: contactInfo.location || contactInfo.address || '',
+                  linkedin: contactInfo.linkedin || '',
+                  github: contactInfo.github || '',
+                  portfolio: contactInfo.website || contactInfo.portfolio || '',
                 };
               }
+              
+              // If we still don't have a fullName but have email/phone, try to extract from parsed text
+              if (!newResume.contact.fullName && resumeDetail.parsed_text) {
+                // Look for a name at the very beginning of the resume (before email/phone)
+                const firstLine = resumeDetail.parsed_text.split('\n')[0];
+                if (firstLine && firstLine.length > 2 && !firstLine.includes('@') && !firstLine.includes('-')) {
+                  newResume.contact.fullName = firstLine.trim();
+                }
+              }
+              
+              console.log('Contact Info from API:', resumeDetail.contact_info);
+              console.log('Populated Contact:', newResume.contact);
               
               // Parse the full text since backend didn't split sections properly
               const fullText = resumeDetail.parsed_text || '';
               const sections = (resumeDetail as any).sections || {};
               
-              // Use the header section if available, otherwise use parsed_text
-              const textToParse = sections.header || fullText;
+              const textToParse = (sections.header && sections.header.length > 500) ? sections.header : fullText;
               
               console.log('Text to parse length:', textToParse.length);
               console.log('First 200 chars:', textToParse.substring(0, 200));
-              
-              // Extract summary section (more flexible regex)
-              const summaryMatch = textToParse.match(/PROFESSIONAL\s*SUMMARY\s*([\s\S]*?)(?=EXPERIENCE)/i);
+              const summaryMatch = textToParse.match(/(?:PROFESSIONAL\s*SUMMARY|SUMMARY|PROFILE|OBJECTIVE|ABOUT\s*ME)(?:[\s\S]*?)(?=EXPERIENCE|WORK\s*HISTORY|EDUCATION|SKILLS|PROJECTS)/i);
               if (summaryMatch) {
-                newResume.summary = summaryMatch[1].trim();
-                console.log('Found summary:', newResume.summary.substring(0, 100));
-              } else {
-                console.log('Summary not found');
+                // Clean up the matched text to remove the header itself
+                const summaryText = summaryMatch[0].replace(/^(?:PROFESSIONAL\s*SUMMARY|SUMMARY|PROFILE|OBJECTIVE|ABOUT\s*ME)/i, '').trim();
+                newResume.summary = summaryText;
               }
               
               // Extract and parse experience section
-              const experienceMatch = textToParse.match(/EXPERIENCE\s*([\s\S]*?)(?=PROJECTS)/i);
-              if (experienceMatch) {
-                console.log('Found experience section:', experienceMatch[1].substring(0, 200));
-                const experiences = parseExperienceSection(experienceMatch[1]);
-                if (experiences.length > 0) {
-                  newResume.experience = experiences;
-                }
+              // First, try to use the extracted experience from the backend API
+              if ((resumeDetail as any).experience && Array.isArray((resumeDetail as any).experience) && (resumeDetail as any).experience.length > 0) {
+                newResume.experience = ((resumeDetail as any).experience as any[]).map((exp: any) => ({
+                  id: crypto.randomUUID(),
+                  company: exp.company || '',
+                  position: exp.position || '',
+                  title: exp.position || '',
+                  location: exp.location || '',
+                  startDate: exp.startDate || '',
+                  endDate: exp.endDate || '',
+                  current: exp.endDate?.toLowerCase() === 'present' || false,
+                  description: exp.description || '',
+                  highlights: Array.isArray(exp.description) ? exp.description : (exp.description ? [exp.description] : []),
+                }));
               } else {
-                console.log('Experience section not found');
+                // Fallback: parse from text if no extracted experience
+                const experienceMatch = textToParse.match(/(?:EXPERIENCE|WORK\s*HISTORY|PROFESSIONAL\s*EXPERIENCE)(?:[\s\S]*?)(?=PROJECTS|EDUCATION|SKILLS|CERTIFICATIONS)/i);
+                if (experienceMatch) {
+                  // Clean up header
+                  const expText = experienceMatch[0].replace(/^(?:EXPERIENCE|WORK\s*HISTORY|PROFESSIONAL\s*EXPERIENCE)/i, '').trim();
+                  const experiences = parseExperienceSection(expText);
+                  if (experiences.length > 0) {
+                    newResume.experience = experiences;
+                  }
+                }
               }
               
               // Extract and parse projects section
-              const projectsMatch = textToParse.match(/PROJECTS\s*([\s\S]*?)(?=TECHNICAL\s*SKILLS)/i);
-              if (projectsMatch) {
-                console.log('Found projects section:', projectsMatch[1].substring(0, 200));
-                const projects = parseProjectsSection(projectsMatch[1]);
-                if (projects.length > 0) {
-                  newResume.projects = projects;
-                }
+              // First, try to use the extracted projects from the backend API
+              if ((resumeDetail as any).projects && Array.isArray((resumeDetail as any).projects) && (resumeDetail as any).projects.length > 0) {
+                newResume.projects = ((resumeDetail as any).projects as any[]).map((p: any) => ({
+                  id: crypto.randomUUID(),
+                  name: p.name || '',
+                  description: p.description || '',
+                  technologies: p.technologies ? (typeof p.technologies === 'string' ? p.technologies.split(',').map((t: string) => t.trim()) : Array.isArray(p.technologies) ? p.technologies : []) : [],
+                  link: p.url || '',
+                  highlights: [],
+                }));
               } else {
-                console.log('Projects section not found');
+                // Fallback: parse from text if no extracted projects
+                const projectsMatch = textToParse.match(/(?:PROJECTS|KEY\s*PROJECTS)(?:[\s\S]*?)(?=TECHNICAL\s*SKILLS|SKILLS|EDUCATION|CERTIFICATIONS|ACHIEVEMENTS)/i);
+                if (projectsMatch) {
+                  const projText = projectsMatch[0].replace(/^(?:PROJECTS|KEY\s*PROJECTS)/i, '').trim();
+                  const projects = parseProjectsSection(projText);
+                  if (projects.length > 0) {
+                    newResume.projects = projects;
+                  }
+                }
               }
               
               // Extract and parse skills section
-              const skillsMatch = textToParse.match(/TECHNICAL\s*SKILLS\s*([\s\S]*?)(?=---|HACKATHONS)/i);
+              const skillsMatch = textToParse.match(/(?:TECHNICAL\s*SKILLS|SKILLS|CORE\s*COMPETENCIES)(?:[\s\S]*?)(?=---|HACKATHONS|ACHIEVEMENTS|INTERESTS|EDUCATION)/i);
               if (skillsMatch) {
-                console.log('Found skills section:', skillsMatch[1].substring(0, 200));
-                const skillCategories = parseSkillsSection(skillsMatch[1]);
+                const skillsText = skillsMatch[0].replace(/^(?:TECHNICAL\s*SKILLS|SKILLS|CORE\s*COMPETENCIES)/i, '').trim();
+                const skillCategories = parseSkillsSection(skillsText);
                 if (skillCategories.length > 0) {
                   newResume.skills = skillCategories;
                 }
@@ -432,15 +473,29 @@ export const ResumeEditorPage: React.FC = () => {
               }
               
               // Extract and parse education section
-              const educationMatch = textToParse.match(/EDUCATION\s*([\s\S]*?)$/i);
-              if (educationMatch) {
-                console.log('Found education section:', educationMatch[1].substring(0, 200));
-                const education = parseEducationSection(educationMatch[1]);
-                if (education.length > 0) {
-                  newResume.education = education;
-                }
+              // First, try to use the extracted education from the backend API
+              if ((resumeDetail as any).education && Array.isArray((resumeDetail as any).education) && (resumeDetail as any).education.length > 0) {
+                newResume.education = ((resumeDetail as any).education as any[]).map((edu: any) => ({
+                  id: crypto.randomUUID(),
+                  institution: edu.school || '',
+                  degree: edu.degree || '',
+                  field: edu.field || '',
+                  location: edu.location || '',
+                  startDate: edu.startDate || '',
+                  endDate: edu.endDate || '',
+                  gpa: edu.gpa || '',
+                  honors: '',
+                }));
               } else {
-                console.log('Education section not found');
+                // Fallback: parse from text if no extracted education
+                const educationMatch = textToParse.match(/(?:EDUCATION|ACADEMIC\s*BACKGROUND)(?:[\s\S]*?)(?=SKILLS|PROJECTS|EXPERIENCE|$)/i);
+                if (educationMatch) {
+                  const eduText = educationMatch[0].replace(/^(?:EDUCATION|ACADEMIC\s*BACKGROUND)/i, '').trim();
+                  const education = parseEducationSection(eduText);
+                  if (education.length > 0) {
+                    newResume.education = education;
+                  }
+                }
               }
               
               // Extract certifications/hackathons
@@ -454,12 +509,14 @@ export const ResumeEditorPage: React.FC = () => {
               }
               
               console.log('Parsed Resume Data:', newResume);
-              console.log('Summary:', newResume.summary);
+              console.log('✅ PARSING COMPLETE');
+              console.log('Contact Name:', newResume.contact.fullName);
+              console.log('Contact Email:', newResume.contact.email);
+              console.log('Summary:', newResume.summary.substring(0, 80) + '...');
               console.log('Experience count:', newResume.experience.length);
               console.log('Projects count:', newResume.projects.length);
               console.log('Skills count:', newResume.skills.length);
               console.log('Education count:', newResume.education.length);
-              
               data = newResume;
               
               // Save the initialized data to Firestore

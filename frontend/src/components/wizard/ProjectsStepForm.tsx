@@ -60,7 +60,7 @@ export default function ProjectsStepForm({ data, onChange }: ProjectsStepFormPro
         <div className="space-y-6">
           {data.map((project, index) => (
             <div
-              key={project.id}
+              key={project.id || `proj-${index}`}
               className="bg-secondary-50 border border-secondary-200 rounded-lg p-6"
             >
               <div className="flex items-center justify-between mb-4">
