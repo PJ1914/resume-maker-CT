@@ -229,6 +229,9 @@ async def upload_direct(
             detail="Failed to save resume metadata"
         )
     
+    # Generate signed download URL
+    storage_url = generate_signed_download_url(storage_path)
+    
     # Trigger parsing in background
     background_tasks.add_task(
         process_resume_parsing,
@@ -241,7 +244,8 @@ async def upload_direct(
     return {
         "message": "File uploaded successfully",
         "resume_id": resume_id,
-        "storage_path": storage_path
+        "storage_path": storage_path,
+        "storage_url": storage_url
     }
 
 
@@ -315,13 +319,17 @@ async def create_resume(
         }
         
         # Create metadata for the new resume
+        # Calculate file size from the data
+        import json
+        estimated_size = len(json.dumps(sections).encode('utf-8'))
+        
         metadata = ResumeMetadata(
             resume_id=resume_id,
             owner_uid=user_id,
-            filename=f"{request.contact.name}.json",
-            original_filename=f"{request.contact.name}.json",
+            filename=request.contact.name,
+            original_filename=request.contact.name,
             content_type="application/json",
-            file_size=0,
+            file_size=estimated_size,
             storage_path="",
             status=ResumeStatus.PARSED,
             created_at=datetime.utcnow(),

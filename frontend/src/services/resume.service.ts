@@ -86,7 +86,7 @@ export const resumeService = {
    * Upload file directly through backend (avoids CORS issues)
    * This is the recommended approach for development
    */
-  async uploadDirect(file: File): Promise<{ resume_id: string; message: string; storage_path: string }> {
+  async uploadDirect(file: File): Promise<{ resume_id: string; message: string; storage_path: string; storage_url: string }> {
     const formData = new FormData()
     formData.append('file', file)
 

@@ -1,15 +1,60 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileUp, Lock, Zap, CheckCircle } from 'lucide-react'
 import FileUpload from '@/components/FileUpload'
+import PDFViewer from '@/components/PDFViewer'
 
 export default function UploadPage() {
   const navigate = useNavigate()
+  const [uploadedResumeId, setUploadedResumeId] = useState<string | null>(null)
+  const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(null)
 
-  const handleUploadComplete = (resumeId: string) => {
-    // Redirect to resume detail page after successful upload
-    setTimeout(() => {
-      navigate(`/resumes/${resumeId}`)
-    }, 1500)
+  const handleUploadComplete = (resumeId: string, pdfUrl: string) => {
+    setUploadedResumeId(resumeId)
+    setUploadedPdfUrl(pdfUrl)
+  }
+
+  const handleViewResume = () => {
+    if (uploadedResumeId) {
+      navigate(`/resumes/${uploadedResumeId}`)
+    }
+  }
+
+  const handleUploadAnother = () => {
+    setUploadedResumeId(null)
+    setUploadedPdfUrl(null)
+  }
+
+  // Show PDF viewer if upload is complete
+  if (uploadedPdfUrl) {
+    return (
+      <div className="min-h-screen bg-secondary-900 flex flex-col">
+        <div className="bg-secondary-800 border-b border-secondary-700 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">PDF Preview</h1>
+            <p className="text-sm text-secondary-400 mt-1">Uploaded resume ready for editing</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleViewResume}
+              className="px-4 py-2 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors"
+            >
+              View Resume Details
+            </button>
+            <button
+              onClick={handleUploadAnother}
+              className="px-4 py-2 bg-white border border-secondary-300 text-secondary-700 rounded-lg font-medium hover:bg-secondary-50 transition-colors"
+            >
+              Upload Another
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-hidden">
+          <PDFViewer pdfUrl={uploadedPdfUrl} fileName={`Resume`} />
+        </div>
+      </div>
+    )
   }
 
   return (

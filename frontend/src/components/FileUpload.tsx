@@ -4,7 +4,7 @@ import { resumeService } from '@/services/resume.service'
 import toast from 'react-hot-toast'
 
 interface FileUploadProps {
-  onUploadComplete?: (resumeId: string) => void
+  onUploadComplete?: (resumeId: string, pdfUrl: string) => void
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -20,6 +20,8 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [uploadComplete, setUploadComplete] = useState(false)
+  const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(null)
+  const [uploadedResumeId, setUploadedResumeId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const validateFile = (file: File): string | null => {
@@ -88,19 +90,14 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       // Complete
       setProgress(100)
       setUploadComplete(true)
+      setUploadedResumeId(result.resume_id)
+      setUploadedPdfUrl(result.storage_url)
       toast.success('Resume uploaded successfully!')
 
-      // Call callback
-      if (onUploadComplete) {
-        onUploadComplete(result.resume_id)
+      // Call callback with both resumeId and pdfUrl
+      if (onUploadComplete && result.storage_url) {
+        onUploadComplete(result.resume_id, result.storage_url)
       }
-
-      // Reset after a delay
-      setTimeout(() => {
-        setSelectedFile(null)
-        setProgress(0)
-        setUploadComplete(false)
-      }, 2000)
     } catch (error: any) {
       console.error('Upload error:', error)
       toast.error(error.message || 'Failed to upload resume')
@@ -108,6 +105,11 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
     } finally {
       setUploading(false)
     }
+  }
+
+  // If PDF is uploaded, don't show the upload form
+  if (uploadedPdfUrl && uploadedResumeId) {
+    return null
   }
 
   const formatFileSize = (bytes: number): string => {
