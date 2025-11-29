@@ -1,0 +1,168 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+% Classic Resume Template - Traditional, professional format
+\documentclass[11pt,letterpaper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+% Page setup
+\geometry{letterpaper,margin=0.75in}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+% Hyperlink setup
+\hypersetup{
+    colorlinks=false,
+    pdfborder={0 0 0}
+}
+
+% Section formatting - simple underline
+\titleformat{\section}
+  {\large\bfseries\scshape}
+  {}
+  {0em}
+  {}
+  [\vspace{-8pt}\rule{\textwidth}{0.5pt}]
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+
+% Subsection formatting
+\titleformat{\subsection}
+  {\bfseries}
+  {}
+  {0em}
+  {}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+
+% List formatting
+\setlist[itemize]{leftmargin=*,label=$\bullet$,itemsep=2pt,parsep=0pt,topsep=2pt}
+
+% Custom commands
+\newcommand{\name}[1]{
+  \begin{center}
+    {\LARGE\bfseries #1}
+  \end{center}
+  \vspace{4pt}
+}
+
+\newcommand{\contact}[1]{
+  \begin{center}
+    {#1}
+  \end{center}
+  \vspace{8pt}
+}
+
+\newcommand{\experience}[5]{
+  \subsection{#1}
+  \textit{#3} \hfill \textit{#2}\\
+  \textit{#4}
+  \vspace{2pt}
+  
+  #5
+  \vspace{6pt}
+}
+
+\newcommand{\education}[5]{
+  \subsection{#1}
+  \textit{#3} \hfill \textit{#2}\\
+  \textit{#4}
+  
+  {#5}
+  \vspace{6pt}
+}
+
+\newcommand{\project}[4]{
+  \subsection{#1}
+  #2 \\
+  \textit{Technologies: #3}
+  \vspace{2pt}
+  
+  #4
+  \vspace{6pt}
+}
+
+\begin{document}
+
+% Header
+\name{ {{- full_name -}} }
+
+\contact{
+  {% if email %}{{ email }}{% endif %}
+  {% if phone and email %} | {% endif %}
+  {% if phone %}{{ phone }}{% endif %}
+  {% if location and (email or phone) %} | {% endif %}
+  {% if location %}{{ location }}{% endif %}
+  {% if linkedin %} | {{ linkedin }}{% endif %}
+  {% if github %} | {{ github }}{% endif %}
+  {% if portfolio %} | {{ portfolio }}{% endif %}
+}
+
+% Summary
+{% if summary %}
+\section{Summary}
+{{ summary }}
+\vspace{4pt}
+{% endif %}
+
+% Experience
+{% if experience %}
+\section{Professional Experience}
+{% for exp in experience %}
+\experience{ {{- exp.position -}} }{ {{- exp.start_date -}} {% if exp.current %}-- Present{% else %}-- {{ exp.end_date }}{% endif %}}{ {{- exp.company -}} }{ {{- exp.location -}} }{
+  {% if exp.highlights %}
+  \begin{itemize}
+    {% for highlight in exp.highlights %}
+    \item {{ highlight }}
+    {% endfor %}
+  \end{itemize}
+  {% endif %}
+}
+{% endfor %}
+{% endif %}
+
+% Education
+{% if education %}
+\section{Education}
+{% for edu in education %}
+\education{ {{- edu.degree -}} {% if edu.field %}in {{ edu.field }}{% endif %}}{ {{- edu.start_date -}} -- {{ edu.end_date }}}{ {{- edu.institution -}} }{ {{- edu.location -}} }{
+  {% if edu.gpa or edu.honors %}
+  {% if edu.gpa %}GPA: {{ edu.gpa }}{% endif %}
+  {% if edu.gpa and edu.honors %} | {% endif %}
+  {% if edu.honors %}{{ edu.honors }}{% endif %}
+  {% endif %}
+}
+{% endfor %}
+{% endif %}
+
+% Projects
+{% if projects %}
+\section{Projects}
+{% for proj in projects %}
+\project{ {{- proj.name -}} }{% if proj.description %}{{{ proj.description }}}{% else %}{}{% endif %}{ {{- proj.technologies|join(', ') -}} }{
+  {% if proj.highlights %}
+  \begin{itemize}
+    {% for highlight in proj.highlights %}
+    \item {{ highlight }}
+    {% endfor %}
+  \end{itemize}
+  {% endif %}
+}
+{% endfor %}
+{% endif %}
+
+% Skills
+{% if skills %}
+\section{Technical Skills}
+\begin{itemize}[label={}]
+{% for skill in skills %}
+  \item \textbf{ {{- skill.category -}} :} {{ skill.items|join(', ') }}
+{% endfor %}
+\end{itemize}
+{% endif %}
+
+\end{document}
