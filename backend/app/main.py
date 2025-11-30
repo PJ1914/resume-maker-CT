@@ -57,11 +57,11 @@ async def add_security_headers(request: Request, call_next):
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(users.router, tags=["Users"])
+app.include_router(pdf_export.router, prefix="/api/resumes", tags=["PDF Export"])
 app.include_router(resumes.router, prefix="/api", tags=["Resumes"])
 app.include_router(templates.router, prefix="/api", tags=["Templates"])
 app.include_router(scoring.router, prefix="/api/scoring", tags=["Scoring"])
 app.include_router(ai.router, tags=["AI"])
-app.include_router(pdf_export.router, tags=["PDF Export"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(credits.router, prefix="/api/credits", tags=["Credits"])
 

@@ -16,7 +16,7 @@ from app.services.latex_compiler import latex_compiler, TemplateType
 from app.services.storage import upload_resume_pdf, get_signed_url
 from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
 
-router = APIRouter(prefix="/api/resumes", tags=["PDF Export"])
+router = APIRouter(tags=["PDF Export"])
 
 
 class ExportRequest(BaseModel):
