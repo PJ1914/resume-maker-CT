@@ -1,7 +1,9 @@
 // Credit service for frontend
 import { auth } from '@/lib/firebase';
 
-const API_BASE_URL = '/api/credits';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = `${API_URL}/api/credits`;
+
 
 export interface CreditBalance {
   balance: number;
@@ -54,11 +56,11 @@ export const creditService = {
     const response = await fetch(`${API_BASE_URL}/balance`, {
       headers: await getAuthHeaders(),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch credit balance');
     }
-    
+
     return response.json();
   },
 
@@ -69,11 +71,11 @@ export const creditService = {
     const response = await fetch(`${API_BASE_URL}/check/${feature}`, {
       headers: await getAuthHeaders(),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to check feature credits');
     }
-    
+
     return response.json();
   },
 
@@ -86,12 +88,12 @@ export const creditService = {
       headers: await getAuthHeaders(),
       body: JSON.stringify({ feature, amount }),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || 'Failed to deduct credits');
     }
-    
+
     return response.json();
   },
 
@@ -102,11 +104,11 @@ export const creditService = {
     const response = await fetch(`${API_BASE_URL}/packages`, {
       headers: await getAuthHeaders(),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch credit packages');
     }
-    
+
     const data = await response.json();
     return data.packages;
   },
@@ -120,12 +122,12 @@ export const creditService = {
       headers: await getAuthHeaders(),
       body: JSON.stringify({ package_id: packageId }),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || 'Failed to purchase credits');
     }
-    
+
     return response.json();
   },
 
@@ -136,11 +138,11 @@ export const creditService = {
     const response = await fetch(`${API_BASE_URL}/history?limit=${limit}`, {
       headers: await getAuthHeaders(),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch credit history');
     }
-    
+
     const data = await response.json();
     return data.transactions;
   },
