@@ -47,10 +47,10 @@ export default function TemplateSelector({
             onClick={() => onSelect(template.id)}
             className={`
               relative p-6 rounded-lg border-2 text-left transition-all
-              ${
-                selectedTemplate === template.id
-                  ? 'border-secondary-300 bg-secondary-500 shadow-lg'
-                  : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+              dark:bg-secondary-800
+              ${selectedTemplate === template.id
+                ? 'border-secondary-300 bg-secondary-50 dark:bg-secondary-700 dark:border-secondary-500 shadow-lg'
+                : 'border-gray-200 dark:border-secondary-700 hover:border-gray-300 dark:hover:border-secondary-600 hover:shadow-md'
               }
             `}
           >
@@ -77,17 +77,17 @@ export default function TemplateSelector({
             <div className="text-4xl mb-3">{template.icon}</div>
 
             {/* Template name */}
-            <h3 className="text-lg font-semibold text-secondary-700 mb-2">
+            <h3 className="text-lg font-semibold text-secondary-700 dark:text-white mb-2">
               {template.name}
             </h3>
 
             {/* Description */}
-            <p className="text-sm text-secondary-700 mb-4">{template.description}</p>
+            <p className="text-sm text-secondary-700 dark:text-secondary-300 mb-4">{template.description}</p>
 
             {/* Features */}
             <ul className="space-y-1">
               {template.features.map((feature, idx) => (
-                <li key={idx} className="text-xs text-secondary-700 flex items-center">
+                <li key={idx} className="text-xs text-secondary-700 dark:text-secondary-400 flex items-center">
                   <svg
                     className="w-3 h-3 mr-2 text-success-500"
                     fill="currentColor"

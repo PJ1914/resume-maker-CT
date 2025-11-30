@@ -85,24 +85,24 @@ export default function PdfExportModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white dark:bg-secondary-900 p-6 text-left align-middle shadow-xl transition-all">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <Dialog.Title
                       as="h3"
-                      className="text-2xl font-bold text-secondary-700"
+                      className="text-2xl font-bold text-secondary-700 dark:text-white"
                     >
                       Export as PDF
                     </Dialog.Title>
                     {resumeName && (
-                      <p className="text-sm text-secondary-700 mt-1">{resumeName}</p>
+                      <p className="text-sm text-secondary-700 dark:text-secondary-400 mt-1">{resumeName}</p>
                     )}
                   </div>
                   <button
                     onClick={handleClose}
                     disabled={isExporting}
-                    className="text-secondary-700 hover:text-secondary-700 disabled:opacity-50"
+                    className="text-secondary-700 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white disabled:opacity-50"
                   >
                     <svg
                       className="w-6 h-6"
@@ -122,7 +122,7 @@ export default function PdfExportModal({
 
                 {/* Template Selection */}
                 <div className="mb-6">
-                  <h4 className="text-sm font-medium text-secondary-700 mb-3">
+                  <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-3">
                     Choose a template
                   </h4>
                   <TemplateSelector
@@ -174,7 +174,7 @@ export default function PdfExportModal({
                 )}
 
                 {/* Info Message */}
-                <div className="mb-6 p-4 bg-secondary-500 border border-secondary-300 rounded-lg">
+                <div className="mb-6 p-4 bg-secondary-50 dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg">
                   <div className="flex items-start">
                     <svg
                       className="w-5 h-5 text-secondary-600 mr-2 mt-0.5"
@@ -187,7 +187,7 @@ export default function PdfExportModal({
                         clipRule="evenodd"
                       />
                     </svg>
-                    <p className="text-sm text-secondary-600">
+                    <p className="text-sm text-secondary-600 dark:text-secondary-300">
                       Your resume will be compiled using LaTeX for professional formatting.
                       This may take 5-10 seconds.
                     </p>
@@ -200,7 +200,7 @@ export default function PdfExportModal({
                     type="button"
                     onClick={handleClose}
                     disabled={isExporting}
-                    className="px-4 py-2 text-sm font-medium text-secondary-700 bg-white border border-gray-300 rounded-lg hover:bg-secondary-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-secondary-700 dark:text-secondary-200 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Cancel
                   </button>

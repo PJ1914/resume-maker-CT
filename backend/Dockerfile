@@ -1,32 +1,26 @@
-# Production Dockerfile for Resume Maker Backend
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies
+# Install system dependencies including TeX Live for PDF generation
 RUN apt-get update && apt-get install -y \
-    gcc \
+    texlive-latex-base \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-latex-extra \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+WORKDIR /app
+
+# Copy requirements
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY ./app ./app
+# Copy app code
+COPY . .
 
-# Create secrets directory (mount external in production)
-RUN mkdir -p /app/secrets
-
-# Expose port
+# Expose port (Render sets PORT env var)
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
-
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Command to run
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
