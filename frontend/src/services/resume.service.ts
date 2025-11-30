@@ -93,7 +93,7 @@ export const resumeService = {
     // Use apiClient but override for multipart/form-data
     const token = await import('./auth.service').then(m => m.getAuthToken())
     const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-    
+
     const response = await fetch(`${API_BASE_URL}/api/upload-direct`, {
       method: 'POST',
       headers: {
@@ -164,9 +164,9 @@ export const resumeService = {
    * Trigger ATS scoring for a resume
    */
   async scoreResume(resumeId: string, preferGemini: boolean = true): Promise<any> {
-    return apiClient.post(`/api/scoring/${resumeId}`, { 
+    return apiClient.post(`/api/scoring/${resumeId}`, {
       prefer_gemini: preferGemini,
-      use_cache: true 
+      use_cache: true
     })
   },
 

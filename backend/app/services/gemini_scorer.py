@@ -225,27 +225,37 @@ Provide ONLY the JSON response, no additional text.
                     'percentage': (float(score) / float(max_score)) * 100
                 }
 
-            # Map old/loose keys to strict schema keys
+            # Map old/loose keys to strict schema keys with safe defaults
+            formatting_score = breakdown.get('formatting', {}).get('score', 10)
+            keywords_score = breakdown.get('keywords', {}).get('score', 20)
+            sections_score = breakdown.get('sections', {}).get('score', 13)
+            quantification_score = breakdown.get('quantification', {}).get('score', 7)
+            readability_score = breakdown.get('readability', {}).get('score', 10)
+            
             mapped_breakdown = {
-                'format_ats_compatibility': create_category_score(breakdown.get('formatting', {}).get('score', 10), 20),
-                'keyword_match': create_category_score(breakdown.get('keywords', {}).get('score', 20), 25),
-                'skills_relevance': create_category_score(breakdown.get('keywords', {}).get('score', 15) * 0.6, 15), # Estimate
-                'experience_quality': create_category_score(breakdown.get('sections', {}).get('score', 13), 20),
-                'achievements_impact': create_category_score(breakdown.get('quantification', {}).get('score', 7), 10),
-                'grammar_clarity': create_category_score(breakdown.get('readability', {}).get('score', 10), 10)
+                'format_ats_compatibility': create_category_score(formatting_score, 20),
+                'keyword_match': create_category_score(keywords_score, 25),
+                'skills_relevance': create_category_score(keywords_score * 0.6, 15),
+                'experience_quality': create_category_score(sections_score, 20),
+                'achievements_impact': create_category_score(quantification_score, 10),
+                'grammar_clarity': create_category_score(readability_score, 10)
             }
             
-            # Construct final response matching ScoringResponse
+            # Ensure all required fields are present with defaults
             final_response = {
                 'total_score': float(result.get('total_score', 70)),
                 'rating': result.get('rating', 'Good'),
                 'breakdown': mapped_breakdown,
-                'strengths': result.get('strengths', []),
-                'weaknesses': result.get('weaknesses', []),
-                'missing_keywords': [], # Gemini prompt doesn't explicitly ask for this yet, defaulting to empty
-                'section_feedback': {}, # Default empty
-                'recommendations': result.get('suggestions', []), # Map suggestions to recommendations
-                'improved_bullets': [], # Map improved_examples to improved_bullets
+                'strengths': result.get('strengths', ['Resume structure is clear', 'Good use of professional language']),
+                'weaknesses': result.get('weaknesses', ['Could add more quantifiable achievements', 'Consider adding more keywords']),
+                'missing_keywords': result.get('missing_keywords', []),
+                'section_feedback': result.get('section_feedback', {}),
+                'recommendations': result.get('suggestions', result.get('recommendations', [
+                    'Add more quantifiable metrics to demonstrate impact',
+                    'Include relevant keywords from job descriptions',
+                    'Ensure all sections are ATS-friendly'
+                ])),
+                'improved_bullets': result.get('improved_examples', result.get('improved_bullets', [])),
                 'scoring_method': 'gemini',
                 'model_name': self.model_name,
                 'scored_at': datetime.now(timezone.utc).isoformat(),

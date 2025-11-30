@@ -16,15 +16,15 @@ import { ResumeData } from '../types/resume';
  * Get resume data for editing
  */
 export async function getResume(userId: string, resumeId: string): Promise<ResumeData | null> {
-    try {
-      const resumeRef = doc(db, 'users', userId, 'resume_data', resumeId);
-      const resumeSnap = await getDoc(resumeRef);
+  try {
+    const resumeRef = doc(db, 'users', userId, 'resume_data', resumeId);
+    const resumeSnap = await getDoc(resumeRef);
 
-      if (resumeSnap.exists()) {
-        return resumeSnap.data() as ResumeData;
-      }
+    if (resumeSnap.exists()) {
+      return resumeSnap.data() as ResumeData;
+    }
 
-      return null;
+    return null;
   } catch (error) {
     console.error('Error getting resume:', error);
     throw error;
@@ -39,23 +39,23 @@ export async function saveResume(
   resumeId: string,
   data: ResumeData
 ): Promise<void> {
-    try {
-      const resumeRef = doc(db, 'users', userId, 'resume_data', resumeId);
+  try {
+    const resumeRef = doc(db, 'users', userId, 'resume_data', resumeId);
 
-      await setDoc(
-        resumeRef,
-        {
-          ...data,
-          id: resumeId,
-          userId,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-    } catch (error) {
-      console.error('Error saving resume:', error);
-      throw error;
-    }
+    await setDoc(
+      resumeRef,
+      {
+        ...data,
+        id: resumeId,
+        userId,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error('Error saving resume:', error);
+    throw error;
+  }
 }
 
 /**
