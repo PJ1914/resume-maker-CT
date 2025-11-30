@@ -30,11 +30,12 @@ from app.services.firestore import (
     delete_resume_metadata,
 )
 from app.services.tasks import process_resume_parsing
+from app.config import settings
 
 router = APIRouter()
 
-# File validation constants
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+# File validation - use settings for security
+MAX_FILE_SIZE = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024  # Convert MB to bytes
 ALLOWED_CONTENT_TYPES = [
     ResumeFileType.PDF.value,
     ResumeFileType.DOCX.value,
