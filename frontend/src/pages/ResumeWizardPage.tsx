@@ -34,10 +34,10 @@ export default function ResumeWizardPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [creating, setCreating] = useState(false)
-  
+
   // Get selected template from route state
   const templateId = (location.state as any)?.templateId || 'modern'
-  
+
   const [resumeData, setResumeData] = useState({
     template: templateId,
     contact: {
@@ -97,17 +97,17 @@ export default function ResumeWizardPage() {
   const handleCreateResume = async () => {
     try {
       setCreating(true)
-      
+
       // Validate required fields
       if (!resumeData.contact.name || !resumeData.contact.email) {
         toast.error('Please fill in at least name and email')
         setCreating(false)
         return
       }
-      
+
       // Call API to create resume with template
       const response: any = await apiClient.post('/api/create', resumeData)
-      
+
       if (response && response.resume_id) {
         toast.success('Resume created successfully!')
         // Navigate to resume detail page or dashboard
@@ -117,7 +117,7 @@ export default function ResumeWizardPage() {
       }
     } catch (error: any) {
       console.error('Create resume error:', error)
-      
+
       // Better error messaging
       let errorMessage = 'Failed to create resume'
       if (error.response?.status === 404) {
@@ -129,7 +129,7 @@ export default function ResumeWizardPage() {
       } else if (error.message) {
         errorMessage = error.message
       }
-      
+
       toast.error(errorMessage)
     } finally {
       setCreating(false)
@@ -228,22 +228,22 @@ export default function ResumeWizardPage() {
   const isLastStep = currentStep === WIZARD_STEPS.length - 1
 
   return (
-    <div className="min-h-screen bg-secondary-50">
+    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
       {/* Header */}
-      <div className="bg-white border-b border-secondary-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white dark:bg-secondary-900 border-b border-secondary-200 dark:border-secondary-800 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className="text-secondary-600 hover:text-secondary-900 transition-colors p-1"
+                className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white transition-colors p-1"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-secondary-900">Build Your Resume</h1>
-                <p className="text-sm text-secondary-600 mt-0.5">
-                  Step {currentStep + 1} of {WIZARD_STEPS.length} • Template: <span className="font-semibold capitalize">{templateId}</span>
+                <h1 className="text-lg sm:text-2xl font-bold text-secondary-900 dark:text-white">Build Your Resume</h1>
+                <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 mt-0.5">
+                  Step {currentStep + 1} of {WIZARD_STEPS.length} • <span className="hidden sm:inline">Template: </span><span className="font-semibold capitalize">{templateId}</span>
                 </p>
               </div>
             </div>
@@ -251,7 +251,7 @@ export default function ResumeWizardPage() {
               <button
                 onClick={handleSaveDraft}
                 disabled={saving}
-                className="px-4 py-2 text-sm bg-white border border-secondary-300 text-secondary-700 rounded-lg hover:bg-secondary-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 <span className="hidden sm:inline">{saving ? 'Saving...' : 'Save Draft'}</span>
@@ -262,43 +262,43 @@ export default function ResumeWizardPage() {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white border-b border-secondary-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white dark:bg-secondary-900 border-b border-secondary-200 dark:border-secondary-800 overflow-x-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 min-w-[600px] sm:min-w-0">
           <WizardProgress steps={WIZARD_STEPS} currentStep={currentStep} />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Step Content */}
-        <div className="bg-white rounded-xl border border-secondary-200 p-8 sm:p-12 shadow-sm mb-8">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-secondary-900 mb-2">
+        <div className="bg-white dark:bg-secondary-900 rounded-xl border border-secondary-200 dark:border-secondary-800 p-5 sm:p-12 shadow-sm mb-6 sm:mb-8">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-secondary-900 dark:text-white mb-2">
               {WIZARD_STEPS[currentStep].title}
             </h2>
-            <p className="text-secondary-600">
+            <p className="text-sm sm:text-base text-secondary-600 dark:text-secondary-400">
               {WIZARD_STEPS[currentStep].description}
             </p>
           </div>
 
           {/* Form Content */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             {renderStepContent()}
           </div>
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
           <button
             onClick={handlePrevious}
             disabled={currentStep === 0}
-            className="px-6 py-3 border border-secondary-300 rounded-lg text-secondary-700 hover:bg-secondary-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+            className="w-full sm:w-auto justify-center px-6 py-3 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Previous
           </button>
 
-          <div className="text-sm text-secondary-600">
+          <div className="text-sm text-secondary-600 dark:text-secondary-400 hidden sm:block">
             {currentStep + 1} / {WIZARD_STEPS.length}
           </div>
 
@@ -306,7 +306,7 @@ export default function ResumeWizardPage() {
             <button
               onClick={handleCreateResume}
               disabled={creating}
-              className="px-8 py-3 bg-primary-900 text-white rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium flex items-center gap-2 shadow-soft"
+              className="w-full sm:w-auto justify-center px-8 py-3 bg-primary-900 dark:bg-primary-600 text-white rounded-lg hover:bg-primary-800 dark:hover:bg-primary-500 disabled:opacity-50 transition-colors font-medium flex items-center gap-2 shadow-soft"
             >
               <Sparkles className="w-4 h-4" />
               {creating ? 'Creating...' : 'Create Resume'}
@@ -314,7 +314,7 @@ export default function ResumeWizardPage() {
           ) : (
             <button
               onClick={handleNext}
-              className="px-8 py-3 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors font-medium flex items-center gap-2 shadow-soft"
+              className="w-full sm:w-auto justify-center px-8 py-3 bg-primary-900 dark:bg-primary-600 text-white rounded-lg hover:bg-primary-800 dark:hover:bg-primary-500 transition-colors font-medium flex items-center gap-2 shadow-soft"
             >
               Next
               <ArrowRight className="w-4 h-4" />

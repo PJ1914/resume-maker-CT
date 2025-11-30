@@ -40,28 +40,51 @@ async def score_resume(
     
     try:
         # Verify resume exists and belongs to user
-        resume_metadata = get_resume_metadata(resume_id, uid)
-        if not resume_metadata:
+        # Use get_merged_resume_data to include any manual edits from the editor
+        from app.services.firestore import get_merged_resume_data
+        resume_data = get_merged_resume_data(resume_id, uid)
+        
+        if not resume_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resume not found"
             )
         
-        # Check if resume has been parsed
-        parsed_text = getattr(resume_metadata, 'parsed_text', None)
+        # Check if resume has been parsed or has content
+        parsed_text = resume_data.get('parsed_text')
+        contact_info = resume_data.get('contact_info', {})
+        sections = resume_data.get('sections', {})
+        resume_status = resume_data.get('status', 'UNKNOWN')
+        
         if not parsed_text:
             # For wizard-created resumes, check if we have contact info or sections as fallback
-            contact_info = getattr(resume_metadata, 'contact_info', {})
-            sections = getattr(resume_metadata, 'sections', {})
-            
             if not contact_info and not sections:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Resume must be parsed before scoring. Status: " + resume_metadata.status
-                )
+                # Provide helpful error message based on status
+                if resume_status == 'UPLOADED':
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Resume is being processed. Please wait a few moments and try again."
+                    )
+                elif resume_status == 'PARSING':
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Resume is currently being parsed. Please wait and try again in a few seconds."
+                    )
+                elif resume_status == 'ERROR':
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Resume parsing failed. Please re-upload your resume."
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Resume must be parsed before scoring. Current status: {resume_status}"
+                    )
             
             # Use contact info and sections as fallback for parsed text
             parsed_text = f"Resume for {contact_info.get('name', 'Unknown')} from {contact_info.get('location', 'Unknown')}"
+            if sections.get('summary'):
+                parsed_text += f"\n\n{sections.get('summary')}"
         
         # Check cache if enabled
         cached_result = None
@@ -93,13 +116,13 @@ async def score_resume(
         # Prepare parsed data
         parsed_data = {
             'parsed_text': parsed_text,
-            'sections': getattr(resume_metadata, 'sections', {}),
-            'contact_info': getattr(resume_metadata, 'contact_info', {}),
-            'skills': getattr(resume_metadata, 'skills', {}),
-            'experience': getattr(resume_metadata, 'experience', []),
-            'education': getattr(resume_metadata, 'education', []),
-            'projects': getattr(resume_metadata, 'projects', []),
-            'layout_type': getattr(resume_metadata, 'layout_type', 'unknown'),
+            'sections': sections,
+            'contact_info': contact_info,
+            'skills': resume_data.get('skills', {}),
+            'experience': resume_data.get('experience', []),
+            'education': resume_data.get('education', []),
+            'projects': resume_data.get('projects', []),
+            'layout_type': resume_data.get('layout_type', 'unknown'),
         }
         
         # Score resume using HybridScorer (prefers Gemini if available)

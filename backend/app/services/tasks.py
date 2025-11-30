@@ -10,8 +10,8 @@ from app.services.gemini_scorer import HybridScorer
 from app.services.firestore import (
     get_resume_metadata,
     update_resume_status,
-    update_resume_parsed_data,
-    update_resume_score_data
+    update_resume_parsed_data_sync,
+    update_resume_score_data_sync
 )
 from app.services.storage import get_file_content
 from app.schemas.resume import ResumeStatus
@@ -20,7 +20,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-async def process_resume_parsing(
+def process_resume_parsing(
     resume_id: str,
     uid: str,
     storage_path: str,
@@ -49,8 +49,9 @@ async def process_resume_parsing(
         # Update status to PARSING
         update_resume_status(resume_id, uid, ResumeStatus.PARSING)
         
-        # Download file content from storage
-        file_content = await get_file_content(storage_path)
+        # Download file content from storage (sync version)
+        from app.services.storage import get_file_content_sync
+        file_content = get_file_content_sync(storage_path)
         
         if not file_content:
             raise Exception("Failed to download file from storage")
@@ -76,8 +77,8 @@ async def process_resume_parsing(
             }
         )
         
-        # Update Firestore with parsed data
-        await update_resume_parsed_data(resume_id, uid, parsed_data)
+        # Update Firestore with parsed data (sync version)
+        update_resume_parsed_data_sync(resume_id, uid, parsed_data)
         
         # Update status to PARSED
         update_resume_status(resume_id, uid, ResumeStatus.PARSED)
@@ -85,10 +86,12 @@ async def process_resume_parsing(
         logger.info(f"Parsing completed for resume {resume_id}")
         
         # Continue with scoring
-        await process_resume_scoring(resume_id, uid, parsed_data)
+        process_resume_scoring(resume_id, uid, parsed_data)
         
     except Exception as e:
         logger.error(f"Parsing failed for resume {resume_id}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         
         # Update status to ERROR
         try:
@@ -102,7 +105,7 @@ async def process_resume_parsing(
             logger.error(f"Failed to update error status: {str(update_error)}")
 
 
-async def process_resume_scoring(
+def process_resume_scoring(
     resume_id: str,
     uid: str,
     parsed_data: dict,
@@ -133,23 +136,26 @@ async def process_resume_scoring(
         scorer = HybridScorer()
         score_data = scorer.score_resume(parsed_data, job_description)
         
-        # Log to audit
-        from app.services.audit import log_scoring_request
-        await log_scoring_request(
-            resume_id=resume_id,
-            user_id=uid,
-            scoring_method=score_data.get('scoring_method', 'local'),
-            job_description_provided=job_description is not None,
-            cache_hit=False,
-            total_score=score_data.get('total_score'),
-            rating=score_data.get('rating'),
-            tokens_used=score_data.get('tokens_used'),
-            model_used=score_data.get('model_name'),
-            success=True
-        )
+        # Log to audit (sync version)
+        from app.services.audit import log_scoring_request_sync
+        try:
+            log_scoring_request_sync(
+                resume_id=resume_id,
+                user_id=uid,
+                scoring_method=score_data.get('scoring_method', 'local'),
+                job_description_provided=job_description is not None,
+                cache_hit=False,
+                total_score=score_data.get('total_score'),
+                rating=score_data.get('rating'),
+                tokens_used=score_data.get('tokens_used'),
+                model_used=score_data.get('model_name'),
+                success=True
+            )
+        except Exception as audit_error:
+            logger.warning(f"Failed to log audit: {audit_error}")
         
-        # Update Firestore with score data
-        await update_resume_score_data(resume_id, uid, score_data)
+        # Update Firestore with score data (sync version)
+        update_resume_score_data_sync(resume_id, uid, score_data)
         
         # Update status to SCORED
         update_resume_status(resume_id, uid, ResumeStatus.SCORED)
@@ -158,18 +164,23 @@ async def process_resume_scoring(
         
     except Exception as e:
         logger.error(f"Scoring failed for resume {resume_id}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         
-        # Log error to audit
-        from app.services.audit import log_scoring_request
-        await log_scoring_request(
-            resume_id=resume_id,
-            user_id=uid,
-            scoring_method='unknown',
-            job_description_provided=job_description is not None,
-            cache_hit=False,
-            success=False,
-            error_message=str(e)
-        )
+        # Log error to audit (sync version)
+        from app.services.audit import log_scoring_request_sync
+        try:
+            log_scoring_request_sync(
+                resume_id=resume_id,
+                user_id=uid,
+                scoring_method='unknown',
+                job_description_provided=job_description is not None,
+                cache_hit=False,
+                success=False,
+                error_message=str(e)
+            )
+        except Exception as audit_error:
+            logger.warning(f"Failed to log audit error: {audit_error}")
         
         # Don't mark as ERROR - parsing succeeded
         # Just log the scoring failure
@@ -183,25 +194,3 @@ async def process_resume_scoring(
         except Exception as update_error:
             logger.error(f"Failed to update status: {str(update_error)}")
 
-
-def trigger_resume_parsing(
-    resume_id: str,
-    uid: str,
-    storage_path: str,
-    content_type: str
-):
-    """
-    Trigger parsing task in background.
-    
-    Args:
-        resume_id: Resume ID
-        uid: User ID
-        storage_path: Storage path
-        content_type: File MIME type
-    """
-    # Create task without awaiting (fire and forget)
-    asyncio.create_task(
-        process_resume_parsing(resume_id, uid, storage_path, content_type)
-    )
-    
-    logger.info(f"Triggered parsing task for resume {resume_id}")

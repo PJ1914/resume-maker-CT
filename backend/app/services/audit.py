@@ -140,6 +140,95 @@ async def log_scoring_request(
         return log_id
 
 
+def log_scoring_request_sync(
+    resume_id: str,
+    user_id: str,
+    scoring_method: str,
+    job_description_provided: bool = False,
+    cache_hit: bool = False,
+    total_score: Optional[float] = None,
+    rating: Optional[str] = None,
+    tokens_used: Optional[int] = None,
+    model_used: Optional[str] = None,
+    api_latency_ms: Optional[int] = None,
+    success: bool = True,
+    error_message: Optional[str] = None
+) -> str:
+    """
+    Log a scoring request to Firestore audit collection (synchronous version).
+    
+    Args:
+        resume_id: Resume ID
+        user_id: User ID
+        scoring_method: 'local' or 'gemini'
+        job_description_provided: Whether job description was included
+        cache_hit: Whether result came from cache
+        total_score: Resulting score
+        rating: Score rating
+        tokens_used: Total tokens used (input + output)
+        model_used: Gemini model name if applicable
+        api_latency_ms: API latency in milliseconds
+        success: Whether request succeeded
+        error_message: Error message if failed
+        
+    Returns:
+        Audit log ID
+    """
+    from app.firebase import resume_maker_app
+    
+    log_id = f"audit_{uuid.uuid4().hex[:12]}"
+    
+    # Calculate cost if tokens provided
+    estimated_cost = None
+    if tokens_used and model_used:
+        # Rough estimate: 70% input, 30% output
+        input_tokens = int(tokens_used * 0.7)
+        output_tokens = int(tokens_used * 0.3)
+        estimated_cost = estimate_cost(model_used, input_tokens, output_tokens)
+    
+    audit_data = {
+        'log_id': log_id,
+        'resume_id': resume_id,
+        'user_id': user_id,
+        'scoring_method': scoring_method,
+        'job_description_provided': job_description_provided,
+        'cache_hit': cache_hit,
+        'total_score': total_score,
+        'rating': rating,
+        'tokens_used': tokens_used,
+        'model_used': model_used,
+        'estimated_cost_usd': estimated_cost,
+        'api_latency_ms': api_latency_ms,
+        'success': success,
+        'error_message': error_message,
+        'created_at': datetime.now(timezone.utc),
+    }
+    
+    # Save to Firestore
+    if not resume_maker_app:
+        logger.info(f"[DEV] Would log audit: {audit_data}")
+        return log_id
+    
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        # Save to audit collection
+        db.collection('audit_logs').document(log_id).set(audit_data)
+        
+        # Also save to user's audit subcollection for easy querying
+        db.collection('users').document(user_id)\
+          .collection('audit_logs').document(log_id)\
+          .set(audit_data)
+        
+        logger.info(f"Logged scoring request: {log_id}")
+        return log_id
+        
+    except Exception as e:
+        logger.error(f"Failed to log audit: {e}")
+        return log_id
+
+
 async def get_user_usage_stats(
     user_id: str,
     days: int = 30

@@ -137,11 +137,11 @@ export default function ReviewStep({ data }: ReviewStepProps) {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 mb-4">
-          <CheckCircle2 className="w-8 h-8 text-primary-900" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-4">
+          <CheckCircle2 className="w-8 h-8 text-primary-900 dark:text-primary-400" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Review Your Resume</h2>
-        <p className="text-lg text-gray-600">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Review Your Resume</h2>
+        <p className="text-lg text-gray-600 dark:text-secondary-400">
           Almost done! Review your information below before creating your resume.
         </p>
       </div>
@@ -149,48 +149,48 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       {/* Progress Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Overall Progress */}
-        <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-2xl p-6">
+        <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Overall Progress</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Overall Progress</h3>
+              <p className="text-sm text-gray-600 dark:text-secondary-400">
                 {completedSections} of {totalSections} sections completed
               </p>
             </div>
             <div className="text-right">
-              <div className="text-4xl font-bold text-primary-900">
+              <div className="text-4xl font-bold text-primary-900 dark:text-primary-300">
                 {Math.round((completedSections / totalSections) * 100)}%
               </div>
             </div>
           </div>
-          <div className="h-3 bg-white/50 rounded-full overflow-hidden">
+          <div className="h-3 bg-white/50 dark:bg-secondary-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-primary-900 transition-all duration-500 rounded-full"
+              className="h-full bg-primary-900 dark:bg-primary-500 transition-all duration-500 rounded-full"
               style={{ width: `${(completedSections / totalSections) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Required Sections */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-2xl p-6">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Required Sections</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Required Sections</h3>
+              <p className="text-sm text-gray-600 dark:text-secondary-400">
                 {completedRequired} of {requiredSections.length} required sections
               </p>
             </div>
             <div className="text-right">
               {completedRequired === requiredSections.length ? (
-                <CheckCircle2 className="w-10 h-10 text-green-600" />
+                <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
               ) : (
-                <AlertCircle className="w-10 h-10 text-amber-600" />
+                <AlertCircle className="w-10 h-10 text-amber-600 dark:text-amber-400" />
               )}
             </div>
           </div>
-          <div className="h-3 bg-white/50 rounded-full overflow-hidden">
+          <div className="h-3 bg-white/50 dark:bg-secondary-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-green-600 transition-all duration-500 rounded-full"
+              className="h-full bg-green-600 dark:bg-green-500 transition-all duration-500 rounded-full"
               style={{ width: `${(completedRequired / requiredSections.length) * 100}%` }}
             />
           </div>
@@ -199,7 +199,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
 
       {/* Section Grid */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Section Details</h3>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Section Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {sections.map((section, index) => {
             const Icon = section.icon
@@ -209,32 +209,32 @@ export default function ReviewStep({ data }: ReviewStepProps) {
                 key={index}
                 className={`
                   relative rounded-xl p-5 border-2 transition-all
-                  ${section.complete 
-                    ? 'bg-white border-green-200 shadow-sm' 
-                    : 'bg-gray-50 border-gray-200'
+                  ${section.complete
+                    ? 'bg-white dark:bg-secondary-800 border-green-200 dark:border-green-800 shadow-sm'
+                    : 'bg-gray-50 dark:bg-secondary-900 border-gray-200 dark:border-secondary-800'
                   }
                 `}
               >
                 {section.required && !section.complete && (
                   <div className="absolute -top-2 -right-2">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
                       Required
                     </span>
                   </div>
                 )}
-                
+
                 <div className="flex items-start gap-3 mb-3">
-                  <div className={`h-11 w-11 rounded-xl ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className={`h-6 w-6 ${colors.icon}`} />
+                  <div className={`h-11 w-11 rounded-xl ${colors.bg} dark:bg-opacity-20 flex items-center justify-center flex-shrink-0`}>
+                    <Icon className={`h-6 w-6 ${colors.icon} dark:text-opacity-90`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+                    <h4 className="font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
                       {section.title}
                       {section.complete && (
-                        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
                       )}
                     </h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-secondary-400">
                       {section.items > 0
                         ? `${section.items} item${section.items !== 1 ? 's' : ''}`
                         : 'No items'}
@@ -243,13 +243,12 @@ export default function ReviewStep({ data }: ReviewStepProps) {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                    section.complete 
-                      ? 'bg-green-100 text-green-700' 
-                      : section.required 
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${section.complete
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                    : section.required
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                      : 'bg-gray-200 dark:bg-secondary-700 text-gray-600 dark:text-secondary-300'
+                    }`}>
                     {section.complete ? 'Complete' : section.required ? 'Incomplete' : 'Optional'}
                   </span>
                 </div>
@@ -261,12 +260,12 @@ export default function ReviewStep({ data }: ReviewStepProps) {
 
       {/* Warnings */}
       {completedRequired < requiredSections.length && (
-        <div className="bg-amber-50 border-l-4 border-amber-400 rounded-lg p-5">
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 dark:border-amber-500 rounded-lg p-5">
           <div className="flex gap-3">
-            <AlertCircle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-bold text-amber-900 mb-1">Required Sections Missing</h4>
-              <p className="text-sm text-amber-800">
+              <h4 className="font-bold text-amber-900 dark:text-amber-300 mb-1">Required Sections Missing</h4>
+              <p className="text-sm text-amber-800 dark:text-amber-400">
                 Please complete all required sections (Contact, Experience, Education, Skills) before creating your resume.
               </p>
             </div>
@@ -276,12 +275,12 @@ export default function ReviewStep({ data }: ReviewStepProps) {
 
       {/* Success Message */}
       {completedRequired === requiredSections.length && (
-        <div className="bg-green-50 border-l-4 border-green-400 rounded-lg p-5">
+        <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 dark:border-green-500 rounded-lg p-5">
           <div className="flex gap-3">
-            <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
+            <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-bold text-green-900 mb-1">Ready to Create!</h4>
-              <p className="text-sm text-green-800">
+              <h4 className="font-bold text-green-900 dark:text-green-300 mb-1">Ready to Create!</h4>
+              <p className="text-sm text-green-800 dark:text-green-400">
                 All required sections are complete. Click <strong>"Create Resume"</strong> below to generate your professional resume using the <strong>{template}</strong> template.
               </p>
             </div>

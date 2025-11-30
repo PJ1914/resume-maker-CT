@@ -22,18 +22,18 @@ import { TemplateRenderer } from '@/components/TemplateRenderer'
 // Helper function to format resume text into HTML
 function formatResumeText(text: string): string {
   if (!text) return '';
-  
+
   // Split by common section headers
   const lines = text.split('\n');
   let html = '';
   let inList = false;
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     // Skip empty lines and page breaks
     if (!line || line.includes('Page Break')) continue;
-    
+
     // Section headers (all caps or common keywords)
     if (line.match(/^(PROFESSIONAL SUMMARY|EXPERIENCE|PROJECTS|TECHNICAL SKILLS|EDUCATION|HACKATHONS|COMPETITIONS|CERTIFICATIONS|AWARDS)/i)) {
       if (inList) {
@@ -101,11 +101,11 @@ function formatResumeText(text: string): string {
       html += `<p>${line}</p>`;
     }
   }
-  
+
   if (inList) {
     html += '</ul>';
   }
-  
+
   return html;
 }
 
@@ -122,18 +122,28 @@ export default function ResumeDetailPage() {
 
   useEffect(() => {
     if (!id || !resume) return
-    
-    // Only start polling if resume is NOT in a final state
-    if (resume.status !== 'PARSED' && resume.status !== 'SCORED' && resume.status !== 'ERROR') {
+
+    // Poll for status updates if processing
+    // We stop polling if status is PARSED, SCORED, or ERROR
+    // We also stop if it's just UPLOADED but hasn't changed for a long time (handled by user action usually)
+    // But for now, let's keep it simple but less aggressive
+    if (resume.status === 'PARSING' || resume.status === 'SCORING') {
       pollingIntervalRef.current = setInterval(async () => {
         refetch()
       }, 3000)
-      
-      return () => {
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current)
-          pollingIntervalRef.current = null
-        }
+    } else if (resume.status === 'UPLOADED') {
+      // If it's uploaded but not parsing, maybe we should poll slower to check if parsing starts?
+      // Or maybe we assume it should have started?
+      // Let's poll slower
+      pollingIntervalRef.current = setInterval(async () => {
+        refetch()
+      }, 5000)
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+        pollingIntervalRef.current = null
       }
     }
   }, [id, resume?.status, refetch])
@@ -155,9 +165,9 @@ export default function ResumeDetailPage() {
       setReparsing(true)
       await resumeService.reparseResume(id)
       toast.success('Re-parsing triggered! Extracting data with updated parser...')
-      
+
       // Refetch resume data after a delay
-      setTimeout(()=> {
+      setTimeout(() => {
         refetch()
         toast.success('Resume parsing complete! Updated data loaded.')
       }, 3000)
@@ -324,16 +334,16 @@ export default function ResumeDetailPage() {
 
         <div className="flex items-start justify-between gap-6">
           <div className="flex items-start gap-4 flex-1 min-w-0">
-            <div className="h-14 w-14 rounded-lg bg-secondary-100 flex items-center justify-center flex-shrink-0">
-              <FileText className="h-7 w-7 text-secondary-600" />
+            <div className="h-14 w-14 rounded-lg bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center flex-shrink-0">
+              <FileText className="h-7 w-7 text-secondary-600 dark:text-secondary-400" />
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-secondary-900 mb-2 break-words">
+              <h1 className="text-2xl font-bold text-secondary-900 dark:text-secondary-50 mb-2 break-words">
                 {resume.original_filename}
               </h1>
 
-              <div className="flex items-center gap-4 text-sm text-secondary-600 mb-3">
+              <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-400 mb-3">
                 <div className="flex items-center gap-1.5">
                   <HardDrive className="h-4 w-4" />
                   {formatFileSize(resume.file_size)}
@@ -367,7 +377,7 @@ export default function ResumeDetailPage() {
 
             <button
               onClick={handleDelete}
-              className="p-2 bg-white border border-danger-300 text-danger-600 rounded-lg font-medium hover:bg-danger-50 transition-colors"
+              className="p-2 bg-white dark:bg-secondary-900 border border-danger-300 dark:border-danger-900 text-danger-600 dark:text-danger-400 rounded-lg font-medium hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors"
               title="Delete Resume"
             >
               <Trash2 className="h-4 w-4" />
@@ -412,7 +422,7 @@ export default function ResumeDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* ATS Score Card */}
           {scoreData ? (
-            <div className="bg-white rounded-lg border border-secondary-200 p-6">
+            <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
               <ComprehensiveATSScore
                 score={scoreData.total_score}
                 rating={scoreData.rating}
@@ -428,10 +438,10 @@ export default function ResumeDetailPage() {
               />
             </div>
           ) : (
-            <div className="bg-white rounded-lg border border-secondary-200 p-6">
-              <h2 className="text-lg font-semibold text-secondary-900 mb-3">ATS Score</h2>
-              <p className="text-sm text-secondary-600 mb-4">
-                {!canScore 
+            <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
+              <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-50 mb-3">ATS Score</h2>
+              <p className="text-sm text-secondary-600 dark:text-secondary-400 mb-4">
+                {!canScore
                   ? 'Your resume is being processed. ATS scoring will be available once parsing is complete.'
                   : 'Check how well your resume performs with Applicant Tracking Systems.'
                 }
@@ -464,9 +474,9 @@ export default function ResumeDetailPage() {
 
           {/* Resume Preview - Original PDF */}
           {resume.storage_url ? (
-            <div className="bg-white rounded-lg border border-secondary-200 overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b border-secondary-200 bg-secondary-50">
-                <h2 className="text-lg font-semibold text-secondary-900">Original Resume</h2>
+            <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-secondary-800 bg-secondary-50 dark:bg-secondary-950">
+                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-50">Original Resume</h2>
                 <button
                   onClick={() => navigate(`/editor/${resume.resume_id}`)}
                   className="px-4 py-2 bg-primary-900 text-white rounded-lg text-sm font-medium hover:bg-primary-800 transition-colors flex items-center gap-2"
@@ -477,9 +487,9 @@ export default function ResumeDetailPage() {
                   Edit
                 </button>
               </div>
-              
+
               {/* PDF Viewer - Full Size with proper aspect ratio */}
-              <div className="w-full bg-secondary-100" style={{ height: 'calc(100vh - 250px)', minHeight: '900px' }}>
+              <div className="w-full bg-secondary-100 dark:bg-secondary-800" style={{ height: 'calc(100vh - 250px)', minHeight: '900px' }}>
                 <iframe
                   src={`${resume.storage_url}#view=FitH&toolbar=0&navpanes=0`}
                   className="w-full h-full"
@@ -502,7 +512,7 @@ export default function ResumeDetailPage() {
                   Edit in Resume Editor
                 </button>
               </div>
-              
+
               {/* Professional Resume Template (for wizard-created resumes) */}
               <div className="bg-white border border-secondary-200 rounded-lg max-h-[900px] overflow-y-auto">
                 <TemplateRenderer resume={resume} />
@@ -550,21 +560,29 @@ export default function ResumeDetailPage() {
         {/* Right Column - Actions & Info */}
         <div className="space-y-6">
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg border border-secondary-200 p-6">
-            <h3 className="text-sm font-semibold text-secondary-900 mb-4">Quick Actions</h3>
+          <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
+            <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-50 mb-4">Quick Actions</h3>
             <div className="space-y-2">
               <button
                 onClick={handleDownload}
                 disabled={!resume.storage_url}
-                className="w-full px-4 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 bg-white dark:bg-secondary-900 border border-secondary-300 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-lg font-medium hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors flex items-center gap-2 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="h-4 w-4" />
-                Download PDF
+                Download Original
+              </button>
+
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="w-full px-4 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2 justify-center"
+              >
+                <FileText className="h-4 w-4" />
+                Export as PDF
               </button>
 
               <button
                 onClick={() => navigate(`/editor/${resume.resume_id}`)}
-                className="w-full px-4 py-2.5 bg-white border border-secondary-300 text-secondary-700 rounded-lg font-medium hover:bg-secondary-50 transition-colors flex items-center gap-2 justify-center"
+                className="w-full px-4 py-2.5 bg-white dark:bg-secondary-900 border border-secondary-300 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-lg font-medium hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors flex items-center gap-2 justify-center"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -572,11 +590,11 @@ export default function ResumeDetailPage() {
                 Edit Resume
               </button>
               {resume.status === 'PARSED' || resume.status === 'SCORED' ? (
-                <p className="text-xs text-success-600 px-2 py-1 bg-success-50 rounded">
+                <p className="text-xs text-success-600 px-2 py-1 bg-success-50 dark:bg-success-900/20 rounded">
                   ✓ Resume data parsed and ready to edit
                 </p>
               ) : isParsing ? (
-                <p className="text-xs text-warning-600 px-2 py-1 bg-warning-50 rounded flex items-center gap-1.5">
+                <p className="text-xs text-warning-600 px-2 py-1 bg-warning-50 dark:bg-warning-900/20 rounded flex items-center gap-1.5">
                   <Clock className="h-3 w-3" />
                   Parsing in progress. Editor will load parsed data soon.
                 </p>
@@ -584,7 +602,7 @@ export default function ResumeDetailPage() {
 
               <button
                 onClick={handleDelete}
-                className="w-full px-4 py-2.5 bg-white border border-danger-300 text-danger-600 rounded-lg font-medium hover:bg-danger-50 transition-colors flex items-center gap-2 justify-center"
+                className="w-full px-4 py-2.5 bg-white dark:bg-secondary-900 border border-danger-300 dark:border-danger-900 text-danger-600 dark:text-danger-400 rounded-lg font-medium hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors flex items-center gap-2 justify-center"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete Resume
@@ -593,11 +611,11 @@ export default function ResumeDetailPage() {
           </div>
 
           {/* Resume Info */}
-          <div className="bg-white rounded-lg border border-secondary-200 p-6">
-            <h3 className="text-sm font-semibold text-secondary-900 mb-4">Resume Details</h3>
+          <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
+            <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-50 mb-4">Resume Details</h3>
             <div className="space-y-3">
               <div>
-                <div className="text-xs font-medium text-secondary-500 mb-1">Status</div>
+                <div className="text-xs font-medium text-secondary-500 dark:text-secondary-400 mb-1">Status</div>
                 <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${statusInfo.className}`}>
                   <StatusIcon className="h-3.5 w-3.5" />
                   {statusInfo.label}
@@ -605,18 +623,18 @@ export default function ResumeDetailPage() {
               </div>
 
               <div>
-                <div className="text-xs font-medium text-secondary-500 mb-1">File Size</div>
-                <div className="text-sm text-secondary-900">{formatFileSize(resume.file_size)}</div>
+                <div className="text-xs font-medium text-secondary-500 dark:text-secondary-400 mb-1">File Size</div>
+                <div className="text-sm text-secondary-900 dark:text-secondary-50">{formatFileSize(resume.file_size)}</div>
               </div>
 
               <div>
-                <div className="text-xs font-medium text-secondary-500 mb-1">Uploaded</div>
-                <div className="text-sm text-secondary-900">{formatDate(resume.created_at)}</div>
+                <div className="text-xs font-medium text-secondary-500 dark:text-secondary-400 mb-1">Uploaded</div>
+                <div className="text-sm text-secondary-900 dark:text-secondary-50">{formatDate(resume.created_at)}</div>
               </div>
 
               {resume.latest_score && (
                 <div>
-                  <div className="text-xs font-medium text-secondary-500 mb-1">Latest ATS Score</div>
+                  <div className="text-xs font-medium text-secondary-500 dark:text-secondary-400 mb-1">Latest ATS Score</div>
                   <div className="text-2xl font-bold text-success-600">{resume.latest_score}%</div>
                 </div>
               )}

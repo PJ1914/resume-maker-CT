@@ -29,7 +29,7 @@ from app.services.firestore import (
     update_resume_status,
     delete_resume_metadata,
 )
-from app.services.tasks import process_resume_parsing, trigger_resume_parsing
+from app.services.tasks import process_resume_parsing
 
 router = APIRouter()
 
@@ -230,6 +230,10 @@ async def upload_direct(
         )
     
     # Trigger parsing in background
+    print(f"📋 Triggering background parsing for resume {resume_id}")
+    print(f"   Storage path: {storage_path}")
+    print(f"   Content type: {file.content_type}")
+    
     background_tasks.add_task(
         process_resume_parsing,
         resume_id=resume_id,
@@ -237,6 +241,8 @@ async def upload_direct(
         storage_path=storage_path,
         content_type=file.content_type or "application/pdf"
     )
+    
+    print(f"✅ Background task added for resume {resume_id}")
     
     return {
         "message": "File uploaded successfully",
@@ -440,9 +446,10 @@ async def get_resume(
     user_id = current_user["uid"]
     
     try:
-        metadata = get_resume_metadata(resume_id, user_id)
+        from app.services.firestore import get_merged_resume_data
+        resume_data = get_merged_resume_data(resume_id, user_id)
         
-        if not metadata:
+        if not resume_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resume not found"
@@ -450,31 +457,31 @@ async def get_resume(
         
         # Generate download URL if needed
         storage_url = None
-        if metadata.storage_path:
-            storage_url = generate_signed_download_url(metadata.storage_path)
+        if resume_data.get('storage_path'):
+            storage_url = generate_signed_download_url(resume_data['storage_path'])
         
         return ResumeDetailResponse(
-            resume_id=metadata.resume_id,
-            filename=metadata.filename,
-            original_filename=metadata.original_filename,
-            content_type=metadata.content_type,
-            file_size=metadata.file_size,
+            resume_id=resume_data['resume_id'],
+            filename=resume_data['filename'],
+            original_filename=resume_data.get('original_filename'),
+            content_type=resume_data['content_type'],
+            file_size=resume_data['file_size'],
             storage_url=storage_url,
-            status=metadata.status,
-            created_at=metadata.created_at,
-            updated_at=metadata.updated_at,
-            parsed_text=metadata.parsed_text,
-            contact_info=metadata.contact_info,
-            skills=metadata.skills,
-            sections=metadata.sections,
-            experience=metadata.experience,
-            projects=metadata.projects,
-            education=metadata.education,
-            layout_type=metadata.layout_type,
-            parsed_at=metadata.parsed_at,
-            latest_score=metadata.latest_score,
-            template=metadata.template,
-            error_message=metadata.error_message,
+            status=resume_data['status'],
+            created_at=resume_data['created_at'],
+            updated_at=resume_data['updated_at'],
+            parsed_text=resume_data.get('parsed_text'),
+            contact_info=resume_data.get('contact_info'),
+            skills=resume_data.get('skills'),
+            sections=resume_data.get('sections'),
+            experience=resume_data.get('experience'),
+            projects=resume_data.get('projects'),
+            education=resume_data.get('education'),
+            layout_type=resume_data.get('layout_type'),
+            parsed_at=resume_data.get('parsed_at'),
+            latest_score=resume_data.get('latest_score'),
+            template=resume_data.get('template'),
+            error_message=resume_data.get('error_message'),
         )
     except HTTPException:
         raise
@@ -542,7 +549,8 @@ async def reparse_resume(
         )
     
     # Trigger parsing in background
-    trigger_resume_parsing(
+    background_tasks.add_task(
+        process_resume_parsing,
         resume_id=resume_id,
         uid=user_id,
         storage_path=metadata.storage_path,
@@ -554,3 +562,5 @@ async def reparse_resume(
         "message": "Resume re-parsing triggered",
         "resume_id": resume_id
     }
+
+

@@ -28,12 +28,11 @@ export default function WizardProgress({ steps, currentStep }: WizardProgressPro
                     className={`
                       flex-shrink-0 h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px]
                       transition-all duration-300
-                      ${
-                        isCompleted
-                          ? 'bg-success-600 text-white'
-                          : isCurrent
-                          ? 'bg-primary-900 text-white ring-2 ring-primary-900/30'
-                          : 'bg-secondary-600 text-secondary-400'
+                      ${isCompleted
+                        ? 'bg-success-600 text-white'
+                        : isCurrent
+                          ? 'bg-primary-900 dark:bg-primary-600 text-white ring-2 ring-primary-900/30 dark:ring-primary-500/30'
+                          : 'bg-secondary-200 dark:bg-secondary-700 text-secondary-500 dark:text-secondary-400'
                       }
                     `}
                   >
@@ -47,13 +46,12 @@ export default function WizardProgress({ steps, currentStep }: WizardProgressPro
                   {/* Step Label */}
                   <div className="flex-1 min-w-0">
                     <div
-                      className={`text-[10px] font-semibold truncate transition-colors ${
-                        isCurrent
-                          ? 'text-white'
-                          : isCompleted
-                          ? 'text-success-400'
-                          : 'text-secondary-500'
-                      }`}
+                      className={`text-[10px] font-semibold truncate transition-colors ${isCurrent
+                        ? 'text-primary-900 dark:text-white'
+                        : isCompleted
+                          ? 'text-success-600 dark:text-success-400'
+                          : 'text-secondary-500 dark:text-secondary-400'
+                        }`}
                     >
                       {step.title}
                     </div>
@@ -64,9 +62,8 @@ export default function WizardProgress({ steps, currentStep }: WizardProgressPro
                 {index < steps.length - 1 && (
                   <div className="h-px w-8 mx-1">
                     <div
-                      className={`h-full transition-all duration-500 ${
-                        isCompleted ? 'bg-success-600' : 'bg-secondary-600'
-                      }`}
+                      className={`h-full transition-all duration-500 ${isCompleted ? 'bg-success-600' : 'bg-secondary-200 dark:bg-secondary-700'
+                        }`}
                     />
                   </div>
                 )}

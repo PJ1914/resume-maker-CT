@@ -67,29 +67,29 @@ export default function ResumesPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto">
       {/* Clean Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-secondary-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-secondary-900 dark:text-white mb-1 sm:mb-2">
               My Resumes
             </h1>
-            <p className="text-secondary-600">
+            <p className="text-sm sm:text-base text-secondary-600 dark:text-secondary-400">
               {resumes.length} {resumes.length === 1 ? 'resume' : 'resumes'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <button
               onClick={() => navigate('/resume/create')}
-              className="px-5 py-2.5 bg-white border-2 border-secondary-200 text-secondary-700 rounded-lg font-medium hover:border-primary-900 hover:text-primary-900 transition-colors flex items-center gap-2"
+              className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2.5 bg-white dark:bg-secondary-900 border-2 border-secondary-200 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-lg font-medium hover:border-primary-900 dark:hover:border-primary-500 hover:text-primary-900 dark:hover:text-primary-500 transition-colors flex items-center gap-2 text-sm sm:text-base"
             >
               <Sparkles className="h-4 w-4" />
               Create New
             </button>
             <button
               onClick={() => navigate('/upload')}
-              className="px-5 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2"
+              className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2 text-sm sm:text-base"
             >
               <Upload className="h-4 w-4" />
               Upload Resume
@@ -100,27 +100,27 @@ export default function ResumesPage() {
 
       {/* Empty State */}
       {resumes.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border-2 border-dashed border-secondary-300">
-          <div className="h-16 w-16 rounded-lg bg-secondary-100 flex items-center justify-center mx-auto">
-            <FileText className="h-8 w-8 text-secondary-400" />
+        <div className="text-center py-12 sm:py-16 bg-white dark:bg-secondary-900 rounded-lg border-2 border-dashed border-secondary-300 dark:border-secondary-700 px-4">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-lg bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center mx-auto">
+            <FileText className="h-7 w-7 sm:h-8 sm:w-8 text-secondary-400 dark:text-secondary-500" />
           </div>
-          <h3 className="mt-4 text-lg font-semibold text-secondary-900">
+          <h3 className="mt-4 text-lg font-semibold text-secondary-900 dark:text-white">
             No resumes yet
           </h3>
-          <p className="mt-2 text-sm text-secondary-600 max-w-md mx-auto">
+          <p className="mt-2 text-sm text-secondary-600 dark:text-secondary-400 max-w-md mx-auto">
             Upload your first resume or create one from scratch to get started.
           </p>
-          <div className="flex items-center justify-center gap-3 mt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6 w-full sm:w-auto">
             <button
               onClick={() => navigate('/resume/create')}
-              className="px-5 py-2.5 bg-white border-2 border-secondary-200 text-secondary-700 rounded-lg font-medium hover:border-primary-900 hover:text-primary-900 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto justify-center px-5 py-2.5 bg-white dark:bg-secondary-900 border-2 border-secondary-200 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-lg font-medium hover:border-primary-900 dark:hover:border-primary-500 hover:text-primary-900 dark:hover:text-primary-500 transition-colors flex items-center gap-2"
             >
               <Sparkles className="h-4 w-4" />
               Create New
             </button>
             <button
               onClick={() => navigate('/upload')}
-              className="px-5 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto justify-center px-5 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2"
             >
               <Upload className="h-4 w-4" />
               Upload Resume
@@ -133,53 +133,51 @@ export default function ResumesPage() {
           {resumes.map((resume) => (
             <div
               key={resume.resume_id}
-              className="bg-white rounded-lg border border-secondary-200 p-6 hover:border-secondary-300 hover:shadow-md transition-all"
+              className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-4 sm:p-6 hover:border-secondary-300 dark:hover:border-secondary-600 hover:shadow-md transition-all"
             >
-              <div className="flex items-start justify-between gap-6">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
                 {/* Left: File Info */}
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className="h-12 w-12 rounded-lg bg-secondary-100 flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-6 w-6 text-secondary-600" />
+                <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 w-full">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-600 dark:text-secondary-400" />
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-secondary-900 truncate mb-1">
+                    <h3 className="text-base sm:text-lg font-semibold text-secondary-900 dark:text-white truncate mb-1">
                       {resume.original_filename}
                     </h3>
 
-                    <div className="flex items-center gap-3 text-sm text-secondary-600">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-secondary-600 dark:text-secondary-400">
                       <span>{formatFileSize(resume.file_size)}</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>Uploaded {formatDate(resume.created_at)}</span>
-                      <span>•</span>
-                      {getStatusBadge(resume.status)}
+                      <span className="hidden sm:inline">•</span>
+                      <div className="mt-1 sm:mt-0">{getStatusBadge(resume.status)}</div>
                     </div>
 
                     {resume.latest_score !== null && resume.latest_score !== undefined && (
-                      <div className="mt-4">
+                      <div className="mt-3 sm:mt-4">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm font-medium text-secondary-700">
+                          <span className="text-xs sm:text-sm font-medium text-secondary-700 dark:text-secondary-300">
                             ATS Score
                           </span>
-                          <span className={`text-sm font-bold ${
-                            resume.latest_score >= 80
-                              ? 'text-success-600'
-                              : resume.latest_score >= 60
+                          <span className={`text-xs sm:text-sm font-bold ${resume.latest_score >= 80
+                            ? 'text-success-600'
+                            : resume.latest_score >= 60
                               ? 'text-warning-600'
                               : 'text-danger-600'
-                          }`}>
+                            }`}>
                             {resume.latest_score}%
                           </span>
                         </div>
-                        <div className="h-2 w-full bg-secondary-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 sm:h-2 w-full bg-secondary-100 dark:bg-secondary-800 rounded-full overflow-hidden">
                           <div
-                            className={`h-full transition-all ${
-                              resume.latest_score >= 80
-                                ? 'bg-success-500'
-                                : resume.latest_score >= 60
+                            className={`h-full transition-all ${resume.latest_score >= 80
+                              ? 'bg-success-500'
+                              : resume.latest_score >= 60
                                 ? 'bg-warning-500'
                                 : 'bg-danger-500'
-                            }`}
+                              }`}
                             style={{ width: `${resume.latest_score}%` }}
                           />
                         </div>
@@ -196,20 +194,22 @@ export default function ResumesPage() {
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-secondary-100 dark:border-secondary-800 pt-3 sm:pt-0 mt-2 sm:mt-0">
                   <button
                     onClick={() => handleView(resume.resume_id)}
-                    className="p-2.5 bg-secondary-50 hover:bg-secondary-100 rounded-lg transition-colors"
+                    className="flex-1 sm:flex-none justify-center p-2 sm:p-2.5 bg-secondary-50 dark:bg-secondary-800 hover:bg-secondary-100 dark:hover:bg-secondary-700 rounded-lg transition-colors flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300 sm:text-current"
                     title="View Details"
                   >
-                    <Eye className="h-5 w-5 text-secondary-600" />
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-600 dark:text-secondary-400" />
+                    <span className="sm:hidden">View</span>
                   </button>
                   <button
                     onClick={() => handleDelete(resume.resume_id, resume.original_filename)}
-                    className="p-2.5 bg-secondary-50 hover:bg-danger-50 rounded-lg transition-colors"
+                    className="flex-1 sm:flex-none justify-center p-2 sm:p-2.5 bg-secondary-50 dark:bg-secondary-800 hover:bg-danger-50 dark:hover:bg-danger-900/20 rounded-lg transition-colors flex items-center gap-2 text-sm text-danger-600 dark:text-danger-400 sm:text-current"
                     title="Delete"
                   >
-                    <Trash2 className="h-5 w-5 text-secondary-600 hover:text-danger-600 transition-colors" />
+                    <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-600 dark:text-secondary-400 hover:text-danger-600 dark:hover:text-danger-400 transition-colors" />
+                    <span className="sm:hidden">Delete</span>
                   </button>
                 </div>
               </div>

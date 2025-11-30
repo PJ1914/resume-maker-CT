@@ -55,33 +55,33 @@ const CreditHistoryPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-secondary-950 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="mb-4 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="mb-4 inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             Back
           </button>
-          
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+
+          <div className="bg-white dark:bg-secondary-900 rounded-2xl shadow-sm p-6 border border-gray-200 dark:border-secondary-800">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Credit History
             </h1>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               View all your credit transactions
             </p>
-            
-            <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
-              <div className="bg-blue-100 rounded-full p-3">
-                <Coins className="w-6 h-6 text-blue-600" />
+
+            <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-secondary-800">
+              <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full p-3">
+                <Coins className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <div className="text-sm text-gray-600">Current Balance</div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Current Balance</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   {currentBalance} Credits
                 </div>
               </div>
@@ -91,12 +91,12 @@ const CreditHistoryPage = () => {
 
         {/* Transaction List */}
         {transactions.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
-            <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div className="bg-white dark:bg-secondary-900 rounded-2xl shadow-sm p-12 text-center border border-gray-200 dark:border-secondary-800">
+            <Clock className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               No transactions yet
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Your credit transaction history will appear here
             </p>
           </div>
@@ -105,19 +105,19 @@ const CreditHistoryPage = () => {
             {transactions.map((transaction) => (
               <div
                 key={transaction.transaction_id}
-                className="bg-white rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-secondary-900 rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow border border-gray-200 dark:border-secondary-800"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="bg-gray-100 rounded-full p-2">
+                    <div className="bg-gray-100 dark:bg-secondary-800 rounded-full p-2">
                       {getTransactionIcon(transaction.type)}
                     </div>
-                    
+
                     <div className="flex-1">
-                      <div className="font-semibold text-gray-900 mb-1">
+                      <div className="font-semibold text-gray-900 dark:text-white mb-1">
                         {transaction.description}
                       </div>
-                      <div className="text-sm text-gray-500 flex items-center gap-2">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                         <Clock className="w-4 h-4" />
                         {formatDate(transaction.timestamp)}
                       </div>
@@ -129,7 +129,7 @@ const CreditHistoryPage = () => {
                       {transaction.type === 'DEDUCTION' ? '-' : '+'}
                       {Math.abs(transaction.amount)}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       Balance: {transaction.balance_after}
                     </div>
                   </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Upload, AlertCircle } from 'lucide-react'
 import { apiClient } from '@/services/api'
 import toast from 'react-hot-toast'
+import { useLoader } from '@/context/LoaderContext'
 
 interface ResumeDumpStepProps {
   onDataExtracted: (data: any) => void
@@ -11,6 +12,7 @@ interface ResumeDumpStepProps {
 export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: ResumeDumpStepProps) {
   const [resumeText, setResumeText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const { showLoader, hideLoader } = useLoader()
 
   const handleSkip = () => {
     // Skip to next step without extracting
@@ -29,10 +31,11 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
     }
 
     setIsProcessing(true)
+    showLoader()
     try {
       console.log('Sending extraction request...')
       console.log('Resume text length:', resumeText.length)
-      
+
       // Call backend API to extract resume data
       const response = await apiClient.post('/api/ai/extract-resume', {
         resume_text: resumeText,
@@ -109,9 +112,9 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
         status: error.response?.status,
         data: error.response?.data,
       })
-      
+
       let errorMsg = 'Failed to extract resume data'
-      
+
       if (error.response?.status === 401 || error.response?.status === 403) {
         errorMsg = 'Authentication failed. Please log in again.'
       } else if (error.response?.status === 404) {
@@ -121,58 +124,59 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
       } else if (error.message) {
         errorMsg = error.message
       }
-      
+
       toast.error(errorMsg)
     } finally {
       setIsProcessing(false)
+      hideLoader()
     }
   }
 
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-secondary-900 mb-2">Quick Start</h1>
-        <p className="text-secondary-600 leading-relaxed">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-secondary-900 dark:text-white mb-2">Quick Start</h1>
+        <p className="text-sm sm:text-base text-secondary-600 dark:text-secondary-400 leading-relaxed">
           Optionally paste your existing resume text below. Our AI will extract and populate your information automatically. Or skip to build manually.
         </p>
       </div>
 
       {/* Main Content */}
-      <div className="bg-white rounded-xl border border-secondary-200 p-8">
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-secondary-900 mb-3">
+      <div className="bg-white dark:bg-secondary-900 rounded-xl border border-secondary-200 dark:border-secondary-800 p-5 sm:p-8">
+        <div className="mb-4 sm:mb-6">
+          <label className="block text-sm font-semibold text-secondary-900 dark:text-white mb-2 sm:mb-3">
             Paste Your Resume Text (Optional)
           </label>
           <textarea
             value={resumeText}
             onChange={(e) => setResumeText(e.target.value)}
             placeholder="Paste your resume content here. Include your name, contact info, experience, education, skills, etc."
-            className="w-full h-64 p-4 border border-secondary-300 rounded-lg font-mono text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+            className="w-full h-48 sm:h-64 p-3 sm:p-4 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg font-mono text-sm text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
             disabled={isLoading || isProcessing}
           />
         </div>
 
         {/* Character Count */}
-        <div className="text-xs text-secondary-500 mb-6">
+        <div className="text-xs text-secondary-500 dark:text-secondary-400 mb-4 sm:mb-6">
           {resumeText.length} characters
         </div>
 
         {/* Info Box */}
-        <div className="bg-secondary-500 border border-secondary-300 rounded-lg p-4 mb-6 flex gap-3">
-          <AlertCircle className="h-5 w-5 text-secondary-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-secondary-600">
+        <div className="bg-secondary-50 dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex gap-3">
+          <AlertCircle className="h-5 w-5 text-secondary-600 dark:text-secondary-400 flex-shrink-0 mt-0.5" />
+          <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-300">
             <p className="font-medium mb-1">Pro Tip:</p>
             <p>You can paste plain text, formatted text, or even copy-paste from your PDF resume. Our AI will do its best to extract and organize your information.</p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleExtract}
             disabled={isLoading || isProcessing || !resumeText.trim()}
-            className="flex-1 px-6 py-3 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-soft"
+            className="w-full sm:flex-1 px-6 py-3 bg-primary-900 dark:bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-800 dark:hover:bg-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-soft"
           >
             {isProcessing ? (
               <>
@@ -193,15 +197,15 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
           <button
             onClick={handleSkip}
             disabled={isLoading || isProcessing}
-            className="flex-1 px-6 py-3 bg-white border border-secondary-300 text-secondary-700 rounded-lg font-medium hover:bg-secondary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:flex-1 px-6 py-3 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-lg font-medium hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Skip
           </button>
         </div>
 
         {/* Manual Entry Info */}
-        <div className="mt-6 pt-6 border-t border-secondary-200">
-          <p className="text-sm text-secondary-600">
+        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-secondary-200 dark:border-secondary-800">
+          <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400">
             Don't have your resume handy? No problem! You can build it step by step in the next sections.
           </p>
         </div>

@@ -335,6 +335,120 @@ async def update_resume_score_data(
         return False
 
 
+def update_resume_parsed_data_sync(
+    resume_id: str,
+    user_id: str,
+    parsed_data: Dict
+) -> bool:
+    """
+    Update resume with parsed data (synchronous version).
+    
+    Args:
+        resume_id: Resume ID
+        user_id: User ID  
+        parsed_data: Parsed resume data from parser
+        
+    Returns:
+        Success boolean
+    """
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        print(f"[DEV] Would update resume {resume_id} with parsed data")
+        return True
+    
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        update_data = {
+            'parsed_text': parsed_data.get('parsed_text', ''),
+            'contact_info': parsed_data.get('contact_info', {}),
+            'skills': parsed_data.get('skills', []),
+            'sections': parsed_data.get('sections', {}),
+            'experience': parsed_data.get('experience', []),
+            'projects': parsed_data.get('projects', []),
+            'education': parsed_data.get('education', []),
+            'layout_type': parsed_data.get('layout_type', 'unknown'),
+            'parsed_at': parsed_data.get('parsed_at'),
+            'updated_at': datetime.utcnow(),
+        }
+        
+        # Update both locations
+        db.collection('users').document(user_id)\
+          .collection('resumes').document(resume_id)\
+          .update(update_data)
+        
+        db.collection('resumes').document(resume_id).update(update_data)
+        
+        return True
+    except Exception as e:
+        print(f"Error updating parsed data: {e}")
+        return False
+
+
+def update_resume_score_data_sync(
+    resume_id: str,
+    user_id: str,
+    score_data: Dict
+) -> bool:
+    """
+    Update resume with ATS score data (synchronous version).
+    
+    Args:
+        resume_id: Resume ID
+        user_id: User ID
+        score_data: Score data from scorer
+        
+    Returns:
+        Success boolean
+    """
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        print(f"[DEV] Would update resume {resume_id} with score: {score_data.get('total_score')}")
+        return True
+    
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        update_data = {
+            'ats_score': score_data.get('total_score', 0),
+            'latest_score': score_data.get('total_score', 0),  # Also update latest_score
+            'score_rating': score_data.get('rating', 'Unknown'),
+            'score_breakdown': score_data.get('breakdown', {}),
+            'score_suggestions': score_data.get('recommendations', []),  # Use recommendations
+            'scoring_method': score_data.get('scoring_method', 'local'),
+            'scored_at': score_data.get('scored_at'),
+            'updated_at': datetime.utcnow(),
+        }
+        
+        # Add comprehensive fields if present
+        if 'strengths' in score_data:
+            update_data['score_strengths'] = score_data['strengths']
+        if 'weaknesses' in score_data:
+            update_data['score_weaknesses'] = score_data['weaknesses']
+        if 'keyword_matches' in score_data:
+            update_data['keyword_matches'] = score_data['keyword_matches']
+        if 'ats_compatibility' in score_data:
+            update_data['ats_compatibility'] = score_data['ats_compatibility']
+        
+        # Update both locations
+        db.collection('users').document(user_id)\
+          .collection('resumes').document(resume_id)\
+          .update(update_data)
+        
+        db.collection('resumes').document(resume_id).update(update_data)
+        
+        return True
+    except Exception as e:
+        print(f"Error updating score data: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def get_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
     """
     Get full resume data from resume_data collection.
@@ -431,3 +545,74 @@ def update_resume_latest_score(
     except Exception as e:
         print(f"Error updating latest_score: {e}")
         return False
+
+def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
+    """
+    Get resume data, preferring edited data from resume_data collection
+    over the original parsed metadata.
+    
+    Returns a dictionary suitable for the frontend or scoring.
+    """
+    # 1. Get base metadata (status, original file info, etc.)
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        return None
+        
+    # 2. Get edited data
+    edited_data = get_resume_data(resume_id, user_id)
+    
+    # Start with metadata converted to dict
+    result = metadata.model_dump()
+    
+    # If we have edited data, override the content sections
+    if edited_data:
+        # Map edited data fields to metadata structure
+        if 'summary' in edited_data:
+            result['parsed_text'] = edited_data['summary'] # Use summary as main text representation
+            # Also update the summary in sections if it exists
+            if 'sections' not in result or result['sections'] is None:
+                result['sections'] = {}
+            result['sections']['summary'] = edited_data['summary']
+            
+        if 'contact' in edited_data:
+            result['contact_info'] = edited_data['contact']
+            
+        if 'experience' in edited_data:
+            result['experience'] = edited_data['experience']
+            
+        if 'education' in edited_data:
+            result['education'] = edited_data['education']
+            
+        if 'projects' in edited_data:
+            result['projects'] = edited_data['projects']
+            
+        if 'skills' in edited_data:
+            # Edited skills are usually a list of categories
+            # Metadata skills are {technical: [], soft: []}
+            # We need to adapt if structure differs, but for now let's assume
+            # the consumer handles the structure or we map it here.
+            # The editor uses {category: string, items: string[]}[]
+            # The scorer expects {technical: [], soft: []}
+            
+            editor_skills = edited_data['skills']
+            if isinstance(editor_skills, list):
+                # Convert editor format to scorer format
+                technical = []
+                soft = []
+                
+                for cat in editor_skills:
+                    if isinstance(cat, dict) and 'items' in cat:
+                        # Add all items to technical for now, or try to classify
+                        # If category name contains "Soft", put in soft
+                        cat_name = cat.get('category', '').lower()
+                        if 'soft' in cat_name or 'personal' in cat_name:
+                            soft.extend(cat['items'])
+                        else:
+                            technical.extend(cat['items'])
+                            
+                result['skills'] = {
+                    'technical': technical,
+                    'soft': soft
+                }
+    
+    return result

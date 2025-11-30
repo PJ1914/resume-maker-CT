@@ -5,14 +5,37 @@
 @tailwind utilities;
 
 @keyframes wave {
-  0% { transform: rotate(0deg); }
-  10% { transform: rotate(14deg); }
-  20% { transform: rotate(-8deg); }
-  30% { transform: rotate(14deg); }
-  40% { transform: rotate(-4deg); }
-  50% { transform: rotate(10deg); }
-  60% { transform: rotate(0deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  10% {
+    transform: rotate(14deg);
+  }
+
+  20% {
+    transform: rotate(-8deg);
+  }
+
+  30% {
+    transform: rotate(14deg);
+  }
+
+  40% {
+    transform: rotate(-4deg);
+  }
+
+  50% {
+    transform: rotate(10deg);
+  }
+
+  60% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 .animate-wave {
@@ -22,41 +45,71 @@
 }
 
 @layer base {
-  * {
-    @apply border-secondary-200;
+  :root {
+    --background: hsl(0, 0%, 100%);
+    --foreground: hsl(0, 0%, 0%);
+    --skeleton: hsl(0, 0%, 90%);
+    --border: hsl(220, 20%, 90%);
+    --btn-border: hsl(214deg, 31.8%, 91.4%);
+    --input: hsl(220, 20%, 90%);
+
+    --radius: 0.5rem;
   }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: hsl(222, 94%, 5%);
+      --foreground: hsl(0, 0%, 100%);
+      --skeleton: hsl(218, 36%, 16%);
+      --border: hsl(220, 20%, 90%);
+      --btn-border: hsl(217deg, 32.6%, 17.5%);
+      --input: hsl(219, 63%, 16%);
+
+      --radius: 0.5rem;
+    }
+  }
+
+  * {
+    @apply border-secondary-200 dark:border-secondary-800;
+  }
+
   body {
-    @apply bg-secondary-50 text-secondary-900 font-sans;
+    @apply bg-secondary-50 text-secondary-900 font-sans dark:bg-secondary-950 dark:text-secondary-50;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-secondary-900;
   }
-  
+
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply btn bg-primary-900 text-white hover:bg-primary-800 focus:ring-primary-500 dark:bg-primary-100 dark:text-primary-900 dark:hover:bg-primary-200;
   }
-  
+
   .btn-secondary {
-    @apply btn bg-secondary-200 text-secondary-900 hover:bg-secondary-300 focus:ring-secondary-500;
+    @apply btn bg-secondary-200 text-secondary-900 hover:bg-secondary-300 focus:ring-secondary-500 dark:bg-secondary-800 dark:text-secondary-50 dark:hover:bg-secondary-700;
   }
-  
+
   .btn-outline {
-    @apply btn border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500;
+    @apply btn border-2 border-primary-900 text-primary-900 hover:bg-primary-50 focus:ring-primary-500 dark:border-primary-100 dark:text-primary-100 dark:hover:bg-secondary-800;
   }
-  
+
   .input {
-    @apply w-full rounded-lg border border-secondary-300 bg-white px-4 py-2 text-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20;
+    @apply w-full rounded-lg border border-secondary-300 bg-white px-4 py-2 text-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20 dark:bg-secondary-900 dark:border-secondary-700 dark:text-white dark:focus:border-primary-400;
   }
-  
+
   .card {
-    @apply rounded-xl bg-white p-6 shadow-soft border border-secondary-100;
+    @apply rounded-xl bg-white p-6 shadow-soft border border-secondary-100 dark:bg-secondary-900 dark:border-secondary-800;
   }
-  
+
   .label {
-    @apply block text-sm font-medium text-secondary-700 mb-1.5;
+    @apply block text-sm font-medium text-secondary-700 mb-1.5 dark:text-secondary-300;
+  }
+
+  .g-button {
+    @apply rounded-[var(--radius)] border;
+    border-color: var(--btn-border)
   }
 }
 

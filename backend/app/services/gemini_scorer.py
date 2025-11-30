@@ -214,85 +214,64 @@ Provide ONLY the JSON response, no additional text.
             # Parse JSON
             result = json.loads(json_text)
             
-            # Ensure required fields exist with safe defaults
-            required_fields = {
-                'total_score': 70,
-                'rating': 'Good',
-                'breakdown': {
-                    'keywords': {'score': 20, 'analysis': 'Analysis not available'},
-                    'sections': {'score': 25, 'analysis': 'Analysis not available'},
-                    'formatting': {'score': 10, 'analysis': 'Analysis not available'},
-                    'quantification': {'score': 8, 'analysis': 'Analysis not available'},
-                    'readability': {'score': 7, 'analysis': 'Analysis not available'},
-                },
-                'strengths': [],
-                'weaknesses': [],
-                'suggestions': [],
-                'improved_examples': [],
-                'keyword_matches': [],
-                'ats_compatibility': 'Medium'
+            # Map breakdown to match ScoreBreakdown schema
+            breakdown = result.get('breakdown', {})
+            
+            # Helper to create CategoryScore
+            def create_category_score(score, max_score=20):
+                return {
+                    'score': float(score),
+                    'max_score': float(max_score),
+                    'percentage': (float(score) / float(max_score)) * 100
+                }
+
+            # Map old/loose keys to strict schema keys
+            mapped_breakdown = {
+                'format_ats_compatibility': create_category_score(breakdown.get('formatting', {}).get('score', 10), 20),
+                'keyword_match': create_category_score(breakdown.get('keywords', {}).get('score', 20), 25),
+                'skills_relevance': create_category_score(breakdown.get('keywords', {}).get('score', 15) * 0.6, 15), # Estimate
+                'experience_quality': create_category_score(breakdown.get('sections', {}).get('score', 13), 20),
+                'achievements_impact': create_category_score(breakdown.get('quantification', {}).get('score', 7), 10),
+                'grammar_clarity': create_category_score(breakdown.get('readability', {}).get('score', 10), 10)
             }
             
-            # Merge with defaults
-            for key, default_value in required_fields.items():
-                if key not in result:
-                    result[key] = default_value
-            
-            # Map Gemini breakdown to ScoringResponse breakdown format
-            if 'breakdown' in result and isinstance(result['breakdown'], dict):
-                breakdown = result['breakdown']
-                
-                # Convert to standardized format if needed
-                if 'keywords' in breakdown and 'score' in breakdown['keywords']:
-                    result['breakdown'] = {
-                        'format_ats_compatibility': {
-                            'score': breakdown.get('formatting', {}).get('score', 10),
-                            'max_score': 20,
-                            'percentage': (breakdown.get('formatting', {}).get('score', 10) / 20) * 100
-                        },
-                        'keyword_match': {
-                            'score': breakdown.get('keywords', {}).get('score', 20),
-                            'max_score': 25,
-                            'percentage': (breakdown.get('keywords', {}).get('score', 20) / 25) * 100
-                        },
-                        'skills_relevance': {
-                            'score': breakdown.get('keywords', {}).get('score', 15) * 0.6,  # Estimate from keywords
-                            'max_score': 15,
-                            'percentage': (breakdown.get('keywords', {}).get('score', 15) * 0.6 / 15) * 100
-                        },
-                        'experience_quality': {
-                            'score': breakdown.get('sections', {}).get('score', 13),
-                            'max_score': 20,
-                            'percentage': (breakdown.get('sections', {}).get('score', 13) / 20) * 100
-                        },
-                        'achievements_impact': {
-                            'score': breakdown.get('quantification', {}).get('score', 7),
-                            'max_score': 10,
-                            'percentage': (breakdown.get('quantification', {}).get('score', 7) / 10) * 100
-                        },
-                        'grammar_clarity': {
-                            'score': breakdown.get('readability', {}).get('score', 10),
-                            'max_score': 10,
-                            'percentage': (breakdown.get('readability', {}).get('score', 10) / 10) * 100
-                        }
-                    }
-            
-            # Rename suggestions to handle both "suggestions" and "improved_examples"
-            if 'suggestions' not in result:
-                result['suggestions'] = []
-            if 'improved_examples' not in result:
-                result['improved_examples'] = []
-            
-            # Ensure all lists are actually lists
-            for field in ['strengths', 'weaknesses', 'suggestions', 'keyword_matches']:
-                if field in result and not isinstance(result[field], list):
-                    result[field] = []
-            
-            return result
+            # Construct final response matching ScoringResponse
+            final_response = {
+                'total_score': float(result.get('total_score', 70)),
+                'rating': result.get('rating', 'Good'),
+                'breakdown': mapped_breakdown,
+                'strengths': result.get('strengths', []),
+                'weaknesses': result.get('weaknesses', []),
+                'missing_keywords': [], # Gemini prompt doesn't explicitly ask for this yet, defaulting to empty
+                'section_feedback': {}, # Default empty
+                'recommendations': result.get('suggestions', []), # Map suggestions to recommendations
+                'improved_bullets': [], # Map improved_examples to improved_bullets
+                'scoring_method': 'gemini',
+                'model_name': self.model_name,
+                'scored_at': datetime.now(timezone.utc).isoformat(),
+                'job_description_provided': False, # Will be updated by caller if needed
+                'cached': False,
+                # Legacy fields for compatibility if needed
+                'suggestions': result.get('suggestions', []),
+                'keyword_matches': result.get('keyword_matches', []),
+                'ats_compatibility': result.get('ats_compatibility', 'Medium')
+            }
+
+            # Map improved examples if present
+            if 'improved_examples' in result:
+                for item in result['improved_examples']:
+                    if isinstance(item, dict) and 'original' in item and 'improved' in item:
+                        final_response['improved_bullets'].append({
+                            'original': item['original'],
+                            'suggestion': item['improved']
+                        })
+
+            return final_response
             
         except json.JSONDecodeError as e:
             # Fallback parsing
             return {
+                'resume_id': 'unknown', # Will be filled by caller
                 'total_score': 70,
                 'rating': 'Good',
                 'breakdown': {
@@ -305,11 +284,18 @@ Provide ONLY the JSON response, no additional text.
                 },
                 'strengths': [],
                 'weaknesses': [],
+                'missing_keywords': [],
+                'section_feedback': {},
+                'recommendations': ['Unable to parse AI response. Using default score.'],
+                'improved_bullets': [],
+                'scoring_method': 'gemini_fallback',
+                'model_name': self.model_name,
+                'scored_at': datetime.now(timezone.utc).isoformat(),
+                'job_description_provided': False,
+                'cached': False,
                 'suggestions': ['Unable to parse AI response. Using default score.'],
-                'improved_examples': [],
                 'keyword_matches': [],
                 'ats_compatibility': 'Medium',
-                'parse_error': str(e),
             }
 
 

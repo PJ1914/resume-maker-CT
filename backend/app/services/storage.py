@@ -139,6 +139,43 @@ async def get_file_content(storage_path: str) -> Optional[bytes]:
         return None
 
 
+def get_file_content_sync(storage_path: str) -> Optional[bytes]:
+    """
+    Download file content from Firebase Storage (synchronous version).
+    
+    Args:
+        storage_path: Path to file in storage
+        
+    Returns:
+        File bytes or None if error
+    """
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        print(f"[DEV] Would download: {storage_path}")
+        # Return empty bytes in dev mode
+        return b"Mock file content for development"
+    
+    try:
+        from firebase_admin import storage
+        bucket = storage.bucket(app=resume_maker_app)
+        blob = bucket.blob(storage_path)
+        
+        if not blob.exists():
+            print(f"File not found: {storage_path}")
+            return None
+        
+        # Download file content
+        content = blob.download_as_bytes()
+        return content
+        
+    except Exception as e:
+        print(f"Error downloading file: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 async def upload_resume_pdf(
     user_id: str,
     resume_id: str,

@@ -2,6 +2,7 @@ import { useState, useRef, type DragEvent, type ChangeEvent } from 'react'
 import { Upload, FileText, X, AlertCircle, CheckCircle } from 'lucide-react'
 import { resumeService } from '@/services/resume.service'
 import toast from 'react-hot-toast'
+import { useLoader } from '@/context/LoaderContext'
 
 interface FileUploadProps {
   onUploadComplete?: (resumeId: string, pdfUrl: string) => void
@@ -23,6 +24,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(null)
   const [uploadedResumeId, setUploadedResumeId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { showLoader, hideLoader } = useLoader()
 
   const validateFile = (file: File): string | null => {
     // Check file type
@@ -81,6 +83,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
 
     setUploading(true)
     setProgress(0)
+    showLoader()
 
     try {
       // Direct upload through backend (avoids CORS)
@@ -104,6 +107,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       setProgress(0)
     } finally {
       setUploading(false)
+      hideLoader()
     }
   }
 
@@ -132,8 +136,8 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
           relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
           transition-all duration-200
           ${isDragging
-            ? 'border-primary-500 bg-primary-50'
-            : 'border-secondary-300 bg-white hover:border-primary-400 hover:bg-secondary-50'
+            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+            : 'border-secondary-300 dark:border-secondary-700 bg-white dark:bg-secondary-900 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-secondary-50 dark:hover:bg-secondary-800'
           }
           ${uploading ? 'pointer-events-none opacity-60' : ''}
         `}
@@ -149,14 +153,14 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
 
         {!selectedFile ? (
           <div className="flex flex-col items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-primary-100 flex items-center justify-center">
-              <Upload className="h-8 w-8 text-primary-600" />
+            <div className="h-16 w-16 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
+              <Upload className="h-8 w-8 text-primary-600 dark:text-primary-400" />
             </div>
             <div>
-              <p className="text-lg font-medium text-secondary-900">
+              <p className="text-lg font-medium text-secondary-900 dark:text-white">
                 Drop your resume here or click to browse
               </p>
-              <p className="text-sm text-secondary-600 mt-1">
+              <p className="text-sm text-secondary-600 dark:text-secondary-400 mt-1">
                 Supports PDF, DOC, DOCX up to 10MB
               </p>
             </div>
@@ -164,10 +168,10 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         ) : (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FileText className="h-10 w-10 text-primary-600" />
+              <FileText className="h-10 w-10 text-primary-600 dark:text-primary-400" />
               <div className="text-left">
-                <p className="font-medium text-secondary-900">{selectedFile.name}</p>
-                <p className="text-sm text-secondary-600">
+                <p className="font-medium text-secondary-900 dark:text-white">{selectedFile.name}</p>
+                <p className="text-sm text-secondary-600 dark:text-secondary-400">
                   {formatFileSize(selectedFile.size)}
                 </p>
               </div>
@@ -179,9 +183,9 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                   e.stopPropagation()
                   setSelectedFile(null)
                 }}
-                className="p-2 hover:bg-secondary-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg transition-colors"
               >
-                <X className="h-5 w-5 text-secondary-600" />
+                <X className="h-5 w-5 text-secondary-600 dark:text-secondary-400" />
               </button>
             )}
 
@@ -194,11 +198,11 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         {/* Progress Bar */}
         {uploading && (
           <div className="mt-4">
-            <div className="flex justify-between text-sm text-secondary-600 mb-2">
+            <div className="flex justify-between text-sm text-secondary-600 dark:text-secondary-400 mb-2">
               <span>Uploading...</span>
               <span>{progress}%</span>
             </div>
-            <div className="h-2 bg-secondary-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-secondary-200 dark:bg-secondary-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary-600 transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -219,7 +223,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       )}
 
       {/* Info */}
-      <div className="mt-4 flex items-start gap-2 text-sm text-secondary-600">
+      <div className="mt-4 flex items-start gap-2 text-sm text-secondary-600 dark:text-secondary-400">
         <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
         <p>
           Your resume will be securely stored and analyzed for ATS compatibility.

@@ -26,50 +26,50 @@ import PdfExportModal from '../components/PdfExportModal';
 // Helper functions to parse sections from text
 function normalizeDateFieldsInResume(resume: ResumeData): ResumeData {
   const normalized = { ...resume };
-  
+
   // Normalize experience dates
   normalized.experience = resume.experience.map(exp => ({
     ...exp,
     startDate: normalizeDate(exp.startDate),
     endDate: exp.current ? '' : normalizeDate(exp.endDate),
   }));
-  
+
   // Normalize education dates
   normalized.education = resume.education.map(edu => ({
     ...edu,
     startDate: normalizeDate(edu.startDate),
     endDate: normalizeDate(edu.endDate),
   }));
-  
+
   // Normalize project dates
   normalized.projects = resume.projects.map(proj => ({
     ...proj,
     startDate: normalizeDate(proj.startDate),
     endDate: normalizeDate(proj.endDate),
   }));
-  
+
   return normalized;
 }
 
 function parseExperienceSection(text: string) {
   const experiences: any[] = [];
   const lines = text.split('\n').filter(line => line.trim());
-  
+
   let currentExp: any = null;
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
-    
+
     // Skip empty or section headers
     if (!trimmed || trimmed.match(/^(EXPERIENCE|PROFESSIONAL EXPERIENCE)/i)) continue;
-    
+
     // Detect company/title (usually starts with bullet •)
     if (trimmed.startsWith('•')) {
       // Save previous experience
       if (currentExp && currentExp.company) {
         experiences.push(currentExp);
       }
-      
+
       const content = trimmed.substring(1).trim();
       currentExp = {
         id: crypto.randomUUID(),
@@ -118,12 +118,12 @@ function parseExperienceSection(text: string) {
       currentExp.highlights.push(bullet);
     }
   }
-  
+
   // Add last experience
   if (currentExp && currentExp.company) {
     experiences.push(currentExp);
   }
-  
+
   return experiences.map(exp => ({
     ...exp,
     description: exp.highlights.join('\n'),
@@ -133,21 +133,21 @@ function parseExperienceSection(text: string) {
 function parseEducationSection(text: string) {
   const education: any[] = [];
   const lines = text.split('\n').filter(line => line.trim());
-  
+
   let currentEdu: any = null;
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
-    
+
     // Skip section headers
     if (!trimmed || trimmed.match(/^(EDUCATION)/i)) continue;
-    
+
     // Detect institution (starts with bullet)
     if (trimmed.startsWith('•')) {
       if (currentEdu && currentEdu.school) {
         education.push(currentEdu);
       }
-      
+
       const content = trimmed.substring(1).trim();
       currentEdu = {
         id: crypto.randomUUID(),
@@ -200,40 +200,40 @@ function parseEducationSection(text: string) {
       currentEdu.location = trimmed;
     }
   }
-  
+
   if (currentEdu && currentEdu.school) {
     education.push(currentEdu);
   }
-  
+
   return education;
 }
 
 function parseProjectsSection(text: string) {
   const projects: any[] = [];
   const lines = text.split('\n').filter(line => line.trim());
-  
+
   let currentProject: any = null;
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
-    
+
     // Skip section headers
     if (!trimmed || trimmed.match(/^(PROJECTS)/i)) continue;
-    
+
     // Project name (starts with bullet)
     if (trimmed.startsWith('•')) {
       if (currentProject && currentProject.name) {
         projects.push(currentProject);
       }
-      
+
       const content = trimmed.substring(1).trim();
-      
+
       // Extract date if present at the end
       const dateMatch = content.match(/([A-Za-z]{3}\s+\d{4})\s*[-–]\s*([A-Za-z]{3}\s+\d{4}|Present)$/i);
       let name = content;
       let startDate = '';
       let endDate = '';
-      
+
       if (dateMatch) {
         name = content.replace(dateMatch[0], '').trim();
         startDate = dateMatch[1];
@@ -246,7 +246,7 @@ function parseProjectsSection(text: string) {
           endDate = singleDateMatch[1];
         }
       }
-      
+
       currentProject = {
         id: crypto.randomUUID(),
         name: name,
@@ -271,11 +271,11 @@ function parseProjectsSection(text: string) {
       currentProject.highlights.push(bullet);
     }
   }
-  
+
   if (currentProject && currentProject.name) {
     projects.push(currentProject);
   }
-  
+
   return projects.map(proj => ({
     ...proj,
     description: proj.highlights.join('\n'),
@@ -285,13 +285,13 @@ function parseProjectsSection(text: string) {
 function parseSkillsSection(text: string): { category: string; items: string[] }[] {
   const skillCategories: { category: string; items: string[] }[] = [];
   const lines = text.split('\n').filter(line => line.trim());
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
-    
+
     // Skip section headers
     if (!trimmed || trimmed.match(/^(TECHNICAL SKILLS|SKILLS)/i)) continue;
-    
+
     // Category with bullet: • Category: skill1, skill2, skill3
     if (trimmed.startsWith('•') && trimmed.includes(':')) {
       const content = trimmed.substring(1).trim();
@@ -300,7 +300,7 @@ function parseSkillsSection(text: string): { category: string; items: string[] }
         const category = parts[0].trim();
         const skillsText = parts.slice(1).join(':').trim();
         const skills = skillsText.split(',').map(s => s.trim()).filter(s => s && s.length < 100);
-        
+
         if (skills.length > 0) {
           skillCategories.push({ category, items: skills });
         }
@@ -313,14 +313,14 @@ function parseSkillsSection(text: string): { category: string; items: string[] }
         const category = parts[0].trim();
         const skillsText = parts.slice(1).join(':').trim();
         const skills = skillsText.split(',').map(s => s.trim()).filter(s => s && s.length < 100);
-        
+
         if (skills.length > 0) {
           skillCategories.push({ category, items: skills });
         }
       }
     }
   }
-  
+
   // If no categories found, try to parse as simple comma-separated list
   if (skillCategories.length === 0) {
     const allText = lines.join(' ');
@@ -329,14 +329,14 @@ function parseSkillsSection(text: string): { category: string; items: string[] }
       skillCategories.push({ category: 'Skills', items: skills });
     }
   }
-  
+
   return skillCategories;
 }
 
 function parseCertificationsSection(text: string) {
   const certifications: any[] = [];
   const lines = text.split('\n').filter(line => line.trim());
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
@@ -346,7 +346,7 @@ function parseCertificationsSection(text: string) {
       }
     }
   }
-  
+
   return certifications;
 }
 
@@ -371,31 +371,31 @@ export const ResumeEditorPage: React.FC = () => {
     const loadResume = async () => {
       try {
         setLoading(true);
-        
+
         // First, try to load existing resume data from Firestore
         let data = await getResume(user.uid, resumeId);
-        
+
         // If no data exists, try to get parsed data from backend
         if (!data) {
           try {
             const { resumeService } = await import('../services/resume.service');
             const resumeDetail = await resumeService.getResume(resumeId);
-            
-              console.log('Resume Detail:', resumeDetail);
-              console.log('Full Resume Detail JSON:', JSON.stringify(resumeDetail, null, 2));
-              console.log('Sections:', (resumeDetail as any).sections);
-              console.log('Parsed Data:', (resumeDetail as any).parsed_data);
-              console.log('Contact Info:', resumeDetail.contact_info);
-              console.log('🎯 EXTRACTED FIELDS CHECK:');
-              console.log('Projects from API:', (resumeDetail as any).projects);
-              console.log('Experience from API:', (resumeDetail as any).experience);
-              console.log('Education from API:', (resumeDetail as any).education);
-              console.log('Skills from API:', (resumeDetail as any).skills);
-            
+
+            console.log('Resume Detail:', resumeDetail);
+            console.log('Full Resume Detail JSON:', JSON.stringify(resumeDetail, null, 2));
+            console.log('Sections:', (resumeDetail as any).sections);
+            console.log('Parsed Data:', (resumeDetail as any).parsed_data);
+            console.log('Contact Info:', resumeDetail.contact_info);
+            console.log('🎯 EXTRACTED FIELDS CHECK:');
+            console.log('Projects from API:', (resumeDetail as any).projects);
+            console.log('Experience from API:', (resumeDetail as any).experience);
+            console.log('Education from API:', (resumeDetail as any).education);
+            console.log('Skills from API:', (resumeDetail as any).skills);
+
             // If we have parsed data, create initial resume data
             if (resumeDetail.parsed_text) {
               const newResume = createEmptyResume();
-              
+
               // Populate contact info - handle all possible field name variations
               if (resumeDetail.contact_info) {
                 const contactInfo = resumeDetail.contact_info;
@@ -409,7 +409,7 @@ export const ResumeEditorPage: React.FC = () => {
                   portfolio: contactInfo.website || contactInfo.portfolio || '',
                 };
               }
-              
+
               // If we still don't have a fullName but have email/phone, try to extract from parsed text
               if (!newResume.contact.fullName && resumeDetail.parsed_text) {
                 // Look for a name at the very beginning of the resume (before email/phone)
@@ -418,16 +418,16 @@ export const ResumeEditorPage: React.FC = () => {
                   newResume.contact.fullName = firstLine.trim();
                 }
               }
-              
+
               console.log('Contact Info from API:', resumeDetail.contact_info);
               console.log('Populated Contact:', newResume.contact);
-              
+
               // Parse the full text since backend didn't split sections properly
               const fullText = resumeDetail.parsed_text || '';
               const sections = (resumeDetail as any).sections || {};
-              
+
               const textToParse = (sections.header && sections.header.length > 500) ? sections.header : fullText;
-              
+
               console.log('Text to parse length:', textToParse.length);
               console.log('First 200 chars:', textToParse.substring(0, 200));
               const summaryMatch = textToParse.match(/(?:PROFESSIONAL\s*SUMMARY|SUMMARY|PROFILE|OBJECTIVE|ABOUT\s*ME)(?:[\s\S]*?)(?=EXPERIENCE|WORK\s*HISTORY|EDUCATION|SKILLS|PROJECTS)/i);
@@ -436,7 +436,7 @@ export const ResumeEditorPage: React.FC = () => {
                 const summaryText = summaryMatch[0].replace(/^(?:PROFESSIONAL\s*SUMMARY|SUMMARY|PROFILE|OBJECTIVE|ABOUT\s*ME)/i, '').trim();
                 newResume.summary = summaryText;
               }
-              
+
               // Extract and parse experience section
               // First, try to use the extracted experience from the backend API
               if ((resumeDetail as any).experience && Array.isArray((resumeDetail as any).experience) && (resumeDetail as any).experience.length > 0) {
@@ -464,7 +464,7 @@ export const ResumeEditorPage: React.FC = () => {
                   }
                 }
               }
-              
+
               // Extract and parse projects section
               // First, try to use the extracted projects from the backend API
               if ((resumeDetail as any).projects && Array.isArray((resumeDetail as any).projects) && (resumeDetail as any).projects.length > 0) {
@@ -487,7 +487,7 @@ export const ResumeEditorPage: React.FC = () => {
                   }
                 }
               }
-              
+
               // Extract and parse certifications section
               if ((resumeDetail as any).certifications && Array.isArray((resumeDetail as any).certifications) && (resumeDetail as any).certifications.length > 0) {
                 newResume.certifications = ((resumeDetail as any).certifications as any[]).map((c: any) => ({
@@ -509,7 +509,7 @@ export const ResumeEditorPage: React.FC = () => {
                   date: a.date || '',
                 }));
               }
-              
+
               // Extract and parse skills section
               const skillsMatch = textToParse.match(/(?:TECHNICAL\s*SKILLS|SKILLS|CORE\s*COMPETENCIES)(?:[\s\S]*?)(?=---|HACKATHONS|ACHIEVEMENTS|INTERESTS|EDUCATION)/i);
               if (skillsMatch) {
@@ -521,7 +521,7 @@ export const ResumeEditorPage: React.FC = () => {
               } else {
                 console.log('Skills section not found');
               }
-              
+
               // Extract and parse education section
               // First, try to use the extracted education from the backend API
               if ((resumeDetail as any).education && Array.isArray((resumeDetail as any).education) && (resumeDetail as any).education.length > 0) {
@@ -547,7 +547,7 @@ export const ResumeEditorPage: React.FC = () => {
                   }
                 }
               }
-              
+
               // Extract certifications/hackathons
               const hackathonsMatch = textToParse.match(/HACKATHONS\s*&\s*COMPETITIONS\s*([\s\S]*?)(?=EDUCATION|$)/i);
               if (hackathonsMatch) {
@@ -557,7 +557,7 @@ export const ResumeEditorPage: React.FC = () => {
                   (newResume as any).certifications = certs;
                 }
               }
-              
+
               console.log('Parsed Resume Data:', newResume);
               console.log('✅ PARSING COMPLETE');
               console.log('Contact Name:', newResume.contact.fullName);
@@ -568,7 +568,7 @@ export const ResumeEditorPage: React.FC = () => {
               console.log('Skills count:', newResume.skills.length);
               console.log('Education count:', newResume.education.length);
               data = newResume;
-              
+
               // Save the initialized data to Firestore
               await saveResume(user.uid, resumeId, newResume);
             }
@@ -576,7 +576,7 @@ export const ResumeEditorPage: React.FC = () => {
             console.error('Error loading parsed resume data:', error);
           }
         }
-        
+
         if (data) {
           setResumeData(data);
         }
@@ -699,15 +699,15 @@ export const ResumeEditorPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50">
+    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
       {/* Header */}
-      <div className="bg-white border-b border-secondary-200 sticky top-0 z-10">
+      <div className="bg-white dark:bg-secondary-900 border-b border-secondary-200 dark:border-secondary-800 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/resumes')}
-                className="text-secondary-600 hover:text-secondary-900"
+                className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100"
               >
                 <svg
                   className="w-6 h-6"
@@ -724,10 +724,10 @@ export const ResumeEditorPage: React.FC = () => {
                 </svg>
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-secondary-900">
+                <h1 className="text-2xl font-bold text-secondary-900 dark:text-secondary-50">
                   Resume Editor
                 </h1>
-                <p className="text-sm text-secondary-600">
+                <p className="text-sm text-secondary-600 dark:text-secondary-400">
                   {resumeData.contact.fullName || 'Untitled Resume'}
                 </p>
               </div>
@@ -755,7 +755,7 @@ export const ResumeEditorPage: React.FC = () => {
                 </svg>
                 {showPreview ? 'Hide' : 'Show'} Preview
               </button>
-              
+
               {showPreview && (
                 <button
                   onClick={handlePrint}
@@ -770,45 +770,45 @@ export const ResumeEditorPage: React.FC = () => {
 
               {/* Save Status */}
               <div className="flex items-center gap-2">
-              {saveStatus === 'saving' && (
-                <span className="text-sm text-secondary-600 flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Saving...
-                </span>
-              )}
-              {saveStatus === 'saved' && (
-                <span className="text-sm text-green-600 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Saved
-                </span>
-              )}
-              {saveStatus === 'error' && (
-                <span className="text-sm text-red-600">Save failed</span>
-              )}
+                {saveStatus === 'saving' && (
+                  <span className="text-sm text-secondary-600 dark:text-secondary-400 flex items-center gap-2">
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Saving...
+                  </span>
+                )}
+                {saveStatus === 'saved' && (
+                  <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Saved
+                  </span>
+                )}
+                {saveStatus === 'error' && (
+                  <span className="text-sm text-red-600 dark:text-red-400">Save failed</span>
+                )}
               </div>
             </div>
           </div>
