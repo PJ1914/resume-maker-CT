@@ -12,6 +12,7 @@ from app.services.ats_scorer import ATSScorer
 from app.services.gemini_scorer import HybridScorer
 from app.services.cache import get_cached_score, set_cached_score
 from app.services.audit import log_scoring_request, check_rate_limit
+from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
 from app.config import settings
 import logging
 
@@ -106,6 +107,18 @@ async def score_resume(
                 
                 return ScoringResponse(**cached_result)
         
+        # Check credits before proceeding with expensive scoring
+        if not has_sufficient_credits(uid, FeatureType.ATS_SCORING):
+            user_credits = get_user_credits(uid)
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "message": "Insufficient credits for ATS scoring",
+                    "current_balance": user_credits["balance"],
+                    "required": FEATURE_COSTS[FeatureType.ATS_SCORING]
+                }
+            )
+
         # Check rate limit for Gemini calls
         if request.prefer_gemini:
             within_limit = await check_rate_limit(uid, settings.MAX_GEMINI_CALLS_PER_USER_PER_DAY)
@@ -132,6 +145,9 @@ async def score_resume(
             job_description=request.job_description,
             prefer_gemini=request.prefer_gemini
         )
+        
+        # Deduct credits after successful scoring
+        deduct_credits(uid, FeatureType.ATS_SCORING, f"ATS Scoring for resume {resume_id}")
         
         # Add scoring method
         score_result['scoring_method'] = score_result.get('scoring_method', 'hybrid')

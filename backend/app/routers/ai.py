@@ -9,6 +9,8 @@ import google.generativeai as genai
 from typing import Optional
 from app.config import settings
 from app.dependencies import get_current_user
+from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
+from fastapi import status
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,6 +54,20 @@ async def improve_content(
         ImprovementResponse with improved content and suggestions
     """
     try:
+        user_id = current_user['uid']
+        
+        # Check credits
+        if not has_sufficient_credits(user_id, FeatureType.AI_SUGGESTION):
+            user_credits = get_user_credits(user_id)
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "message": "Insufficient credits for AI suggestion",
+                    "current_balance": user_credits["balance"],
+                    "required": FEATURE_COSTS[FeatureType.AI_SUGGESTION]
+                }
+            )
+
         # Create appropriate prompt based on context
         prompts = {
             "summary": """You are an expert resume writer. Improve the following professional summary to make it more compelling and ATS-friendly.
@@ -124,6 +140,9 @@ Provide ONLY a comma-separated list of skills, nothing else.""",
             suggestions = [s.strip() for s in improved_text.split(",")]
             improved_text = request.text  # Keep original for skill suggestions
 
+        # Deduct credits
+        deduct_credits(user_id, FeatureType.AI_SUGGESTION, f"AI Suggestion for {request.context}")
+
         return ImprovementResponse(
             original=request.text, improved=improved_text, suggestions=suggestions
         )
@@ -144,6 +163,20 @@ async def rewrite_content(
     Similar to improve but generates completely new content based on the input
     """
     try:
+        user_id = current_user['uid']
+        
+        # Check credits
+        if not has_sufficient_credits(user_id, FeatureType.AI_REWRITE):
+            user_credits = get_user_credits(user_id)
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "message": "Insufficient credits for AI rewrite",
+                    "current_balance": user_credits["balance"],
+                    "required": FEATURE_COSTS[FeatureType.AI_REWRITE]
+                }
+            )
+
         prompt = f"""You are an expert resume writer. Completely rewrite the following content to make it more professional and impactful.
 
 Context: {request.context}
@@ -162,6 +195,9 @@ Provide ONLY the rewritten content, nothing else."""
         )
 
         improved_text = response.text.strip()
+
+        # Deduct credits
+        deduct_credits(user_id, FeatureType.AI_REWRITE, f"AI Rewrite for {request.context}")
 
         return ImprovementResponse(
             original=request.text, improved=improved_text, suggestions=[]

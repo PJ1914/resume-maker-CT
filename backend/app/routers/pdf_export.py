@@ -14,6 +14,7 @@ from app.dependencies import get_current_user
 from app.services.firestore import get_resume_data
 from app.services.latex_compiler import latex_compiler, TemplateType
 from app.services.storage import upload_resume_pdf, get_signed_url
+from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
 
 router = APIRouter(prefix="/api/resumes", tags=["PDF Export"])
 
@@ -50,8 +51,22 @@ async def export_resume_pdf(
         ExportResponse with storage URL and signed download URL
     """
     try:
+        user_id = current_user["uid"]
+        
+        # Check credits
+        if not has_sufficient_credits(user_id, FeatureType.PDF_EXPORT):
+            user_credits = get_user_credits(user_id)
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "message": "Insufficient credits for PDF export",
+                    "current_balance": user_credits["balance"],
+                    "required": FEATURE_COSTS[FeatureType.PDF_EXPORT]
+                }
+            )
+
         # Get resume data from Firestore
-        resume_data = get_resume_data(resume_id, current_user["uid"])
+        resume_data = get_resume_data(resume_id, user_id)
         
         if not resume_data:
             raise HTTPException(
@@ -99,6 +114,9 @@ async def export_resume_pdf(
                     expiration=timedelta(days=7)
                 )
                 
+                # Deduct credits
+                deduct_credits(user_id, FeatureType.PDF_EXPORT, f"PDF Export for resume {resume_id}")
+
                 return ExportResponse(
                     success=True,
                     storage_url=storage_url,
@@ -114,6 +132,9 @@ async def export_resume_pdf(
                 )
         
         else:
+            # Deduct credits
+            deduct_credits(user_id, FeatureType.PDF_EXPORT, f"PDF Export for resume {resume_id}")
+
             # Return PDF directly without saving
             return ExportResponse(
                 success=True,
@@ -149,8 +170,22 @@ async def download_resume_pdf(
         StreamingResponse with PDF file
     """
     try:
+        user_id = current_user["uid"]
+        
+        # Check credits
+        if not has_sufficient_credits(user_id, FeatureType.PDF_EXPORT):
+            user_credits = get_user_credits(user_id)
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "message": "Insufficient credits for PDF export",
+                    "current_balance": user_credits["balance"],
+                    "required": FEATURE_COSTS[FeatureType.PDF_EXPORT]
+                }
+            )
+
         # Get resume data from Firestore
-        resume_data = get_resume_data(resume_id, current_user["uid"])
+        resume_data = get_resume_data(resume_id, user_id)
         
         if not resume_data:
             raise HTTPException(
@@ -169,6 +204,9 @@ async def download_resume_pdf(
         name = contact.get("fullName", "Resume").replace(" ", "_")
         filename = f"{name}_{template}.pdf"
         
+        # Deduct credits
+        deduct_credits(user_id, FeatureType.PDF_EXPORT, f"PDF Download for resume {resume_id}")
+
         # Return as streaming response
         return StreamingResponse(
             io.BytesIO(pdf_content),

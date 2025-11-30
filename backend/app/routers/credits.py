@@ -160,20 +160,28 @@ async def purchase_credits(
     # For now, this is a placeholder
     
     # Add credits
-    description = f"Purchased {package['name']} - ₹{package['price']}"
-    if add_credits(user_id, package["credits"], CreditTransactionType.PURCHASE, description):
-        credits = get_user_credits(user_id)
-        return {
-            "success": True,
-            "message": f"Added {package['credits']} credits",
-            "new_balance": credits["balance"],
-            "package": package,
-        }
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to add credits"
-        )
+    # description = f"Purchased {package['name']} - ₹{package['price']}"
+    # if add_credits(user_id, package["credits"], CreditTransactionType.PURCHASE, description):
+    #     credits = get_user_credits(user_id)
+    #     return {
+    #         "success": True,
+    #         "message": f"Added {package['credits']} credits",
+    #         "new_balance": credits["balance"],
+    #         "package": package,
+    #     }
+    # else:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #         detail="Failed to add credits"
+    #     )
+    
+    # Return pending status
+    return {
+        "success": False,
+        "message": "Payment integration is pending. Please contact admin to complete purchase.",
+        "payment_id": "mock_payment_id",
+        "status": "pending"
+    }
 
 @router.get("/history", response_model=List[CreditTransactionResponse])
 async def get_history(
