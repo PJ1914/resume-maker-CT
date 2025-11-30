@@ -568,8 +568,7 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
     if edited_data:
         # Map edited data fields to metadata structure
         if 'summary' in edited_data:
-            result['parsed_text'] = edited_data['summary'] # Use summary as main text representation
-            # Also update the summary in sections if it exists
+            # Update the summary in sections
             if 'sections' not in result or result['sections'] is None:
                 result['sections'] = {}
             result['sections']['summary'] = edited_data['summary']
@@ -601,7 +600,7 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
                 soft = []
                 
                 for cat in editor_skills:
-                    if isinstance(cat, dict) and 'items' in cat:
+                    if isinstance(cat, dict) and 'items' in cat and isinstance(cat['items'], list):
                         # Add all items to technical for now, or try to classify
                         # If category name contains "Soft", put in soft
                         cat_name = cat.get('category', '').lower()
