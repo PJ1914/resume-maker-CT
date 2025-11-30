@@ -82,21 +82,21 @@ export default function ComprehensiveATSScore({
   };
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 90) return 'bg-green-50 border-green-200';
-    if (score >= 80) return 'bg-blue-50 border-blue-200';
-    if (score >= 70) return 'bg-yellow-50 border-yellow-200';
-    if (score >= 60) return 'bg-orange-50 border-orange-200';
-    return 'bg-red-50 border-red-200';
+    if (score >= 90) return 'bg-secondary-50 border-secondary-300';
+    if (score >= 80) return 'bg-secondary-50 border-secondary-300';
+    if (score >= 70) return 'bg-secondary-50 border-secondary-300';
+    if (score >= 60) return 'bg-secondary-100 border-secondary-300';
+    return 'bg-secondary-100 border-secondary-300';
   };
 
   const getRatingBadgeStyle = (rating: string) => {
     switch (rating.toLowerCase()) {
-      case 'excellent': return 'bg-green-600 text-white';
-      case 'very good': return 'bg-blue-600 text-white';
-      case 'good': return 'bg-emerald-600 text-white';
-      case 'fair': return 'bg-yellow-600 text-white';
-      case 'needs improvement': return 'bg-orange-600 text-white';
-      default: return 'bg-gray-600 text-white';
+      case 'excellent': return 'bg-primary-900 text-white';
+      case 'very good': return 'bg-primary-800 text-white';
+      case 'good': return 'bg-secondary-700 text-white';
+      case 'fair': return 'bg-secondary-600 text-white';
+      case 'needs improvement': return 'bg-secondary-600 text-white';
+      default: return 'bg-secondary-600 text-white';
     }
   };
 
@@ -114,7 +114,7 @@ export default function ComprehensiveATSScore({
       <div className="bg-white rounded-xl border border-secondary-200 p-8">
         <div className="flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-900 mx-auto mb-4"></div>
             <p className="text-secondary-600 font-medium">Analyzing your resume...</p>
             <p className="text-sm text-secondary-500 mt-2">Evaluating 6 ATS parameters</p>
           </div>
@@ -166,7 +166,7 @@ export default function ComprehensiveATSScore({
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-secondary-50 transition-colors rounded-t-xl"
         >
           <div className="flex items-center gap-3">
-            <TrendingUp className="h-5 w-5 text-primary-600" />
+            <TrendingUp className="h-5 w-5 text-primary-900" />
             <h3 className="text-lg font-semibold text-secondary-900">Detailed Score Breakdown</h3>
           </div>
           {expandedSections.breakdown ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
@@ -187,9 +187,9 @@ export default function ComprehensiveATSScore({
                       </span>
                       <span className="text-sm text-secondary-600">/ {data.max_score}</span>
                       <span className={`text-sm font-medium px-2 py-1 rounded ${
-                        data.percentage >= 80 ? 'bg-green-100 text-green-700' :
-                        data.percentage >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
+                        data.percentage >= 80 ? 'bg-secondary-200 text-secondary-800' :
+                        data.percentage >= 60 ? 'bg-secondary-100 text-secondary-700' :
+                        'bg-secondary-100 text-secondary-700'
                       }`}>
                         {data.percentage.toFixed(0)}%
                       </span>
@@ -198,9 +198,9 @@ export default function ComprehensiveATSScore({
                   <div className="w-full bg-secondary-200 rounded-full h-3 overflow-hidden">
                     <div
                       className={`h-3 rounded-full transition-all duration-700 ${
-                        data.percentage >= 80 ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
-                        data.percentage >= 60 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
-                        'bg-gradient-to-r from-red-500 to-rose-600'
+                        data.percentage >= 80 ? 'bg-primary-900' :
+                        data.percentage >= 60 ? 'bg-primary-700' :
+                        'bg-secondary-600'
                       }`}
                       style={{ width: `${data.percentage}%` }}
                     />
@@ -214,24 +214,24 @@ export default function ComprehensiveATSScore({
 
       {/* Strengths */}
       {strengths.length > 0 && (
-        <div className="bg-white rounded-xl border border-green-200">
+        <div className="bg-white rounded-xl border border-secondary-300">
           <button
             onClick={() => toggleSection('strengths')}
-            className="w-full px-6 py-4 flex items-center justify-between hover:bg-green-50 transition-colors rounded-t-xl"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-secondary-100 transition-colors rounded-t-xl"
           >
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <h3 className="text-lg font-semibold text-green-900">Resume Strengths ({strengths.length})</h3>
+              <CheckCircle className="h-5 w-5 text-primary-900" />
+              <h3 className="text-lg font-semibold text-secondary-900">Resume Strengths ({strengths.length})</h3>
             </div>
             {expandedSections.strengths ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </button>
 
           {expandedSections.strengths && (
-            <div className="p-6 bg-green-50 border-t border-green-200 rounded-b-xl">
+            <div className="p-6 bg-secondary-50 border-t border-secondary-300 rounded-b-xl">
               <ul className="grid md:grid-cols-2 gap-3">
                 {strengths.map((strength, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-sm text-green-900">
-                    <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <li key={idx} className="flex items-start gap-3 text-sm text-secondary-900">
+                    <CheckCircle className="h-4 w-4 text-primary-900 mt-0.5 flex-shrink-0" />
                     <span>{strength}</span>
                   </li>
                 ))}
@@ -243,24 +243,24 @@ export default function ComprehensiveATSScore({
 
       {/* Weaknesses */}
       {weaknesses.length > 0 && (
-        <div className="bg-white rounded-xl border border-red-200">
+        <div className="bg-white rounded-xl border border-secondary-300">
           <button
             onClick={() => toggleSection('weaknesses')}
-            className="w-full px-6 py-4 flex items-center justify-between hover:bg-red-50 transition-colors rounded-t-xl"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-secondary-100 transition-colors rounded-t-xl"
           >
             <div className="flex items-center gap-3">
-              <XCircle className="h-5 w-5 text-red-600" />
-              <h3 className="text-lg font-semibold text-red-900">Areas to Improve ({weaknesses.length})</h3>
+              <XCircle className="h-5 w-5 text-secondary-700" />
+              <h3 className="text-lg font-semibold text-secondary-900">Areas to Improve ({weaknesses.length})</h3>
             </div>
             {expandedSections.weaknesses ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </button>
 
           {expandedSections.weaknesses && (
-            <div className="p-6 bg-red-50 border-t border-red-200 rounded-b-xl">
+            <div className="p-6 bg-secondary-50 border-t border-secondary-300 rounded-b-xl">
               <ul className="grid md:grid-cols-2 gap-3">
                 {weaknesses.map((weakness, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-sm text-red-900">
-                    <XCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <li key={idx} className="flex items-start gap-3 text-sm text-secondary-900">
+                    <XCircle className="h-4 w-4 text-secondary-700 mt-0.5 flex-shrink-0" />
                     <span>{weakness}</span>
                   </li>
                 ))}
@@ -272,14 +272,14 @@ export default function ComprehensiveATSScore({
 
       {/* Missing Keywords */}
       {missing_keywords.length > 0 && (
-        <div className="bg-white rounded-xl border border-orange-200">
+        <div className="bg-white rounded-xl border border-secondary-300">
           <button
             onClick={() => toggleSection('keywords')}
-            className="w-full px-6 py-4 flex items-center justify-between hover:bg-orange-50 transition-colors rounded-t-xl"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-secondary-100 transition-colors rounded-t-xl"
           >
             <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-orange-600" />
-              <h3 className="text-lg font-semibold text-orange-900">
+              <AlertCircle className="h-5 w-5 text-secondary-700" />
+              <h3 className="text-lg font-semibold text-secondary-900">
                 Missing Keywords ({missing_keywords.length})
               </h3>
             </div>
@@ -287,7 +287,7 @@ export default function ComprehensiveATSScore({
           </button>
 
           {expandedSections.keywords && (
-            <div className="p-6 bg-orange-50 border-t border-orange-200 rounded-b-xl">
+            <div className="p-6 bg-secondary-50 border-t border-secondary-300 rounded-b-xl">
               <p className="text-sm text-orange-800 mb-4">
                 These keywords from the job description are missing from your resume. Consider adding relevant ones:
               </p>
@@ -308,11 +308,11 @@ export default function ComprehensiveATSScore({
         <div className="bg-white rounded-xl border border-blue-200">
           <button
             onClick={() => toggleSection('recommendations')}
-            className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors rounded-t-xl"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-secondary-100 transition-colors rounded-t-xl"
           >
             <div className="flex items-center gap-3">
-              <Lightbulb className="h-5 w-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-blue-900">
+              <Lightbulb className="h-5 w-5 text-secondary-700" />
+              <h3 className="text-lg font-semibold text-secondary-900">
                 Actionable Recommendations ({recommendations.length})
               </h3>
             </div>
@@ -320,11 +320,11 @@ export default function ComprehensiveATSScore({
           </button>
 
           {expandedSections.recommendations && (
-            <div className="p-6 bg-blue-50 border-t border-blue-200 rounded-b-xl">
+            <div className="p-6 bg-secondary-50 border-t border-secondary-300 rounded-b-xl">
               <ul className="space-y-3">
                 {recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-sm text-blue-900">
-                    <span className="flex-shrink-0 w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
+                  <li key={idx} className="flex items-start gap-3 text-sm text-secondary-900">
+                    <span className="flex-shrink-0 w-7 h-7 bg-primary-900 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
                       {idx + 1}
                     </span>
                     <span className="leading-relaxed pt-1">{rec}</span>
@@ -338,16 +338,16 @@ export default function ComprehensiveATSScore({
 
       {/* Improved Bullet Examples */}
       {improved_bullets.length > 0 && (
-        <div className="bg-white rounded-xl border border-purple-200">
+        <div className="bg-white rounded-xl border border-secondary-300">
           <button
             onClick={() => toggleSection('examples')}
-            className="w-full px-6 py-4 flex items-center justify-between hover:bg-purple-50 transition-colors rounded-t-xl"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-secondary-100 transition-colors rounded-t-xl"
           >
             <div className="flex items-center gap-3">
-              <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-secondary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              <h3 className="text-lg font-semibold text-purple-900">
+              <h3 className="text-lg font-semibold text-secondary-900">
                 Improved Bullet Point Examples ({improved_bullets.length})
               </h3>
             </div>
@@ -355,9 +355,9 @@ export default function ComprehensiveATSScore({
           </button>
 
           {expandedSections.examples && (
-            <div className="p-6 bg-purple-50 border-t border-purple-200 rounded-b-xl space-y-4">
+            <div className="p-6 bg-secondary-50 border-t border-secondary-300 rounded-b-xl space-y-4">
               {improved_bullets.map((bullet, idx) => (
-                <div key={idx} className="bg-white border border-purple-200 rounded-lg p-4">
+                <div key={idx} className="bg-white border border-secondary-200 rounded-lg p-4">
                   <div className="mb-3">
                     <span className="text-xs font-semibold text-purple-700 uppercase">Original</span>
                     <p className="text-sm text-secondary-700 mt-1 italic">{bullet.original}</p>

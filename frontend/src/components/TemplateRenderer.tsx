@@ -11,25 +11,8 @@ interface TemplateRendererProps {
   resume: ResumeDetail;
 }
 
-export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ resume }) => {
+export const TemplateRenderer: React.FC<TemplateRendererProps> = React.memo(({ resume }) => {
   const template = resume.template || 'modern'
-  
-  // Debug logging
-  if (typeof window !== 'undefined') {
-    console.log('TemplateRenderer - Full Resume object:', resume)
-    console.log('TemplateRenderer - Resume data:', {
-      template,
-      has_experience: !!resume.experience && resume.experience.length > 0,
-      has_education: !!resume.education && resume.education.length > 0,
-      has_projects: !!resume.projects && resume.projects.length > 0,
-      experience_count: resume.experience?.length || 0,
-      education_count: resume.education?.length || 0,
-      projects_count: resume.projects?.length || 0,
-      experience_data: resume.experience,
-      education_data: resume.education,
-      projects_data: resume.projects,
-    })
-  }
   
   const formatDate = (dateStr: string | undefined): string => {
     if (!dateStr) return '';
@@ -643,4 +626,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ resume }) =>
   } else {
     return <ModernTemplate />;
   }
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if resume_id or status changed
+  return prevProps.resume.resume_id === nextProps.resume.resume_id && 
+         prevProps.resume.status === nextProps.resume.status;
+});

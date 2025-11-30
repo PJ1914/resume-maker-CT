@@ -107,7 +107,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       e.stopPropagation();
                       removeExperience(exp.id);
                     }}
-                    className="text-red-600 hover:text-red-700 p-1"
+                    className="text-danger-600 hover:text-danger-700 p-1"
                   >
                     <svg
                       className="w-5 h-5"
@@ -281,7 +281,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                           />
                           <button
                             onClick={() => removeHighlight(exp.id, hIndex)}
-                            className="text-red-600 hover:text-red-700 p-2"
+                            className="text-danger-600 hover:text-danger-700 p-2"
                           >
                             <svg
                               className="w-5 h-5"

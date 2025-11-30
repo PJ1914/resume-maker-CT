@@ -49,14 +49,14 @@ export default function TemplateSelector({
               relative p-6 rounded-lg border-2 text-left transition-all
               ${
                 selectedTemplate === template.id
-                  ? 'border-blue-500 bg-blue-50 shadow-lg'
+                  ? 'border-secondary-300 bg-secondary-500 shadow-lg'
                   : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
               }
             `}
           >
             {/* Selection indicator */}
             {selectedTemplate === template.id && (
-              <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="absolute top-3 right-3 w-6 h-6 bg-secondary-500 rounded-full flex items-center justify-center">
                 <svg
                   className="w-4 h-4 text-white"
                   fill="none"
@@ -77,19 +77,19 @@ export default function TemplateSelector({
             <div className="text-4xl mb-3">{template.icon}</div>
 
             {/* Template name */}
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-secondary-700 mb-2">
               {template.name}
             </h3>
 
             {/* Description */}
-            <p className="text-sm text-gray-600 mb-4">{template.description}</p>
+            <p className="text-sm text-secondary-700 mb-4">{template.description}</p>
 
             {/* Features */}
             <ul className="space-y-1">
               {template.features.map((feature, idx) => (
-                <li key={idx} className="text-xs text-gray-500 flex items-center">
+                <li key={idx} className="text-xs text-secondary-700 flex items-center">
                   <svg
-                    className="w-3 h-3 mr-2 text-green-500"
+                    className="w-3 h-3 mr-2 text-success-500"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >

@@ -9,6 +9,8 @@ import ExperienceStepForm from '../components/wizard/ExperienceStepForm'
 import EducationStepForm from '../components/wizard/EducationStepForm'
 import SkillsStepForm from '../components/wizard/SkillsStepForm'
 import ProjectsStepForm from '../components/wizard/ProjectsStepForm'
+import CertificationsStepForm from '../components/wizard/CertificationsStepForm'
+import AchievementsStepForm from '../components/wizard/AchievementsStepForm'
 import ReviewStep from '../components/wizard/ReviewStep'
 import toast from 'react-hot-toast'
 import { apiClient } from '../services/api.ts'
@@ -21,7 +23,9 @@ const WIZARD_STEPS: WizardStep[] = [
   { id: 4, title: 'Education', description: 'Academic background' },
   { id: 5, title: 'Skills', description: 'Technologies' },
   { id: 6, title: 'Projects', description: 'Portfolio items' },
-  { id: 7, title: 'Review', description: 'Finalize resume' },
+  { id: 7, title: 'Certifications', description: 'Credentials' },
+  { id: 8, title: 'Achievements', description: 'Awards & honors' },
+  { id: 9, title: 'Review', description: 'Finalize resume' },
 ]
 
 export default function ResumeWizardPage() {
@@ -52,6 +56,8 @@ export default function ResumeWizardPage() {
       soft: [] as string[],
     },
     projects: [] as any[],
+    certifications: [] as any[],
+    achievements: [] as any[],
   })
 
   const updateResumeData = (section: string, data: any) => {
@@ -145,6 +151,8 @@ export default function ResumeWizardPage() {
                 if (data.education) updateResumeData('education', data.education)
                 if (data.skills) updateResumeData('skills', data.skills)
                 if (data.projects) updateResumeData('projects', data.projects)
+                if (data.certifications) updateResumeData('certifications', data.certifications)
+                if (data.achievements) updateResumeData('achievements', data.achievements)
                 toast.success('Resume data extracted! Continue to review and edit.')
               }
               // Move to next step whether data extracted or skip
@@ -196,6 +204,20 @@ export default function ResumeWizardPage() {
           />
         )
       case 7:
+        return (
+          <CertificationsStepForm
+            data={resumeData.certifications}
+            onChange={(data: any[]) => updateResumeData('certifications', data)}
+          />
+        )
+      case 8:
+        return (
+          <AchievementsStepForm
+            data={resumeData.achievements}
+            onChange={(data: any[]) => updateResumeData('achievements', data)}
+          />
+        )
+      case 9:
         return <ReviewStep data={resumeData} />
       default:
         console.warn('Unknown step:', currentStep)
@@ -284,7 +306,7 @@ export default function ResumeWizardPage() {
             <button
               onClick={handleCreateResume}
               disabled={creating}
-              className="px-8 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors font-medium flex items-center gap-2"
+              className="px-8 py-3 bg-primary-900 text-white rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium flex items-center gap-2 shadow-soft"
             >
               <Sparkles className="w-4 h-4" />
               {creating ? 'Creating...' : 'Create Resume'}
@@ -292,7 +314,7 @@ export default function ResumeWizardPage() {
           ) : (
             <button
               onClick={handleNext}
-              className="px-8 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium flex items-center gap-2"
+              className="px-8 py-3 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors font-medium flex items-center gap-2 shadow-soft"
             >
               Next
               <ArrowRight className="w-4 h-4" />

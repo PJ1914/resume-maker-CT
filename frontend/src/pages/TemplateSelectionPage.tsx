@@ -73,19 +73,19 @@ export default function TemplateSelectionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50">
+    <div className="min-h-screen bg-secondary-50">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-secondary-200 sticky top-0 z-40">
+      <div className="bg-white border-b border-secondary-200 sticky top-0 z-40 shadow-soft">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-secondary-600 hover:text-primary-600 transition-colors group"
+              className="flex items-center gap-2 text-secondary-600 hover:text-primary-900 transition-colors group font-medium"
             >
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-              <span className="font-medium">Back</span>
+              <span>Back</span>
             </button>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold text-primary-900">
               Choose Your Template
             </h1>
             <div className="w-20"></div> {/* Spacer for centering */}
@@ -125,16 +125,16 @@ export default function TemplateSelectionPage() {
                 <div
                   key={template.id}
                   onClick={() => setSelectedTemplate(template.id)}
-                  className={`group relative bg-white rounded-2xl border-2 transition-all cursor-pointer hover:shadow-2xl hover:-translate-y-1 ${
+                  className={`group relative bg-white rounded-2xl border-2 transition-all cursor-pointer hover:shadow-medium hover:-translate-y-1 ${
                     isSelected
-                      ? 'border-primary-500 shadow-xl ring-4 ring-primary-500/20'
-                      : 'border-secondary-200 hover:border-primary-300'
+                      ? 'border-primary-900 shadow-medium ring-2 ring-primary-900/20'
+                      : 'border-secondary-200 hover:border-secondary-400'
                   }`}
                 >
                 {/* Recommended Badge */}
                 {template.recommended && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <span className="bg-gradient-to-r from-primary-600 to-primary-800 text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-lg">
+                    <span className="bg-primary-900 text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-soft">
                       ✨ Recommended
                     </span>
                   </div>
@@ -142,7 +142,7 @@ export default function TemplateSelectionPage() {
 
                 {/* Selected Checkmark */}
                 {isSelected && (
-                  <div className="absolute top-4 right-4 z-10 bg-primary-600 text-white rounded-full p-1.5 shadow-lg">
+                  <div className="absolute top-4 right-4 z-10 bg-primary-900 text-white rounded-full p-1.5 shadow-soft">
                     <Check className="w-5 h-5" />
                   </div>
                 )}
@@ -153,10 +153,10 @@ export default function TemplateSelectionPage() {
                   <div className="mb-6 flex justify-center">
                     <div className={`
                       w-16 h-16 rounded-2xl flex items-center justify-center
-                      ${template.color === 'primary' ? 'bg-gradient-to-br from-primary-500 to-primary-700' : ''}
-                      ${template.color === 'secondary' ? 'bg-gradient-to-br from-secondary-700 to-secondary-900' : ''}
-                      ${template.color === 'success' ? 'bg-gradient-to-br from-success-500 to-success-700' : ''}
-                      shadow-lg transform group-hover:scale-110 transition-transform
+                      ${template.color === 'primary' ? 'bg-primary-900' : ''}
+                      ${template.color === 'secondary' ? 'bg-secondary-700' : ''}
+                      ${template.color === 'success' ? 'bg-success-600' : ''}
+                      shadow-soft transform group-hover:scale-110 transition-transform
                     `}>
                       {Icon && <Icon className="w-8 h-8 text-white" />}
                     </div>
@@ -169,21 +169,21 @@ export default function TemplateSelectionPage() {
                       {template.id === 'modern' && (
                         <div className="space-y-3">
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-700"></div>
+                            <div className="w-12 h-12 rounded-full bg-primary-900\"></div>
                             <div className="flex-1">
                               <div className="h-3 bg-secondary-900 rounded w-2/3 mb-1"></div>
                               <div className="h-2 bg-secondary-400 rounded w-1/2"></div>
                             </div>
                           </div>
-                          <div className="h-0.5 bg-gradient-to-r from-primary-500 to-transparent"></div>
-                          <div className="space-y-2 mt-4">
-                            <div className="h-2.5 bg-primary-600 rounded w-1/3"></div>
+                          <div className="h-0.5 bg-primary-900"></div>
+                          <div className="space-y-2">
+                            <div className="h-2.5 bg-secondary-400 rounded w-1/3"></div>
                             <div className="h-2 bg-secondary-300 rounded"></div>
                             <div className="h-2 bg-secondary-300 rounded w-5/6"></div>
                             <div className="h-2 bg-secondary-300 rounded w-4/6"></div>
                           </div>
                           <div className="space-y-2 mt-4">
-                            <div className="h-2.5 bg-primary-600 rounded w-2/5"></div>
+                            <div className="h-2.5 bg-secondary-400 rounded w-2/5"></div>
                             <div className="flex gap-2">
                               <div className="h-1.5 bg-secondary-200 rounded w-1/4"></div>
                               <div className="h-1.5 bg-secondary-200 rounded w-1/4"></div>
@@ -264,7 +264,7 @@ export default function TemplateSelectionPage() {
                         {template.features.map((feature, idx) => (
                           <div key={idx} className="flex items-center text-xs text-secondary-600">
                             <Check className={`w-3.5 h-3.5 mr-2 flex-shrink-0 ${
-                              template.color === 'primary' ? 'text-primary-600' : ''
+                              template.color === 'primary' ? 'text-primary-900' : ''
                             }${template.color === 'secondary' ? 'text-secondary-700' : ''}${
                               template.color === 'success' ? 'text-success-600' : ''
                             }`} />
@@ -281,8 +281,8 @@ export default function TemplateSelectionPage() {
                   <button
                     className={`w-full py-3 rounded-xl font-semibold transition-all transform ${
                       isSelected
-                        ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg shadow-primary-500/30'
-                        : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200 group-hover:shadow-md'
+                        ? 'bg-primary-900 text-white shadow-soft'
+                        : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200 group-hover:shadow-soft'
                     }`}
                   >
                     {isSelected ? '✓ Selected' : 'Choose Template'}
@@ -301,7 +301,7 @@ export default function TemplateSelectionPage() {
               <h3 className="text-xl font-semibold text-secondary-800">Your Custom Templates</h3>
               <button
                 onClick={() => navigate('/templates')}
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                className="text-primary-900 hover:text-primary-800 font-medium text-sm"
               >
                 Manage All →
               </button>
@@ -314,15 +314,15 @@ export default function TemplateSelectionPage() {
                   <div
                     key={template.id}
                     onClick={() => setSelectedTemplate(template.id)}
-                    className={`group relative bg-white rounded-2xl border-2 transition-all cursor-pointer hover:shadow-2xl hover:-translate-y-1 ${
+                    className={`group relative bg-white rounded-2xl border-2 transition-all cursor-pointer hover:shadow-medium hover:-translate-y-1 ${
                       isSelected
-                        ? 'border-primary-500 shadow-xl ring-4 ring-primary-500/20'
-                        : 'border-secondary-200 hover:border-primary-300'
+                        ? 'border-primary-900 shadow-medium ring-2 ring-primary-900/20'
+                        : 'border-secondary-200 hover:border-secondary-400'
                     }`}
                   >
                     {/* Selected Checkmark */}
                     {isSelected && (
-                      <div className="absolute top-4 right-4 z-10 bg-primary-600 text-white rounded-full p-1.5 shadow-lg">
+                      <div className="absolute top-4 right-4 z-10 bg-primary-900 text-white rounded-full p-1.5 shadow-soft">
                         <Check className="w-5 h-5" />
                       </div>
                     )}
@@ -331,7 +331,7 @@ export default function TemplateSelectionPage() {
                     <div className="p-6">
                       {/* Icon */}
                       <div className="mb-6 flex justify-center">
-                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
+                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-secondary-700 shadow-soft">
                           <Upload className="w-8 h-8 text-white" />
                         </div>
                       </div>
@@ -344,7 +344,7 @@ export default function TemplateSelectionPage() {
                         <p className="text-sm text-secondary-600 leading-relaxed mb-4">
                           {template.description || `Custom ${template.type?.toUpperCase()} template`}
                         </p>
-                        <div className="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
+                        <div className="inline-block px-3 py-1 bg-secondary-200 text-secondary-700 text-xs font-semibold rounded-full">
                           {template.type?.toUpperCase()} · Custom
                         </div>
                       </div>
@@ -355,8 +355,8 @@ export default function TemplateSelectionPage() {
                       <button
                         className={`w-full py-3 rounded-xl font-semibold transition-all transform ${
                           isSelected
-                            ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg shadow-primary-500/30'
-                            : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200 group-hover:shadow-md'
+                            ? 'bg-primary-900 text-white shadow-soft'
+                            : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200 group-hover:shadow-soft'
                         }`}
                       >
                         {isSelected ? '✓ Selected' : 'Choose Template'}
@@ -373,8 +373,8 @@ export default function TemplateSelectionPage() {
         {templates.length === DEFAULT_TEMPLATES.length && (
           <div className="mb-12 p-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl border-2 border-purple-200 text-center">
             <Upload size={48} className="mx-auto text-purple-600 mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Create Your Custom Templates</h3>
-            <p className="text-gray-600 mb-6 max-w-lg mx-auto">
+            <h3 className="text-xl font-bold text-secondary-700 mb-2">Create Your Custom Templates</h3>
+            <p className="text-secondary-700 mb-6 max-w-lg mx-auto">
               Upload your own HTML or LaTeX templates to personalize your resumes even more
             </p>
             <button

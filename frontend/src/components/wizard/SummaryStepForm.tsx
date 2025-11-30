@@ -38,7 +38,7 @@ export default function SummaryStepForm({ data, onChange }: SummaryStepFormProps
           <button
             onClick={handleGenerateAI}
             disabled={generatingAI}
-            className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 disabled:opacity-50"
+            className="text-sm text-primary-900 hover:text-primary-800 flex items-center gap-1 disabled:opacity-50 font-medium"
           >
             <Sparkles className="h-4 w-4" />
             {generatingAI ? 'Generating...' : 'Generate with AI'}

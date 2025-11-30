@@ -171,14 +171,14 @@ export const TemplatesPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Resume Templates</h1>
-              <p className="text-gray-600 mt-2">
+              <h1 className="text-3xl font-bold text-secondary-700">Resume Templates</h1>
+              <p className="text-secondary-700 mt-2">
                 Manage your resume templates and create custom designs
               </p>
             </div>
             <button
               onClick={() => setShowUpload(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg hover:shadow-xl"
+              className="flex items-center gap-2 px-6 py-3 bg-secondary-500 text-white rounded-lg hover:bg-secondary-500 transition-colors font-medium shadow-lg hover:shadow-xl"
             >
               <Upload size={20} />
               Upload Template
@@ -191,7 +191,7 @@ export const TemplatesPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Default Templates */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Default Templates</h2>
+          <h2 className="text-2xl font-bold text-secondary-700 mb-6">Default Templates</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {defaultTemplatesList.map((template) => (
               <div
@@ -201,24 +201,24 @@ export const TemplatesPage: React.FC = () => {
                 {/* Template Card */}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-lg flex items-center justify-center">
                       <FileText size={24} className="text-white" />
                     </div>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                    <span className="px-3 py-1 bg-secondary-500 text-secondary-600 text-xs font-semibold rounded-full">
                       {template.type.toUpperCase()}
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-secondary-700 mb-2">
                     {template.name}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  <p className="text-secondary-700 text-sm mb-4 line-clamp-2">
                     {template.description}
                   </p>
 
                   <button
                     onClick={() => setEditingTemplate(template)}
-                    className="w-full px-4 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                    className="w-full px-4 py-2 bg-secondary-300 text-secondary-700 rounded-lg hover:bg-secondary-300 transition-colors font-medium"
                   >
                     View Template
                   </button>
@@ -231,7 +231,7 @@ export const TemplatesPage: React.FC = () => {
         {/* Custom Templates */}
         {customTemplates.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Custom Templates</h2>
+            <h2 className="text-2xl font-bold text-secondary-700 mb-6">Your Custom Templates</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {customTemplates.map((template) => (
                 <div
@@ -249,7 +249,7 @@ export const TemplatesPage: React.FC = () => {
                           onClick={() =>
                             setOpenMenuId(openMenuId === template.id ? null : template.id)
                           }
-                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-2 text-secondary-700 hover:text-secondary-700 hover:bg-secondary-300 rounded-lg transition-colors"
                         >
                           <MoreVertical size={18} />
                         </button>
@@ -262,7 +262,7 @@ export const TemplatesPage: React.FC = () => {
                                 setEditingTemplate(template);
                                 setOpenMenuId(null);
                               }}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 border-b transition-colors"
+                              className="w-full flex items-center gap-2 px-4 py-2 text-secondary-700 hover:bg-secondary-300 border-b transition-colors"
                             >
                               <Edit2 size={16} />
                               Edit Template
@@ -271,7 +271,7 @@ export const TemplatesPage: React.FC = () => {
                               onClick={() => {
                                 handleDeleteTemplate(template.id);
                               }}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                              className="w-full flex items-center gap-2 px-4 py-2 text-danger-600 hover:bg-danger-100 transition-colors"
                             >
                               <Trash2 size={16} />
                               Delete
@@ -281,23 +281,23 @@ export const TemplatesPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-lg font-semibold text-secondary-700 mb-2">
                       {template.name}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    <p className="text-secondary-700 text-sm mb-4 line-clamp-2">
                       {template.description}
                     </p>
 
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingTemplate(template)}
-                        className="flex-1 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors font-medium text-sm"
+                        className="flex-1 px-4 py-2 bg-secondary-500 text-secondary-600 rounded-lg hover:bg-secondary-500 transition-colors font-medium text-sm"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteTemplate(template.id)}
-                        className="flex-1 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors font-medium text-sm"
+                        className="flex-1 px-4 py-2 bg-danger-100 text-danger-600 rounded-lg hover:bg-danger-100 transition-colors font-medium text-sm"
                       >
                         Delete
                       </button>
@@ -312,14 +312,14 @@ export const TemplatesPage: React.FC = () => {
         {/* Empty State */}
         {customTemplates.length === 0 && (
           <div className="text-center py-12">
-            <FileText size={48} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No custom templates yet</h3>
-            <p className="text-gray-600 mb-6">
+            <FileText size={48} className="mx-auto text-secondary-700 mb-4" />
+            <h3 className="text-lg font-semibold text-secondary-700 mb-2">No custom templates yet</h3>
+            <p className="text-secondary-700 mb-6">
               Upload your own templates to customize your resumes
             </p>
             <button
               onClick={() => setShowUpload(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-secondary-500 text-white rounded-lg hover:bg-secondary-500 transition-colors font-medium"
             >
               <Plus size={20} />
               Upload First Template

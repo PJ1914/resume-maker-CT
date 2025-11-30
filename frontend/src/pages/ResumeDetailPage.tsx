@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -116,40 +116,100 @@ export default function ResumeDetailPage() {
   const [scoreData, setScoreData] = useState<any>(null)
   const [scoring, setScoring] = useState(false)
   const [reparsing, setReparsing] = useState(false)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    if (id) {
-      loadResume(id)
-    }
-  }, [id])
-
-  // Poll for parsing status if resume is still parsing
-  useEffect(() => {
-    if (!resume || resume.status === 'PARSED' || resume.status === 'SCORED') {
-      return
-    }
-
-    const interval = setInterval(async () => {
+    if (!id) return
+    
+    let isMounted = true
+    
+    const loadAndPoll = async () => {
       try {
-        const data = await resumeService.getResume(id!)
-        setResume(data)
+        setLoading(true)
+        const data = await resumeService.getResume(id)
         
-        if (data.status === 'PARSED' || data.status === 'SCORED') {
-          clearInterval(interval)
-          toast.success('Resume processing complete!')
+        if (!isMounted) return
+        
+        // Only update if data actually changed to prevent infinite re-renders
+        setResume(prevResume => {
+          if (!prevResume || prevResume.resume_id !== data.resume_id || prevResume.status !== data.status) {
+            return data;
+          }
+          return prevResume;
+        })
+        
+        // Auto-load score if it exists
+        if (data.latest_score) {
+          try {
+            const score = await resumeService.getScore(id)
+            if (isMounted) setScoreData(score)
+          } catch (error) {
+            console.error('Failed to load score:', error)
+          }
+        }
+        
+        // Only start polling if resume is NOT in a final state
+        if (data.status !== 'PARSED' && data.status !== 'SCORED' && data.status !== 'ERROR') {
+          pollingIntervalRef.current = setInterval(async () => {
+            try {
+              const updatedData = await resumeService.getResume(id)
+              
+              if (!isMounted) return
+              
+              // Only update if status changed
+              setResume(prevResume => {
+                if (!prevResume || prevResume.status !== updatedData.status) {
+                  return updatedData;
+                }
+                return prevResume;
+              });
+              
+              // Stop polling if we've reached a final state
+              if (updatedData.status === 'PARSED' || updatedData.status === 'SCORED' || updatedData.status === 'ERROR') {
+                if (pollingIntervalRef.current) {
+                  clearInterval(pollingIntervalRef.current)
+                  pollingIntervalRef.current = null
+                }
+                
+                if (updatedData.status === 'PARSED' || updatedData.status === 'SCORED') {
+                  toast.success('Resume processing complete!')
+                }
+              }
+            } catch (error: any) {
+              if (!isMounted) return
+              
+              // If 404, the resume was deleted - stop polling
+              if (error.response?.status === 404) {
+                if (pollingIntervalRef.current) {
+                  clearInterval(pollingIntervalRef.current)
+                  pollingIntervalRef.current = null
+                }
+                setResume(null)
+              }
+            }
+          }, 3000)
         }
       } catch (error: any) {
-        // If 404, the resume was deleted - stop polling and clear state
-        if (error.response?.status === 404) {
-          clearInterval(interval)
-          setResume(null)
-        }
-        // Silently ignore network errors during polling - resume will update when available
+        if (!isMounted) return
+        
+        console.error('Failed to load resume:', error)
+        toast.error('Failed to load resume details')
+        navigate('/resumes')
+      } finally {
+        if (isMounted) setLoading(false)
       }
-    }, 3000) // Poll every 3 seconds
-
-    return () => clearInterval(interval)
-  }, [resume?.status, id])
+    }
+    
+    loadAndPoll()
+    
+    return () => {
+      isMounted = false
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+        pollingIntervalRef.current = null
+      }
+    }
+  }, [id, navigate])
 
   const loadResume = async (resumeId: string) => {
     try {
@@ -243,9 +303,41 @@ export default function ResumeDetailPage() {
     }
   }
 
-  const handleDownload = () => {
-    if (resume?.storage_url) {
-      window.open(resume.storage_url, '_blank')
+  const handleDownload = async () => {
+    if (!resume) return
+
+    try {
+      // Call backend proxy to stream the original file (avoids CORS)
+      // Include Firebase ID token for authentication
+      const authModule = await import('@/lib/firebase')
+      const user = authModule.auth.currentUser
+      let token = ''
+      if (user) token = await user.getIdToken()
+
+      const resp = await fetch(`/api/resumes/${resume.resume_id}/download-original`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        }
+      })
+
+      if (!resp.ok) {
+        throw new Error('Download failed')
+      }
+
+      const blob = await resp.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = resume.original_filename || 'resume.pdf'
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Download failed:', error)
+      toast.error('Direct download failed. Please check the backend or try again.')
     }
   }
 
@@ -276,19 +368,19 @@ export default function ResumeDetailPage() {
       UPLOADED: {
         label: 'Uploaded',
         icon: CheckCircle,
-        className: 'text-blue-600 bg-blue-100',
+        className: 'text-secondary-600 bg-secondary-500',
         description: 'Resume has been uploaded successfully',
       },
       PARSING: {
         label: 'Parsing',
         icon: Clock,
-        className: 'text-yellow-600 bg-yellow-100',
+        className: 'text-warning-600 bg-warning-100',
         description: 'Extracting text and information from resume',
       },
       PARSED: {
         label: 'Parsed',
         icon: CheckCircle,
-        className: 'text-green-600 bg-green-100',
+        className: 'text-success-600 bg-success-600',
         description: 'Resume has been parsed successfully',
       },
       SCORING: {
@@ -318,7 +410,7 @@ export default function ResumeDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900 mx-auto"></div>
           <p className="mt-4 text-secondary-600">Loading resume details...</p>
         </div>
       </div>
@@ -395,16 +487,6 @@ export default function ResumeDetailPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               Edit
-            </button>
-
-            <button
-              onClick={handleDownload}
-              disabled={!resume.storage_url}
-              className="px-4 py-2 bg-white border border-secondary-300 text-secondary-700 rounded-lg font-medium hover:bg-secondary-50 transition-colors flex items-center gap-2 disabled:opacity-50"
-              title="Download Original"
-            >
-              <Download className="h-4 w-4" />
-              Download
             </button>
 
             <button
@@ -504,8 +586,33 @@ export default function ResumeDetailPage() {
             </div>
           )}
 
-          {/* Resume Preview - Template Format */}
-          {resume.parsed_text || resume.contact_info ? (
+          {/* Resume Preview - Original PDF */}
+          {resume.storage_url ? (
+            <div className="bg-white rounded-lg border border-secondary-200 overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-secondary-200 bg-secondary-50">
+                <h2 className="text-lg font-semibold text-secondary-900">Original Resume</h2>
+                <button
+                  onClick={() => navigate(`/editor/${resume.resume_id}`)}
+                  className="px-4 py-2 bg-primary-900 text-white rounded-lg text-sm font-medium hover:bg-primary-800 transition-colors flex items-center gap-2"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit
+                </button>
+              </div>
+              
+              {/* PDF Viewer - Full Size with proper aspect ratio */}
+              <div className="w-full bg-secondary-100" style={{ height: 'calc(100vh - 250px)', minHeight: '900px' }}>
+                <iframe
+                  src={`${resume.storage_url}#view=FitH&toolbar=0&navpanes=0`}
+                  className="w-full h-full"
+                  title="Resume PDF Viewer"
+                  style={{ border: 'none' }}
+                />
+              </div>
+            </div>
+          ) : resume.parsed_text || resume.contact_info ? (
             <div className="bg-white rounded-lg border border-secondary-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-secondary-900">Resume Preview</h2>
@@ -520,7 +627,7 @@ export default function ResumeDetailPage() {
                 </button>
               </div>
               
-              {/* Professional Resume Template */}
+              {/* Professional Resume Template (for wizard-created resumes) */}
               <div className="bg-white border border-secondary-200 rounded-lg max-h-[900px] overflow-y-auto">
                 <TemplateRenderer resume={resume} />
               </div>
@@ -571,8 +678,17 @@ export default function ResumeDetailPage() {
             <h3 className="text-sm font-semibold text-secondary-900 mb-4">Quick Actions</h3>
             <div className="space-y-2">
               <button
+                onClick={handleDownload}
+                disabled={!resume.storage_url}
+                className="w-full px-4 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="h-4 w-4" />
+                Download PDF
+              </button>
+
+              <button
                 onClick={() => navigate(`/editor/${resume.resume_id}`)}
-                className="w-full px-4 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2 justify-center"
+                className="w-full px-4 py-2.5 bg-white border border-secondary-300 text-secondary-700 rounded-lg font-medium hover:bg-secondary-50 transition-colors flex items-center gap-2 justify-center"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -589,25 +705,6 @@ export default function ResumeDetailPage() {
                   Parsing in progress. Editor will load parsed data soon.
                 </p>
               ) : null}
-
-              <button
-                onClick={() => setShowExportModal(true)}
-                className="w-full px-4 py-2.5 bg-white border border-secondary-300 text-secondary-700 rounded-lg font-medium hover:bg-secondary-50 transition-colors flex items-center gap-2 justify-center"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                Export as PDF
-              </button>
-
-              <button
-                onClick={handleDownload}
-                disabled={!resume.storage_url}
-                className="w-full px-4 py-2.5 bg-white border border-secondary-300 text-secondary-700 rounded-lg font-medium hover:bg-secondary-50 transition-colors flex items-center gap-2 justify-center disabled:opacity-50"
-              >
-                <Download className="h-4 w-4" />
-                Download Original
-              </button>
 
               <button
                 onClick={handleDelete}

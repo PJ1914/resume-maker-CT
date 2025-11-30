@@ -13,6 +13,7 @@ import {
   getAISuggestion,
   getAIRewrite,
 } from '../services/resume-editor.service';
+import { normalizeDate } from '../utils/dateUtils';
 import { ContactSection } from '../components/editor/ContactSection';
 import { SummarySection } from '../components/editor/SummarySection';
 import { ExperienceSection } from '../components/editor/ExperienceSection';
@@ -23,6 +24,33 @@ import { ResumePreview } from '../components/ResumePreview';
 import PdfExportModal from '../components/PdfExportModal';
 
 // Helper functions to parse sections from text
+function normalizeDateFieldsInResume(resume: ResumeData): ResumeData {
+  const normalized = { ...resume };
+  
+  // Normalize experience dates
+  normalized.experience = resume.experience.map(exp => ({
+    ...exp,
+    startDate: normalizeDate(exp.startDate),
+    endDate: exp.current ? '' : normalizeDate(exp.endDate),
+  }));
+  
+  // Normalize education dates
+  normalized.education = resume.education.map(edu => ({
+    ...edu,
+    startDate: normalizeDate(edu.startDate),
+    endDate: normalizeDate(edu.endDate),
+  }));
+  
+  // Normalize project dates
+  normalized.projects = resume.projects.map(proj => ({
+    ...proj,
+    startDate: normalizeDate(proj.startDate),
+    endDate: normalizeDate(proj.endDate),
+  }));
+  
+  return normalized;
+}
+
 function parseExperienceSection(text: string) {
   const experiences: any[] = [];
   const lines = text.split('\n').filter(line => line.trim());
@@ -460,6 +488,28 @@ export const ResumeEditorPage: React.FC = () => {
                 }
               }
               
+              // Extract and parse certifications section
+              if ((resumeDetail as any).certifications && Array.isArray((resumeDetail as any).certifications) && (resumeDetail as any).certifications.length > 0) {
+                newResume.certifications = ((resumeDetail as any).certifications as any[]).map((c: any) => ({
+                  id: crypto.randomUUID(),
+                  name: c.name || '',
+                  issuer: c.issuer || '',
+                  date: c.date || '',
+                  credentialId: c.credentialId || '',
+                  url: c.url || '',
+                }));
+              }
+
+              // Extract and parse achievements section
+              if ((resumeDetail as any).achievements && Array.isArray((resumeDetail as any).achievements) && (resumeDetail as any).achievements.length > 0) {
+                newResume.achievements = ((resumeDetail as any).achievements as any[]).map((a: any) => ({
+                  id: crypto.randomUUID(),
+                  title: a.title || '',
+                  description: a.description || '',
+                  date: a.date || '',
+                }));
+              }
+              
               // Extract and parse skills section
               const skillsMatch = textToParse.match(/(?:TECHNICAL\s*SKILLS|SKILLS|CORE\s*COMPETENCIES)(?:[\s\S]*?)(?=---|HACKATHONS|ACHIEVEMENTS|INTERESTS|EDUCATION)/i);
               if (skillsMatch) {
@@ -548,7 +598,9 @@ export const ResumeEditorPage: React.FC = () => {
     const timer = setTimeout(async () => {
       try {
         setSaveStatus('saving');
-        await saveResume(user.uid, resumeId, resumeData);
+        // Normalize dates before saving
+        const normalizedResume = normalizeDateFieldsInResume(resumeData);
+        await saveResume(user.uid, resumeId, normalizedResume);
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus(null), 2000);
       } catch (err) {
@@ -626,7 +678,7 @@ export const ResumeEditorPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900 mx-auto mb-4"></div>
           <p className="text-secondary-600">Loading resume...</p>
         </div>
       </div>

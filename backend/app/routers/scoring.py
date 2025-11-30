@@ -9,6 +9,7 @@ from app.schemas.scoring import ScoringRequest, ScoringResponse
 from app.dependencies import get_current_user
 from app.services.firestore import get_resume_metadata
 from app.services.ats_scorer import ATSScorer
+from app.services.gemini_scorer import HybridScorer
 from app.services.cache import get_cached_score, set_cached_score
 from app.services.audit import log_scoring_request, check_rate_limit
 from app.config import settings
@@ -101,16 +102,17 @@ async def score_resume(
             'layout_type': getattr(resume_metadata, 'layout_type', 'unknown'),
         }
         
-        # Score resume using new ATS Scorer
-        scorer = ATSScorer()
+        # Score resume using HybridScorer (prefers Gemini if available)
+        scorer = HybridScorer()
         score_result = scorer.score_resume(
             parsed_data,
-            job_description=request.job_description
+            job_description=request.job_description,
+            prefer_gemini=request.prefer_gemini
         )
         
         # Add scoring method
-        score_result['scoring_method'] = 'ats_advanced'
-        score_result['model_name'] = 'ATS Evaluation Engine v2.0'
+        score_result['scoring_method'] = score_result.get('scoring_method', 'hybrid')
+        score_result['model_name'] = score_result.get('model_name', 'Gemini/Local Hybrid Engine')
         
         # Calculate latency
         latency_ms = int((time.time() - start_time) * 1000)

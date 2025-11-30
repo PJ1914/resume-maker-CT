@@ -91,18 +91,18 @@ export default function PdfExportModal({
                   <div>
                     <Dialog.Title
                       as="h3"
-                      className="text-2xl font-bold text-gray-900"
+                      className="text-2xl font-bold text-secondary-700"
                     >
                       Export as PDF
                     </Dialog.Title>
                     {resumeName && (
-                      <p className="text-sm text-gray-500 mt-1">{resumeName}</p>
+                      <p className="text-sm text-secondary-700 mt-1">{resumeName}</p>
                     )}
                   </div>
                   <button
                     onClick={handleClose}
                     disabled={isExporting}
-                    className="text-gray-400 hover:text-gray-500 disabled:opacity-50"
+                    className="text-secondary-700 hover:text-secondary-700 disabled:opacity-50"
                   >
                     <svg
                       className="w-6 h-6"
@@ -122,7 +122,7 @@ export default function PdfExportModal({
 
                 {/* Template Selection */}
                 <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  <h4 className="text-sm font-medium text-secondary-700 mb-3">
                     Choose a template
                   </h4>
                   <TemplateSelector
@@ -133,10 +133,10 @@ export default function PdfExportModal({
 
                 {/* Error Message */}
                 {error && (
-                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="mb-4 p-4 bg-danger-100 border border-danger-200 rounded-lg">
                     <div className="flex items-center">
                       <svg
-                        className="w-5 h-5 text-red-500 mr-2"
+                        className="w-5 h-5 text-danger-600 mr-2"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -146,17 +146,17 @@ export default function PdfExportModal({
                           clipRule="evenodd"
                         />
                       </svg>
-                      <p className="text-sm text-red-800">{error}</p>
+                      <p className="text-sm text-danger-600">{error}</p>
                     </div>
                   </div>
                 )}
 
                 {/* Success Message */}
                 {success && (
-                  <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="mb-4 p-4 bg-success-50 border border-success-200 rounded-lg">
                     <div className="flex items-center">
                       <svg
-                        className="w-5 h-5 text-green-500 mr-2"
+                        className="w-5 h-5 text-success-500 mr-2"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -166,7 +166,7 @@ export default function PdfExportModal({
                           clipRule="evenodd"
                         />
                       </svg>
-                      <p className="text-sm text-green-800">
+                      <p className="text-sm text-success-800">
                         PDF exported successfully! Download should start automatically.
                       </p>
                     </div>
@@ -174,10 +174,10 @@ export default function PdfExportModal({
                 )}
 
                 {/* Info Message */}
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mb-6 p-4 bg-secondary-500 border border-secondary-300 rounded-lg">
                   <div className="flex items-start">
                     <svg
-                      className="w-5 h-5 text-blue-500 mr-2 mt-0.5"
+                      className="w-5 h-5 text-secondary-600 mr-2 mt-0.5"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -187,7 +187,7 @@ export default function PdfExportModal({
                         clipRule="evenodd"
                       />
                     </svg>
-                    <p className="text-sm text-blue-800">
+                    <p className="text-sm text-secondary-600">
                       Your resume will be compiled using LaTeX for professional formatting.
                       This may take 5-10 seconds.
                     </p>
@@ -200,7 +200,7 @@ export default function PdfExportModal({
                     type="button"
                     onClick={handleClose}
                     disabled={isExporting}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-secondary-700 bg-white border border-gray-300 rounded-lg hover:bg-secondary-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Cancel
                   </button>
@@ -208,7 +208,7 @@ export default function PdfExportModal({
                     type="button"
                     onClick={handleExport}
                     disabled={isExporting}
-                    className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                    className="px-6 py-2 text-sm font-medium text-white bg-secondary-500 rounded-lg hover:bg-secondary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
                   >
                     {isExporting ? (
                       <>

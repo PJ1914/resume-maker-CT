@@ -83,33 +83,33 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               type="text"
               value={template.name}
               onChange={(e) => handleNameChange(e.target.value)}
-              className="text-2xl font-bold text-gray-900 bg-transparent border-none outline-none p-0 w-full"
+              className="text-2xl font-bold text-secondary-700 bg-transparent border-none outline-none p-0 w-full"
               placeholder="Template name"
             />
             <input
               type="text"
               value={template.description || ''}
               onChange={(e) => handleDescriptionChange(e.target.value)}
-              className="text-sm text-gray-600 bg-transparent border-none outline-none p-0 w-full mt-1"
+              className="text-sm text-secondary-700 bg-transparent border-none outline-none p-0 w-full mt-1"
               placeholder="Add a description (optional)"
             />
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 ml-4"
+            className="text-secondary-700 hover:text-secondary-700 ml-4"
           >
             <X size={24} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 px-6 pt-4 border-b bg-gray-50">
+        <div className="flex gap-4 px-6 pt-4 border-b bg-secondary-300">
           <button
             onClick={() => setIsPreview(false)}
             className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
               !isPreview
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'text-secondary-600 border-b-2 border-secondary-300'
+                : 'text-secondary-700 hover:text-secondary-700'
             }`}
           >
             <Code size={18} />
@@ -119,8 +119,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             onClick={() => setIsPreview(true)}
             className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
               isPreview
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'text-secondary-600 border-b-2 border-secondary-300'
+                : 'text-secondary-700 hover:text-secondary-700'
             }`}
           >
             <Eye size={18} />
@@ -139,7 +139,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               spellCheck="false"
             />
           ) : (
-            <div className="w-full p-6 overflow-auto bg-gray-50">
+            <div className="w-full p-6 overflow-auto bg-secondary-300">
               <div className="bg-white rounded-lg p-6 border">
                 {template.type === 'html' ? (
                   <iframe
@@ -148,8 +148,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                     style={{ minHeight: '600px' }}
                   />
                 ) : (
-                  <div className="text-gray-600 text-sm whitespace-pre-wrap font-mono">
-                    <p className="text-gray-500 mb-4">
+                  <div className="text-secondary-700 text-sm whitespace-pre-wrap font-mono">
+                    <p className="text-secondary-700 mb-4">
                       LaTeX preview not available in browser. Template content:
                     </p>
                     <code>{template.content}</code>
@@ -161,17 +161,17 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 justify-end p-6 border-t bg-gray-50">
+        <div className="flex gap-3 justify-end p-6 border-t bg-secondary-300">
           <button
             onClick={onClose}
-            className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="px-6 py-2 text-secondary-700 bg-white border border-gray-300 rounded-lg hover:bg-secondary-300 transition-colors font-medium"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-500 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Save size={18} />
             {isSaving ? 'Saving...' : 'Save Template'}

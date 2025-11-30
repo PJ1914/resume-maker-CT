@@ -187,6 +187,59 @@ async def download_resume_pdf(
         )
 
 
+@router.get("/{resume_id}/download-original")
+async def download_original_resume(
+    resume_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Stream the original uploaded resume PDF from Firebase Storage via the backend.
+    This avoids CORS issues when downloading from client-side storage URLs.
+    """
+    try:
+        # Get resume metadata
+        from app.services.firestore import get_resume_metadata
+        meta = get_resume_metadata(resume_id, current_user["uid"])
+
+        if not meta:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Resume {resume_id} not found"
+            )
+
+        storage_path = getattr(meta, 'storage_path', None)
+        if not storage_path:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No stored original file available for this resume"
+            )
+
+        # Download file content from storage
+        from app.services.storage import get_file_content
+        content = await get_file_content(storage_path)
+        if content is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="File not found in storage"
+            )
+
+        filename = meta.original_filename or meta.filename or f"{resume_id}.pdf"
+
+        return StreamingResponse(
+            io.BytesIO(content),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=\"{filename}\""}
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to download original file: {str(e)}"
+        )
+
+
 @router.get("/templates")
 async def list_templates():
     """

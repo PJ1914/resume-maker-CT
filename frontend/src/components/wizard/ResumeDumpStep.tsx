@@ -83,6 +83,20 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
           startDate: proj.startDate || '',
           endDate: proj.endDate || '',
         })),
+        certifications: ((response as any).certifications || []).map((cert: any, idx: number) => ({
+          id: `cert-${idx}-${Date.now()}`,
+          name: cert.name || '',
+          issuer: cert.issuer || '',
+          date: cert.date || '',
+          credentialId: cert.credentialId || '',
+          url: cert.url || '',
+        })),
+        achievements: ((response as any).achievements || []).map((ach: any, idx: number) => ({
+          id: `ach-${idx}-${Date.now()}`,
+          title: ach.title || '',
+          description: ach.description || '',
+          date: ach.date || '',
+        })),
       }
 
       console.log('Extracted data:', extractedData)
@@ -145,9 +159,9 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
         </div>
 
         {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-900">
+        <div className="bg-secondary-500 border border-secondary-300 rounded-lg p-4 mb-6 flex gap-3">
+          <AlertCircle className="h-5 w-5 text-secondary-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-secondary-600">
             <p className="font-medium mb-1">Pro Tip:</p>
             <p>You can paste plain text, formatted text, or even copy-paste from your PDF resume. Our AI will do its best to extract and organize your information.</p>
           </div>
@@ -158,7 +172,7 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
           <button
             onClick={handleExtract}
             disabled={isLoading || isProcessing || !resumeText.trim()}
-            className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-soft"
           >
             {isProcessing ? (
               <>

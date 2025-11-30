@@ -97,7 +97,7 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
       {/* Technical Skills */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <Code className="h-5 w-5 text-primary-600" />
+          <Code className="h-5 w-5 text-primary-900" />
           <h3 className="text-lg font-semibold text-secondary-900">Technical Skills</h3>
         </div>
 
@@ -167,7 +167,7 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
       {/* Soft Skills */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <Users className="h-5 w-5 text-primary-600" />
+          <Users className="h-5 w-5 text-primary-900" />
           <h3 className="text-lg font-semibold text-secondary-900">Soft Skills</h3>
         </div>
 
@@ -201,12 +201,12 @@ export default function SkillsStepForm({ data, onChange }: SkillsStepFormProps) 
             {safeData.soft.map((skill, index) => (
               <div
                 key={index}
-                className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium"
+                className="bg-secondary-200 text-secondary-800 px-3 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium"
               >
                 {skill}
                 <button
                   onClick={() => removeSoftSkill(index)}
-                  className="hover:bg-purple-200 rounded-full p-0.5"
+                  className="hover:bg-secondary-300 rounded-full p-0.5"
                 >
                   <X className="h-3 w-3" />
                 </button>

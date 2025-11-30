@@ -5,8 +5,8 @@ from typing import Optional
 import os
 
 # Check if service account files exist
-codetapasya_exists = os.path.exists(settings.CODETAPASYA_SERVICE_ACCOUNT_PATH)
-resume_maker_exists = os.path.exists(settings.RESUME_MAKER_SERVICE_ACCOUNT_PATH)
+codetapasya_exists = settings.CODETAPASYA_SERVICE_ACCOUNT_PATH and os.path.exists(settings.CODETAPASYA_SERVICE_ACCOUNT_PATH)
+resume_maker_exists = settings.RESUME_MAKER_SERVICE_ACCOUNT_PATH and os.path.exists(settings.RESUME_MAKER_SERVICE_ACCOUNT_PATH)
 
 # Initialize Firebase Admin SDK for CodeTapasya (Auth verification)
 if codetapasya_exists:

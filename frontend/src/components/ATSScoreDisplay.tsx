@@ -46,15 +46,15 @@ export default function ATSScoreDisplay({
   }, [score, loading]);
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 80) return 'text-success-600';
+    if (score >= 60) return 'text-warning-600';
+    return 'text-danger-600';
   };
 
   const getScoreGradient = (score: number) => {
-    if (score >= 80) return 'from-green-500 to-emerald-600';
-    if (score >= 60) return 'from-yellow-500 to-orange-600';
-    return 'from-red-500 to-rose-600';
+    if (score >= 80) return 'bg-success-600';
+    if (score >= 60) return 'bg-warning-600';
+    return 'bg-danger-600';
   };
 
   const getRatingIcon = (rating: string) => {
@@ -145,9 +145,9 @@ export default function ATSScoreDisplay({
           {/* Rating Badge */}
           <div className="flex-1">
             <div className={`inline-flex items-center px-6 py-3 rounded-full text-lg font-semibold ${
-              score >= 80 ? 'bg-green-100 text-green-800' :
-              score >= 60 ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
+              score >= 80 ? 'bg-success-600 text-success-600' :
+              score >= 60 ? 'bg-warning-100 text-warning-600' :
+              'bg-danger-100 text-danger-600'
             }`}>
               {rating}
             </div>
@@ -192,17 +192,17 @@ export default function ATSScoreDisplay({
         <div className="grid md:grid-cols-2 gap-6">
           {/* Strengths */}
           {strengths.length > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+            <div className="bg-success-600 border border-success-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-6 h-6 text-success-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <h3 className="text-lg font-semibold text-green-900">Strengths</h3>
+                <h3 className="text-lg font-semibold text-success-600">Strengths</h3>
               </div>
               <ul className="space-y-2">
                 {strengths.map((strength, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-green-800">
-                    <span className="text-green-500 mt-0.5">•</span>
+                  <li key={idx} className="flex items-start gap-2 text-sm text-success-600">
+                    <span className="text-success-600 mt-0.5">•</span>
                     <span>{strength}</span>
                   </li>
                 ))}
@@ -212,17 +212,17 @@ export default function ATSScoreDisplay({
 
           {/* Weaknesses */}
           {weaknesses.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+            <div className="bg-danger-100 border border-danger-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-6 h-6 text-danger-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <h3 className="text-lg font-semibold text-red-900">Areas to Improve</h3>
+                <h3 className="text-lg font-semibold text-danger-600">Areas to Improve</h3>
               </div>
               <ul className="space-y-2">
                 {weaknesses.map((weakness, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-red-800">
-                    <span className="text-red-500 mt-0.5">•</span>
+                  <li key={idx} className="flex items-start gap-2 text-sm text-danger-600">
+                    <span className="text-danger-600 mt-0.5">•</span>
                     <span>{weakness}</span>
                   </li>
                 ))}
@@ -234,17 +234,17 @@ export default function ATSScoreDisplay({
 
       {/* Suggestions */}
       {suggestions.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+        <div className="bg-secondary-500 border border-secondary-300 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-6 h-6 text-secondary-600" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <h3 className="text-lg font-semibold text-blue-900">Suggestions for Improvement</h3>
+            <h3 className="text-lg font-semibold text-secondary-600">Suggestions for Improvement</h3>
           </div>
           <ul className="space-y-3">
             {suggestions.map((suggestion, idx) => (
-              <li key={idx} className="flex items-start gap-3 text-sm text-blue-900">
-                <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+              <li key={idx} className="flex items-start gap-3 text-sm text-secondary-600">
+                <span className="flex-shrink-0 w-6 h-6 bg-secondary-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                   {idx + 1}
                 </span>
                 <span className="leading-relaxed">{suggestion}</span>

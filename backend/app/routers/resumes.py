@@ -229,9 +229,6 @@ async def upload_direct(
             detail="Failed to save resume metadata"
         )
     
-    # Generate signed download URL
-    storage_url = generate_signed_download_url(storage_path)
-    
     # Trigger parsing in background
     background_tasks.add_task(
         process_resume_parsing,
@@ -244,8 +241,7 @@ async def upload_direct(
     return {
         "message": "File uploaded successfully",
         "resume_id": resume_id,
-        "storage_path": storage_path,
-        "storage_url": storage_url
+        "storage_path": storage_path
     }
 
 

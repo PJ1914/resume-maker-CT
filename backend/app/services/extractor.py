@@ -35,17 +35,25 @@ class PDFExtractor:
                 metadata = pdf.metadata or {}
                 
                 for page_num, page in enumerate(pdf.pages, 1):
-                    # Extract text using default method
-                    page_text = page.extract_text()
+                    # Extract text with proper spacing parameters to avoid concatenation
+                    page_text = page.extract_text(
+                        x_tolerance=2,  # Horizontal tolerance for character grouping
+                        y_tolerance=3,  # Vertical tolerance for line grouping
+                        layout=False
+                    )
                     
-                    if page_text:
+                    if page_text and len(page_text.strip()) > 50:
                         # Add page separator for multi-page resumes
                         if page_num > 1:
                             text_parts.append('\n--- Page Break ---\n')
                         text_parts.append(page_text)
                     else:
-                        # If default extraction fails, try with layout preservation
-                        page_text = page.extract_text(layout=True)
+                        # If default extraction fails or produces poor results, try with layout preservation
+                        page_text = page.extract_text(
+                            layout=True,
+                            x_tolerance=2,
+                            y_tolerance=3
+                        )
                         if page_text:
                             if page_num > 1:
                                 text_parts.append('\n--- Page Break ---\n')

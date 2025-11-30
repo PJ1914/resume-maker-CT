@@ -116,14 +116,14 @@ export const TemplateUpload: React.FC<TemplateUploadProps> = ({
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-6 border-b">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Upload Custom Templates</h2>
-            <p className="text-gray-600 text-sm mt-1">
+            <h2 className="text-2xl font-bold text-secondary-700">Upload Custom Templates</h2>
+            <p className="text-secondary-700 text-sm mt-1">
               Upload HTML or LaTeX templates to customize your resume
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-secondary-700 hover:text-secondary-700"
           >
             <X size={24} />
           </button>
@@ -138,25 +138,25 @@ export const TemplateUpload: React.FC<TemplateUploadProps> = ({
             onDrop={handleDrop}
             className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
               isDragging
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                ? 'border-secondary-300 bg-secondary-500'
+                : 'border-gray-300 bg-secondary-300 hover:bg-secondary-300'
             }`}
           >
             <Upload
               size={48}
               className={`mx-auto mb-4 ${
-                isDragging ? 'text-blue-500' : 'text-gray-400'
+                isDragging ? 'text-secondary-600' : 'text-secondary-700'
               }`}
             />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-secondary-700 mb-2">
               Drag and drop your templates
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-secondary-700 mb-4">
               or click to browse files (.html, .tex, .latex)
             </p>
             <button
               onClick={handleUploadClick}
-              className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-block px-6 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-500 transition-colors"
             >
               Browse Files
             </button>
@@ -173,36 +173,36 @@ export const TemplateUpload: React.FC<TemplateUploadProps> = ({
           {/* File List */}
           {templates.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-secondary-700 mb-3">
                 Selected Templates ({templates.length})
               </h3>
               <div className="space-y-2">
                 {templates.map((template) => (
                   <div
                     key={template.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                    className="flex items-center justify-between p-4 bg-secondary-300 rounded-lg border border-gray-200"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <span className="text-xs font-semibold text-blue-600 uppercase">
+                        <div className="w-10 h-10 bg-secondary-500 rounded-lg flex items-center justify-center">
+                          <span className="text-xs font-semibold text-secondary-600 uppercase">
                             {template.type === 'html' ? 'HTML' : 'TEX'}
                           </span>
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-secondary-700 truncate">
                           {template.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-secondary-700">
                           {(template.file.size / 1024).toFixed(2)} KB
                         </p>
                       </div>
-                      <Check size={20} className="text-green-600 flex-shrink-0" />
+                      <Check size={20} className="text-success-600 flex-shrink-0" />
                     </div>
                     <button
                       onClick={() => removeTemplate(template.id)}
-                      className="ml-4 p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="ml-4 p-2 text-secondary-700 hover:text-danger-600 hover:bg-danger-100 rounded-lg transition-colors"
                     >
                       <X size={18} />
                     </button>
@@ -213,9 +213,9 @@ export const TemplateUpload: React.FC<TemplateUploadProps> = ({
           )}
 
           {/* Info Box */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
-            <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-800">
+          <div className="mt-6 p-4 bg-secondary-500 border border-secondary-300 rounded-lg flex gap-3">
+            <AlertCircle size={20} className="text-secondary-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-secondary-600">
               <p className="font-semibold mb-1">Supported formats:</p>
               <ul className="list-disc list-inside space-y-0.5 text-xs">
                 <li>HTML templates (.html, .htm)</li>
@@ -227,17 +227,17 @@ export const TemplateUpload: React.FC<TemplateUploadProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 flex gap-3 justify-end p-6 border-t bg-gray-50">
+        <div className="sticky bottom-0 flex gap-3 justify-end p-6 border-t bg-secondary-300">
           <button
             onClick={onClose}
-            className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="px-6 py-2 text-secondary-700 bg-white border border-gray-300 rounded-lg hover:bg-secondary-300 transition-colors font-medium"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={templates.length === 0}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-500 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Upload {templates.length > 0 && `(${templates.length})`}
           </button>

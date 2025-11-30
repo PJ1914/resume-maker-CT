@@ -67,7 +67,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
             </div>
             <button
               onClick={() => removeCategory(index)}
-              className="text-red-600 hover:text-red-700 p-2"
+              className="text-danger-600 hover:text-danger-700 p-2"
             >
               <svg
                 className="w-5 h-5"

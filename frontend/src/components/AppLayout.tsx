@@ -39,25 +39,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50">
+    <div className="min-h-screen bg-secondary-50">
       {/* Top Navbar */}
-      <nav className="fixed top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-secondary-200">
+      <nav className="fixed top-0 z-50 w-full bg-white border-b border-secondary-200 shadow-soft">
         <div className="px-3 py-3 lg:px-5 lg:pl-3">
           <div className="flex items-center justify-between">
             {/* Left side */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="inline-flex items-center p-2 text-secondary-600 rounded-lg hover:bg-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+                className="inline-flex items-center p-2 text-secondary-700 rounded-lg hover:bg-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-800 transition-colors"
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
               
               <Link to="/dashboard" className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg bg-primary-900 flex items-center justify-center">
                   <FileText className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
+                <span className="text-xl font-bold text-primary-900">
                   Resume Maker
                 </span>
               </Link>
@@ -69,7 +69,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary-100 transition-colors"
               >
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-primary-900 flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
                 </div>
                 <div className="hidden md:block text-left">
@@ -88,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     className="fixed inset-0 z-10"
                     onClick={() => setUserMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-secondary-200 py-1 z-20">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-medium border border-secondary-200 py-1 z-20">
                     <Link
                       to="/profile"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
@@ -99,7 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-danger-600 hover:bg-danger-50"
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-danger-600 hover:bg-secondary-50"
                     >
                       <LogOut className="h-4 w-4" />
                       Logout
@@ -130,7 +130,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     to={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                       active
-                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md shadow-primary-500/30'
+                        ? 'bg-primary-900 text-white shadow-soft'
                         : 'text-secondary-700 hover:bg-secondary-100'
                     }`}
                   >
@@ -150,14 +150,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="space-y-2">
               <button
                 onClick={() => navigate('/resume/create')}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-primary-900 hover:bg-secondary-100 rounded-lg transition-colors font-medium"
               >
                 <Sparkles className="h-4 w-4" />
                 Create from Scratch
               </button>
               <button
                 onClick={() => navigate('/upload')}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-primary-900 hover:bg-secondary-100 rounded-lg transition-colors font-medium"
               >
                 <Upload className="h-4 w-4" />
                 Upload Existing
@@ -166,11 +166,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Stats Card */}
-          <div className="mt-8 mx-3 p-4 bg-gradient-to-br from-primary-50 to-primary-100 rounded-lg border border-primary-200">
-            <h3 className="text-sm font-semibold text-primary-900 mb-2">
+          <div className="mt-8 mx-3 p-4 bg-secondary-100 rounded-lg border border-secondary-300">
+            <h3 className="text-sm font-semibold text-secondary-900 mb-2">
               💡 Pro Tip
             </h3>
-            <p className="text-xs text-primary-700">
+            <p className="text-xs text-secondary-700">
               Use AI features to enhance your resume and get better ATS scores!
             </p>
           </div>

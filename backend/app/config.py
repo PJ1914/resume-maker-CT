@@ -7,13 +7,13 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     
     # Firebase
-    CODETAPASYA_SERVICE_ACCOUNT_PATH: str 
-    RESUME_MAKER_SERVICE_ACCOUNT_PATH: str
+    CODETAPASYA_SERVICE_ACCOUNT_PATH: Optional[str] = None
+    RESUME_MAKER_SERVICE_ACCOUNT_PATH: Optional[str] = None
     STORAGE_BUCKET_NAME: str = "resume-maker-ct.firebasestorage.app"
     
     # Gemini API
-    GEMINI_API_KEY: str
-    GEMINI_MODEL: str
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-2.0-flash-exp"
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

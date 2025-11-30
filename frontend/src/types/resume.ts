@@ -51,6 +51,18 @@ export interface Skill {
   items: string[];
 }
 
+export interface Certification {
+  name: string;
+  issuer: string;
+  date: string;
+}
+
+export interface Achievement {
+  title: string;
+  description: string;
+  date: string;
+}
+
 export interface ResumeData {
   id?: string;
   userId?: string;
@@ -60,6 +72,8 @@ export interface ResumeData {
   education: Education[];
   skills: Skill[];
   projects: Project[];
+  certifications?: Certification[];
+  achievements?: Achievement[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -112,4 +126,16 @@ export const createEmptyProject = (): Project => ({
 export const createEmptySkill = (): Skill => ({
   category: '',
   items: [],
+});
+
+export const createEmptyCertification = (): Certification => ({
+  name: '',
+  issuer: '',
+  date: '',
+});
+
+export const createEmptyAchievement = (): Achievement => ({
+  title: '',
+  description: '',
+  date: '',
 });

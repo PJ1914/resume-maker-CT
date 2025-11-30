@@ -84,6 +84,22 @@ class ProjectEntry(BaseModel):
     startDate: Optional[str] = None
     endDate: Optional[str] = None
 
+class CertificationEntry(BaseModel):
+    """Certification entry"""
+    id: Optional[str] = None
+    name: str
+    issuer: str
+    date: Optional[str] = None
+    credentialId: Optional[str] = None
+    url: Optional[str] = None
+
+class AchievementEntry(BaseModel):
+    """Achievement entry"""
+    id: Optional[str] = None
+    title: str
+    description: Optional[str] = None
+    date: Optional[str] = None
+
 class CreateResumeRequest(BaseModel):
     """Request to create resume from wizard data"""
     template: Optional[str] = "modern"  # Template ID: modern, classic, minimalist, or custom_xxxxx
@@ -93,6 +109,8 @@ class CreateResumeRequest(BaseModel):
     education: List[EducationEntry] = []
     skills: SkillsData
     projects: List[ProjectEntry] = []
+    certifications: List[CertificationEntry] = []
+    achievements: List[AchievementEntry] = []
 
 class ResumeMetadata(BaseModel):
     """Resume metadata stored in Firestore"""
@@ -117,6 +135,8 @@ class ResumeMetadata(BaseModel):
     experience: Optional[List[dict]] = None
     projects: Optional[List[dict]] = None
     education: Optional[List[dict]] = None
+    certifications: Optional[List[dict]] = None
+    achievements: Optional[List[dict]] = None
     layout_type: Optional[str] = None
     parsed_at: Optional[datetime] = None
     
@@ -160,6 +180,8 @@ class ResumeDetailResponse(BaseModel):
     experience: Optional[List[dict]] = None
     projects: Optional[List[dict]] = None
     education: Optional[List[dict]] = None
+    certifications: Optional[List[dict]] = None
+    achievements: Optional[List[dict]] = None
     layout_type: Optional[str] = None
     parsed_at: Optional[datetime] = None
     latest_score: Optional[float] = None

@@ -32,7 +32,7 @@ export default function WizardProgress({ steps, currentStep }: WizardProgressPro
                         isCompleted
                           ? 'bg-success-600 text-white'
                           : isCurrent
-                          ? 'bg-primary-600 text-white ring-2 ring-primary-300'
+                          ? 'bg-primary-900 text-white ring-2 ring-primary-900/30'
                           : 'bg-secondary-600 text-secondary-400'
                       }
                     `}

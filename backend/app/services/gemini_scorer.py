@@ -147,32 +147,47 @@ Full Resume Text:
    - Grammar and spelling
    - Conciseness
 
+**IMPORTANT - GENERATE SPECIFIC, ACTIONABLE SUGGESTIONS:**
+- Analyze the ACTUAL resume content provided above
+- For each weakness identified, provide SPECIFIC examples from the resume
+- For "Improved Bullet Point Examples", extract ACTUAL bullet points from the resume and show improvements
+- Suggestions should be tailored to this specific resume, not generic templates
+- Include actual skills, companies, and achievements found in the resume
+- If resume text is "very short or poorly extracted", mention specific sections that are missing or truncated
+
 **RESPONSE FORMAT (JSON only):**
 ```json
 {
   "total_score": 85,
   "rating": "Excellent",
   "breakdown": {
-    "keywords": {"score": 25, "analysis": "Strong technical keywords"},
-    "sections": {"score": 30, "analysis": "All sections present"},
-    "formatting": {"score": 13, "analysis": "Good structure"},
-    "quantification": {"score": 8, "analysis": "Some metrics"},
-    "readability": {"score": 9, "analysis": "Clear and professional"}
+    "keywords": {"score": 25, "analysis": "Specific analysis of keywords found in this resume"},
+    "sections": {"score": 30, "analysis": "Specific sections analysis for this resume"},
+    "formatting": {"score": 13, "analysis": "Formatting analysis specific to this resume"},
+    "quantification": {"score": 8, "analysis": "Analysis of metrics in this resume"},
+    "readability": {"score": 9, "analysis": "Readability analysis specific to this resume"}
   },
   "strengths": [
-    "Strong technical skills section",
-    "Quantified achievements in experience"
+    "Strength 1 - specific to this resume",
+    "Strength 2 - with actual examples"
   ],
   "weaknesses": [
-    "Missing certifications section",
-    "Could add more metrics"
+    "Weakness 1 - with specific examples from resume",
+    "Weakness 2 - with specific bullet point or section mentioned"
   ],
   "suggestions": [
-    "Add certifications if applicable",
-    "Include more numbers in achievements"
+    "Specific suggestion 1 for this resume",
+    "Specific suggestion 2 with actual improvement example",
+    "Specific suggestion 3 addressing actual gaps"
   ],
-  "keyword_matches": ["python", "react", "sql"],
-  "ats_compatibility": "High"
+  "improved_examples": [
+    {
+      "original": "Actual bullet point from resume",
+      "improved": "Improved version with specific changes"
+    }
+  ],
+  "keyword_matches": ["actual keywords found in resume"],
+  "ats_compatibility": "High/Medium/Low"
 }
 ```
 
@@ -182,7 +197,7 @@ Provide ONLY the JSON response, no additional text.
         return prompt
     
     def _parse_gemini_response(self, response_text: str) -> Dict:
-        """Parse Gemini's JSON response."""
+        """Parse Gemini's JSON response and map to ScoringResponse schema."""
         try:
             # Extract JSON from markdown code blocks if present
             if '```json' in response_text:
@@ -199,11 +214,79 @@ Provide ONLY the JSON response, no additional text.
             # Parse JSON
             result = json.loads(json_text)
             
-            # Validate structure
-            required_keys = ['total_score', 'rating', 'breakdown', 'suggestions']
-            for key in required_keys:
+            # Ensure required fields exist with safe defaults
+            required_fields = {
+                'total_score': 70,
+                'rating': 'Good',
+                'breakdown': {
+                    'keywords': {'score': 20, 'analysis': 'Analysis not available'},
+                    'sections': {'score': 25, 'analysis': 'Analysis not available'},
+                    'formatting': {'score': 10, 'analysis': 'Analysis not available'},
+                    'quantification': {'score': 8, 'analysis': 'Analysis not available'},
+                    'readability': {'score': 7, 'analysis': 'Analysis not available'},
+                },
+                'strengths': [],
+                'weaknesses': [],
+                'suggestions': [],
+                'improved_examples': [],
+                'keyword_matches': [],
+                'ats_compatibility': 'Medium'
+            }
+            
+            # Merge with defaults
+            for key, default_value in required_fields.items():
                 if key not in result:
-                    raise ValueError(f"Missing required key: {key}")
+                    result[key] = default_value
+            
+            # Map Gemini breakdown to ScoringResponse breakdown format
+            if 'breakdown' in result and isinstance(result['breakdown'], dict):
+                breakdown = result['breakdown']
+                
+                # Convert to standardized format if needed
+                if 'keywords' in breakdown and 'score' in breakdown['keywords']:
+                    result['breakdown'] = {
+                        'format_ats_compatibility': {
+                            'score': breakdown.get('formatting', {}).get('score', 10),
+                            'max_score': 20,
+                            'percentage': (breakdown.get('formatting', {}).get('score', 10) / 20) * 100
+                        },
+                        'keyword_match': {
+                            'score': breakdown.get('keywords', {}).get('score', 20),
+                            'max_score': 25,
+                            'percentage': (breakdown.get('keywords', {}).get('score', 20) / 25) * 100
+                        },
+                        'skills_relevance': {
+                            'score': breakdown.get('keywords', {}).get('score', 15) * 0.6,  # Estimate from keywords
+                            'max_score': 15,
+                            'percentage': (breakdown.get('keywords', {}).get('score', 15) * 0.6 / 15) * 100
+                        },
+                        'experience_quality': {
+                            'score': breakdown.get('sections', {}).get('score', 13),
+                            'max_score': 20,
+                            'percentage': (breakdown.get('sections', {}).get('score', 13) / 20) * 100
+                        },
+                        'achievements_impact': {
+                            'score': breakdown.get('quantification', {}).get('score', 7),
+                            'max_score': 10,
+                            'percentage': (breakdown.get('quantification', {}).get('score', 7) / 10) * 100
+                        },
+                        'grammar_clarity': {
+                            'score': breakdown.get('readability', {}).get('score', 10),
+                            'max_score': 10,
+                            'percentage': (breakdown.get('readability', {}).get('score', 10) / 10) * 100
+                        }
+                    }
+            
+            # Rename suggestions to handle both "suggestions" and "improved_examples"
+            if 'suggestions' not in result:
+                result['suggestions'] = []
+            if 'improved_examples' not in result:
+                result['improved_examples'] = []
+            
+            # Ensure all lists are actually lists
+            for field in ['strengths', 'weaknesses', 'suggestions', 'keyword_matches']:
+                if field in result and not isinstance(result[field], list):
+                    result[field] = []
             
             return result
             
@@ -213,15 +296,19 @@ Provide ONLY the JSON response, no additional text.
                 'total_score': 70,
                 'rating': 'Good',
                 'breakdown': {
-                    'keywords': {'score': 20, 'analysis': 'Unable to parse detailed analysis'},
-                    'sections': {'score': 25, 'analysis': 'Unable to parse detailed analysis'},
-                    'formatting': {'score': 10, 'analysis': 'Unable to parse detailed analysis'},
-                    'quantification': {'score': 8, 'analysis': 'Unable to parse detailed analysis'},
-                    'readability': {'score': 7, 'analysis': 'Unable to parse detailed analysis'},
+                    'format_ats_compatibility': {'score': 10, 'max_score': 20, 'percentage': 50},
+                    'keyword_match': {'score': 20, 'max_score': 25, 'percentage': 80},
+                    'skills_relevance': {'score': 10, 'max_score': 15, 'percentage': 66.7},
+                    'experience_quality': {'score': 13, 'max_score': 20, 'percentage': 65},
+                    'achievements_impact': {'score': 7, 'max_score': 10, 'percentage': 70},
+                    'grammar_clarity': {'score': 10, 'max_score': 10, 'percentage': 100},
                 },
                 'strengths': [],
                 'weaknesses': [],
                 'suggestions': ['Unable to parse AI response. Using default score.'],
+                'improved_examples': [],
+                'keyword_matches': [],
+                'ats_compatibility': 'Medium',
                 'parse_error': str(e),
             }
 

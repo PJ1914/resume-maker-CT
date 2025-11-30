@@ -242,6 +242,20 @@ Return JSON with this exact structure (omit sections if not found):
       "link": "github.com/project",
       "technologies": ["React", "Node.js"]
     }}
+  ],
+  "certifications": [
+    {{
+      "name": "Certification Name",
+      "issuer": "Issuing Organization",
+      "date": "Jan 2024"
+    }}
+  ],
+  "achievements": [
+    {{
+      "title": "Achievement Title",
+      "description": "Brief description",
+      "date": "2024"
+    }}
   ]
 }}
 
