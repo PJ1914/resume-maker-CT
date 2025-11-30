@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { authService } from '@/services/auth.service'
-import { resumeService } from '@/services/resume.service'
+import { useResumes } from '@/hooks/useResumes'
 import { 
   FileText, 
   Upload, 
@@ -17,62 +16,27 @@ import {
 export default function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [stats, setStats] = useState({
-    totalResumes: 0,
-    averageScore: 0,
-    recentUploads: 0
-  })
-  const [loading, setLoading] = useState(true)
-  const [lastRefresh, setLastRefresh] = useState<number>(0)
+  const { data: resumesData, isLoading: loading } = useResumes()
 
-  const loadStats = async () => {
-    if (!user) return
+  const resumes = resumesData || []
+
+  const stats = useMemo(() => {
+    const scoredResumes = resumes.filter(r => r.latest_score && r.latest_score > 0)
     
-    try {
-      // Load resume stats
-      try {
-        const data = await resumeService.listResumes()
-        const resumes = data.resumes || []
-        
-        const scoredResumes = resumes.filter(r => r.latest_score && r.latest_score > 0)
-        
-        setStats({
-          totalResumes: resumes.length,
-          averageScore: scoredResumes.length > 0 
-            ? Math.round(scoredResumes.reduce((sum, r) => sum + (r.latest_score || 0), 0) / scoredResumes.length)
-            : 0,
-          recentUploads: resumes.filter(r => {
-            if (!r.created_at) return false
-            const uploadDate = new Date(r.created_at)
-            const weekAgo = new Date()
-            weekAgo.setDate(weekAgo.getDate() - 7)
-            return uploadDate > weekAgo
-          }).length
-        })
-      } catch (statsError: any) {
-        // Stats loading failed, but don't block the page
-        console.warn('Failed to load stats (this is okay):', statsError)
-        // Keep default stats
-      }
-    } catch (error: any) {
-      console.error('Init error:', error)
-    } finally {
-      setLoading(false)
+    return {
+      totalResumes: resumes.length,
+      averageScore: scoredResumes.length > 0 
+        ? Math.round(scoredResumes.reduce((sum, r) => sum + (r.latest_score || 0), 0) / scoredResumes.length)
+        : 0,
+      recentUploads: resumes.filter(r => {
+        if (!r.created_at) return false
+        const uploadDate = new Date(r.created_at)
+        const weekAgo = new Date()
+        weekAgo.setDate(weekAgo.getDate() - 7)
+        return uploadDate > weekAgo
+      }).length
     }
-  }
-
-  useEffect(() => {
-    loadStats()
-  }, [user])
-
-  // Refresh stats every 10 seconds to catch score updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadStats()
-    }, 10000)
-
-    return () => clearInterval(interval)
-  }, [user])
+  }, [resumes])
 
   return (
     <div className="min-h-screen bg-gray-50">

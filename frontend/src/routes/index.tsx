@@ -10,6 +10,8 @@ import { ResumeEditorPage } from '../pages/ResumeEditorPage'
 import ResumeWizardPage from '../pages/ResumeWizardPage'
 import TemplateSelectionPage from '../pages/TemplateSelectionPage'
 import { TemplatesPage } from '../pages/TemplatesPage'
+import CreditPurchasePage from '../pages/CreditPurchasePage'
+import CreditHistoryPage from '../pages/CreditHistoryPage'
 import { useAuth } from '../context/AuthContext'
 
 export default function AppRoutes() {
@@ -102,6 +104,24 @@ export default function AppRoutes() {
             <AppLayout>
               <ResumeEditorPage />
             </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/credits/purchase"
+        element={
+          <ProtectedRoute>
+            <CreditPurchasePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/credits/history"
+        element={
+          <ProtectedRoute>
+            <CreditHistoryPage />
           </ProtectedRoute>
         }
       />

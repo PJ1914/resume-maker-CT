@@ -118,6 +118,28 @@ export const resumeService = {
   },
 
   /**
+   * Get all resumes (alias for listResumes)
+   */
+  async getAllResumes(limit = 50): Promise<ResumeListItem[]> {
+    const result = await this.listResumes(limit)
+    return result.resumes
+  },
+
+  /**
+   * Create a new resume
+   */
+  async createResume(data: any): Promise<ResumeDetail> {
+    return apiClient.post<ResumeDetail>('/api/resumes', data)
+  },
+
+  /**
+   * Update an existing resume
+   */
+  async updateResume(id: string, data: any): Promise<ResumeDetail> {
+    return apiClient.put<ResumeDetail>(`/api/resumes/${id}`, data)
+  },
+
+  /**
    * Get detailed information about a resume
    */
   async getResume(resumeId: string): Promise<ResumeDetail> {

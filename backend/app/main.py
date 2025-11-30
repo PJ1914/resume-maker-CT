@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates
+from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, admin, credits
 import sys
 
 # Print startup info
@@ -35,6 +35,8 @@ app.include_router(templates.router, prefix="/api", tags=["Templates"])
 app.include_router(scoring.router, prefix="/api/scoring", tags=["Scoring"])
 app.include_router(ai.router, tags=["AI"])
 app.include_router(pdf_export.router, tags=["PDF Export"])
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(credits.router, prefix="/api/credits", tags=["Credits"])
 
 @app.get("/")
 async def root():

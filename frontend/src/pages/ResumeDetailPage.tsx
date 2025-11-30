@@ -11,6 +11,8 @@ import {
   CheckCircle,
   Clock,
 } from 'lucide-react'
+import { useResume, useDeleteResume } from '@/hooks/useResumes'
+import { useResumeScore, useScoreResume } from '@/hooks/useScoring'
 import { resumeService, type ResumeDetail } from '@/services/resume.service'
 import toast from 'react-hot-toast'
 import PdfExportModal from '@/components/PdfExportModal'
@@ -110,174 +112,54 @@ function formatResumeText(text: string): string {
 export default function ResumeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [resume, setResume] = useState<ResumeDetail | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: resume, isLoading: loading, refetch } = useResume(id)
+  const { data: scoreData } = useResumeScore(id)
+  const { mutate: scoreResume, isPending: scoring } = useScoreResume()
+  const { mutate: deleteResumeMutation } = useDeleteResume()
   const [showExportModal, setShowExportModal] = useState(false)
-  const [scoreData, setScoreData] = useState<any>(null)
-  const [scoring, setScoring] = useState(false)
   const [reparsing, setReparsing] = useState(false)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    if (!id) return
+    if (!id || !resume) return
     
-    let isMounted = true
-    
-    const loadAndPoll = async () => {
-      try {
-        setLoading(true)
-        const data = await resumeService.getResume(id)
-        
-        if (!isMounted) return
-        
-        // Only update if data actually changed to prevent infinite re-renders
-        setResume(prevResume => {
-          if (!prevResume || prevResume.resume_id !== data.resume_id || prevResume.status !== data.status) {
-            return data;
-          }
-          return prevResume;
-        })
-        
-        // Auto-load score if it exists
-        if (data.latest_score) {
-          try {
-            const score = await resumeService.getScore(id)
-            if (isMounted) setScoreData(score)
-          } catch (error) {
-            console.error('Failed to load score:', error)
-          }
+    // Only start polling if resume is NOT in a final state
+    if (resume.status !== 'PARSED' && resume.status !== 'SCORED' && resume.status !== 'ERROR') {
+      pollingIntervalRef.current = setInterval(async () => {
+        refetch()
+      }, 3000)
+      
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current)
+          pollingIntervalRef.current = null
         }
-        
-        // Only start polling if resume is NOT in a final state
-        if (data.status !== 'PARSED' && data.status !== 'SCORED' && data.status !== 'ERROR') {
-          pollingIntervalRef.current = setInterval(async () => {
-            try {
-              const updatedData = await resumeService.getResume(id)
-              
-              if (!isMounted) return
-              
-              // Only update if status changed
-              setResume(prevResume => {
-                if (!prevResume || prevResume.status !== updatedData.status) {
-                  return updatedData;
-                }
-                return prevResume;
-              });
-              
-              // Stop polling if we've reached a final state
-              if (updatedData.status === 'PARSED' || updatedData.status === 'SCORED' || updatedData.status === 'ERROR') {
-                if (pollingIntervalRef.current) {
-                  clearInterval(pollingIntervalRef.current)
-                  pollingIntervalRef.current = null
-                }
-                
-                if (updatedData.status === 'PARSED' || updatedData.status === 'SCORED') {
-                  toast.success('Resume processing complete!')
-                }
-              }
-            } catch (error: any) {
-              if (!isMounted) return
-              
-              // If 404, the resume was deleted - stop polling
-              if (error.response?.status === 404) {
-                if (pollingIntervalRef.current) {
-                  clearInterval(pollingIntervalRef.current)
-                  pollingIntervalRef.current = null
-                }
-                setResume(null)
-              }
-            }
-          }, 3000)
-        }
-      } catch (error: any) {
-        if (!isMounted) return
-        
-        console.error('Failed to load resume:', error)
-        toast.error('Failed to load resume details')
-        navigate('/resumes')
-      } finally {
-        if (isMounted) setLoading(false)
       }
     }
-    
-    loadAndPoll()
-    
-    return () => {
-      isMounted = false
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current)
-        pollingIntervalRef.current = null
-      }
-    }
-  }, [id, navigate])
+  }, [id, resume?.status, refetch])
 
   const loadResume = async (resumeId: string) => {
-    try {
-      setLoading(true)
-      const data = await resumeService.getResume(resumeId)
-      setResume(data)
-      
-      // Auto-load score if it exists
-      if (data.latest_score) {
-        try {
-          const score = await resumeService.getScore(resumeId)
-          setScoreData(score)
-        } catch (error) {
-          console.error('Failed to load score:', error)
-        }
-      }
-    } catch (error: any) {
-      console.error('Failed to load resume:', error)
-      toast.error('Failed to load resume details')
-      navigate('/resumes')
-    } finally {
-      setLoading(false)
-    }
+    refetch()
   }
 
   const handleCheckScore = async () => {
-    if (!resume) return
+    if (!resume || !id) return
 
-    try {
-      setScoring(true)
-      const score = await resumeService.scoreResume(resume.resume_id)
-      setScoreData(score)
-      toast.success('ATS score generated successfully!')
-    } catch (error: any) {
-      console.error('Scoring error:', error)
-      const errorMessage = error.response?.data?.detail || error.message || 'Failed to generate ATS score'
-      
-      if (errorMessage.includes('parsed') || errorMessage.includes('parsing')) {
-        toast.error('Resume is being parsed. Please wait a moment and try again.', {
-          duration: 5000
-        })
-      } else if (errorMessage.includes('Network')) {
-        toast.error('Network error. Please ensure the backend is running.')
-      } else {
-        toast.error(errorMessage)
-      }
-    } finally {
-      setScoring(false)
-    }
+    scoreResume({ resumeId: id, preferGemini: true })
   }
 
   const handleReparse = async () => {
-    if (!resume) return
+    if (!resume || !id) return
 
     try {
       setReparsing(true)
-      await resumeService.reparseResume(resume.resume_id)
+      await resumeService.reparseResume(id)
       toast.success('Re-parsing triggered! Extracting data with updated parser...')
       
-      // Reload resume data after a delay to show the update
-      setTimeout(async () => {
-        try {
-          const data = await resumeService.getResume(resume.resume_id)
-          setResume(data)
-          toast.success('Resume parsing complete! Updated data loaded.')
-        } catch (error) {
-          console.error('Error reloading resume:', error)
-        }
+      // Refetch resume data after a delay
+      setTimeout(()=> {
+        refetch()
+        toast.success('Resume parsing complete! Updated data loaded.')
       }, 3000)
     } catch (error: any) {
       console.error('Reparse error:', error)
@@ -288,19 +170,13 @@ export default function ResumeDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!resume || !confirm(`Delete "${resume.original_filename}"?`)) return
+    if (!resume || !id || !confirm(`Delete "${resume.original_filename}"?`)) return
 
-    try {
-      await resumeService.deleteResume(resume.resume_id)
-      // Clear the resume state immediately to stop polling
-      setResume(null)
-      toast.success('Resume deleted successfully')
-      // Navigate after clearing state to prevent polling from running
-      navigate('/resumes')
-    } catch (error: any) {
-      console.error('Delete error:', error)
-      toast.error('Failed to delete resume')
-    }
+    deleteResumeMutation(id, {
+      onSuccess: () => {
+        navigate('/resumes')
+      },
+    })
   }
 
   const handleDownload = async () => {

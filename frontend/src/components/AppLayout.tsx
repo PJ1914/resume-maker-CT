@@ -11,7 +11,9 @@ import {
   Menu,
   X,
   ChevronDown,
+  History,
 } from 'lucide-react'
+import CreditBalance from './CreditBalance'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
@@ -63,50 +65,62 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </div>
 
-            {/* Right side - User menu */}
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary-100 transition-colors"
-              >
-                <div className="h-8 w-8 rounded-full bg-primary-900 flex items-center justify-center">
-                  <User className="h-4 w-4 text-white" />
-                </div>
-                <div className="hidden md:block text-left">
-                  <div className="text-sm font-medium text-secondary-900">
-                    {user?.displayName || user?.email?.split('@')[0] || 'User'}
+            {/* Right side - Credits & User menu */}
+            <div className="flex items-center gap-3">
+              <CreditBalance />
+              
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary-100 transition-colors"
+                >
+                  <div className="h-8 w-8 rounded-full bg-primary-900 flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
                   </div>
-                  <div className="text-xs text-secondary-500">{user?.email}</div>
-                </div>
-                <ChevronDown className="h-4 w-4 text-secondary-600" />
-              </button>
+                  <div className="hidden md:block text-left">
+                    <div className="text-sm font-medium text-secondary-900">
+                      {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                    </div>
+                    <div className="text-xs text-secondary-500">{user?.email}</div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-secondary-600" />
+                </button>
 
-              {/* User dropdown */}
-              {userMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setUserMenuOpen(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-medium border border-secondary-200 py-1 z-20">
-                    <Link
-                      to="/profile"
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                {/* User dropdown */}
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
                       onClick={() => setUserMenuOpen(false)}
-                    >
-                      <User className="h-4 w-4" />
-                      Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-danger-600 hover:bg-secondary-50"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
-                  </div>
-                </>
-              )}
+                    />
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-medium border border-secondary-200 py-1 z-20">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <User className="h-4 w-4" />
+                        Profile
+                      </Link>
+                      <Link
+                        to="/credits/history"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <History className="h-4 w-4" />
+                        Credit History
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-danger-600 hover:bg-secondary-50"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

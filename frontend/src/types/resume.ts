@@ -44,6 +44,8 @@ export interface Project {
   technologies: string[];
   link?: string;
   highlights: string[];
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface Skill {
@@ -63,6 +65,12 @@ export interface Achievement {
   date: string;
 }
 
+export interface Language {
+  id: string;
+  language: string;
+  proficiency: string;
+}
+
 export interface ResumeData {
   id?: string;
   userId?: string;
@@ -74,6 +82,7 @@ export interface ResumeData {
   projects: Project[];
   certifications?: Certification[];
   achievements?: Achievement[];
+  languages?: Language[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -138,4 +147,10 @@ export const createEmptyAchievement = (): Achievement => ({
   title: '',
   description: '',
   date: '',
+});
+
+export const createEmptyLanguage = (): Language => ({
+  id: crypto.randomUUID(),
+  language: '',
+  proficiency: '',
 });

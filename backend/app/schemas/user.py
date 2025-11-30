@@ -9,6 +9,7 @@ class UserProfile(BaseModel):
     displayName: Optional[str] = None
     photoURL: Optional[str] = None
     emailVerified: bool
+    isAdmin: bool = False
 
 class TokenVerifyResponse(BaseModel):
     """Token verification response"""

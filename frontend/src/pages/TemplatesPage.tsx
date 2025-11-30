@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Upload, FileText, MoreVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 import TemplateUpload from '../components/TemplateUpload';
 import TemplateEditor from '../components/TemplateEditor';
 import templateService, { Template as TemplateType } from '../services/templates.service';
@@ -51,6 +52,7 @@ interface TemplateFile {
 }
 
 export const TemplatesPage: React.FC = () => {
+  const { isAdmin } = useAuth();
   const [templates, setTemplates] = useState<Template[]>(defaultTemplates);
   const [showUpload, setShowUpload] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
@@ -176,13 +178,15 @@ export const TemplatesPage: React.FC = () => {
                 Manage your resume templates and create custom designs
               </p>
             </div>
-            <button
-              onClick={() => setShowUpload(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-secondary-500 text-white rounded-lg hover:bg-secondary-500 transition-colors font-medium shadow-lg hover:shadow-xl"
-            >
-              <Upload size={20} />
-              Upload Template
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowUpload(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-secondary-500 text-white rounded-lg hover:bg-secondary-500 transition-colors font-medium shadow-lg hover:shadow-xl"
+              >
+                <Upload size={20} />
+                Upload Template
+              </button>
+            )}
           </div>
         </div>
       </div>

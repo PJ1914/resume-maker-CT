@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, Sparkles, Star, Award, Upload, Settings } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 
 interface Template {
   id: string
@@ -49,6 +50,7 @@ const DEFAULT_TEMPLATES: Template[] = [
 
 export default function TemplateSelectionPage() {
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
   const [selectedTemplate, setSelectedTemplate] = useState<string>('modern')
   const [templates, setTemplates] = useState<Template[]>(DEFAULT_TEMPLATES)
 
@@ -368,9 +370,8 @@ export default function TemplateSelectionPage() {
             </div>
           </div>
         )}
-
-        {/* No Custom Templates - Upload CTA */}
-        {templates.length === DEFAULT_TEMPLATES.length && (
+        {/* No Custom Templates - Upload CTA (Admin only) */}
+        {isAdmin && templates.length === DEFAULT_TEMPLATES.length && (
           <div className="mb-12 p-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl border-2 border-purple-200 text-center">
             <Upload size={48} className="mx-auto text-purple-600 mb-4" />
             <h3 className="text-xl font-bold text-secondary-700 mb-2">Create Your Custom Templates</h3>

@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from typing import List
 from datetime import datetime
 from app.dependencies import get_current_user
+from app.dependencies_admin import get_current_admin
+from app.services.user_roles import is_user_admin
 from app.services.templates import (
     Template,
     save_template,
@@ -289,12 +291,28 @@ async def delete_template_detail(
             detail="Failed to delete template"
         )
 
+@router.get("/admin/check")
+async def check_admin_status(
+    current_user: dict = Depends(get_current_user)
+):
+    """Check if current user is an admin"""
+    user_id = current_user["uid"]
+    user_email = current_user.get("email", "")
+    
+    is_admin = is_user_admin(user_email, user_id)
+    
+    return {
+        "is_admin": is_admin,
+        "user_id": user_id,
+        "email": user_email
+    }
+
 @router.post("/templates/upload")
 async def upload_template(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_admin)
 ):
-    """Upload a template file"""
+    """Upload a template file (Admin only)"""
     user_id = current_user["uid"]
     
     print(f"[API] Uploading template file for user {user_id}: {file.filename}")

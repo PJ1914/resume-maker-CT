@@ -1,43 +1,18 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Trash2, Eye, Upload, AlertCircle, Sparkles } from 'lucide-react'
-import { resumeService, type ResumeListItem } from '@/services/resume.service'
-import toast from 'react-hot-toast'
+import { useResumes, useDeleteResume } from '@/hooks/useResumes'
+import type { ResumeListItem } from '@/services/resume.service'
 
 export default function ResumesPage() {
-  const [resumes, setResumes] = useState<ResumeListItem[]>([])
-  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const { data: resumesData, isLoading: loading } = useResumes()
+  const { mutate: deleteResume } = useDeleteResume()
 
-  useEffect(() => {
-    loadResumes()
-  }, [])
-
-  const loadResumes = async () => {
-    try {
-      setLoading(true)
-      const data = await resumeService.listResumes()
-      setResumes(data.resumes)
-    } catch (error: any) {
-      console.error('Failed to load resumes:', error)
-      toast.error('Failed to load resumes')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const resumes = resumesData || []
 
   const handleDelete = async (resumeId: string, filename: string) => {
     if (!confirm(`Delete "${filename}"?`)) return
-
-    try {
-      await resumeService.deleteResume(resumeId)
-      toast.success('Resume deleted successfully')
-      // Remove from state
-      setResumes((prev) => prev.filter((r) => r.resume_id !== resumeId))
-    } catch (error: any) {
-      console.error('Delete error:', error)
-      toast.error('Failed to delete resume')
-    }
+    deleteResume(resumeId)
   }
 
   const handleView = (resumeId: string) => {

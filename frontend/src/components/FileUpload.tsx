@@ -91,12 +91,12 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       setProgress(100)
       setUploadComplete(true)
       setUploadedResumeId(result.resume_id)
-      setUploadedPdfUrl(result.storage_url)
+      setUploadedPdfUrl(result.storage_path)
       toast.success('Resume uploaded successfully!')
 
       // Call callback with both resumeId and pdfUrl
-      if (onUploadComplete && result.storage_url) {
-        onUploadComplete(result.resume_id, result.storage_url)
+      if (onUploadComplete && result.storage_path) {
+        onUploadComplete(result.resume_id, result.storage_path)
       }
     } catch (error: any) {
       console.error('Upload error:', error)

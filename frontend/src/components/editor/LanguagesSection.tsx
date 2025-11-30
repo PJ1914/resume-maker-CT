@@ -50,9 +50,9 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                 <input
                   type="text"
                   className="input w-full"
-                  value={lang.name}
+                  value={lang.language}
                   onChange={(e) =>
-                    updateLanguage(index, { name: e.target.value })
+                    updateLanguage(index, { language: e.target.value })
                   }
                   placeholder="e.g., Spanish, French, Mandarin"
                 />

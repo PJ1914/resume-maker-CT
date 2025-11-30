@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 interface AuthContextType {
   user: User | null
   loading: boolean
+  isAdmin: boolean
   signIn: (email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -32,11 +34,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const token = await user.getIdToken()
           localStorage.setItem('authToken', token)
           console.log('[AUTH] Stored Firebase ID token in localStorage')
+          
+          // Fetch user profile to get admin status
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+          const response = await fetch(`${API_URL}/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          
+          if (response.ok) {
+            const profile = await response.json()
+            setIsAdmin(profile.isAdmin || false)
+            console.log('[AUTH] User admin status:', profile.isAdmin)
+          }
         } catch (error) {
-          console.error('[AUTH] Error getting ID token:', error)
+          console.error('[AUTH] Error getting ID token or profile:', error)
+          setIsAdmin(false)
         }
       } else {
         localStorage.removeItem('authToken')
+        setIsAdmin(false)
         console.log('[AUTH] Cleared authToken from localStorage')
       }
       setLoading(false)
@@ -93,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     loading,
+    isAdmin,
     signIn,
     signInWithGoogle,
     signOut,

@@ -116,10 +116,6 @@ to-do.txt
 .mypy_cache/
 .pydantic_cache/
 
-# Node modules lock files (keep but can be regenerated)
-package-lock.json
-yarn.lock
-
 # OS specific
 Thumbs.db
 .DS_Store
