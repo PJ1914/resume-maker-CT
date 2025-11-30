@@ -26,6 +26,9 @@ def get_redis_client():
         import redis
         from app.config import settings
         
+        if not settings.REDIS_ENABLED:
+            return None
+            
         redis_client = redis.from_url(
             settings.REDIS_URL,
             decode_responses=True,

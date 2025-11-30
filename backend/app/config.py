@@ -16,10 +16,9 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.0-flash-exp"
     
     # Redis - Optional, falls back to no caching if unavailable
+    REDIS_ENABLED: bool = False
     REDIS_URL: str = "redis://localhost:6379/0"
-    
-    # CORS - MUST be set via environment variable for security
-    # Example: CORS_ORIGINS=http://localhost:5173,https://prativeda.codetapasya.com
+  
     CORS_ORIGINS: Union[str, List[str]]
     
     # Rate limiting
