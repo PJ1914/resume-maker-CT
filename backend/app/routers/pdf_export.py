@@ -11,7 +11,7 @@ import io
 from datetime import timedelta
 
 from app.dependencies import get_current_user
-from app.services.firestore import get_resume_data
+from app.services.firestore import get_merged_resume_data
 from app.services.latex_compiler import latex_compiler, TemplateType
 from app.services.storage import upload_resume_pdf, get_signed_url
 from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
@@ -66,7 +66,7 @@ async def export_resume_pdf(
             )
 
         # Get resume data from Firestore
-        resume_data = get_resume_data(resume_id, user_id)
+        resume_data = get_merged_resume_data(resume_id, user_id)
         
         if not resume_data:
             raise HTTPException(
@@ -185,7 +185,7 @@ async def download_resume_pdf(
             )
 
         # Get resume data from Firestore
-        resume_data = get_resume_data(resume_id, user_id)
+        resume_data = get_merged_resume_data(resume_id, user_id)
         
         if not resume_data:
             raise HTTPException(

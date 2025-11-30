@@ -191,6 +191,8 @@ async def score_resume(
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         logger.error(f"Scoring error for resume {resume_id}: {e}")
         
         # Log error
