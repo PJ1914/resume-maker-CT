@@ -330,45 +330,54 @@ async def list_templates():
     Returns:
         List of available template names with descriptions
     """
-    return {
-        "templates": [
-            {
-                "name": "resume_1",
-                "display_name": "Resume 1",
-                "description": "Professional template with clean layout"
-            },
-            {
-                "name": "resume_2",
-                "display_name": "Resume 2",
-                "description": "Classic resume style"
-            },
-            {
-                "name": "resume_3",
-                "display_name": "Resume 3",
-                "description": "Clean and modern design"
-            },
-            {
-                "name": "resume_4",
-                "display_name": "Resume 4",
-                "description": "Structured professional layout"
-            },
-            {
-                "name": "resume_5",
-                "display_name": "Resume 5",
-                "description": "AltaCV style - Modern and colorful"
-            },
-            {
-                "name": "resume_6",
-                "display_name": "Resume 6",
-                "description": "Professional CV format"
-            },
-            {
-                "name": "resume_7",
-                "display_name": "Resume 7",
-                "description": "Comprehensive resume template"
-            }
-        ]
-    }
+    try:
+        return {
+            "templates": [
+                {
+                    "name": "resume_1",
+                    "display_name": "Resume 1",
+                    "description": "Professional template with clean layout"
+                },
+                {
+                    "name": "resume_2",
+                    "display_name": "Resume 2",
+                    "description": "Classic resume style"
+                },
+                {
+                    "name": "resume_3",
+                    "display_name": "Resume 3",
+                    "description": "Clean and modern design"
+                },
+                {
+                    "name": "resume_4",
+                    "display_name": "Resume 4",
+                    "description": "Structured professional layout"
+                },
+                {
+                    "name": "resume_5",
+                    "display_name": "Resume 5",
+                    "description": "AltaCV style - Modern and colorful"
+                },
+                {
+                    "name": "resume_6",
+                    "display_name": "Resume 6",
+                    "description": "Professional CV format"
+                },
+                {
+                    "name": "resume_7",
+                    "display_name": "Resume 7",
+                    "description": "Comprehensive resume template"
+                }
+            ]
+        }
+    except Exception as e:
+        import traceback
+        logger.error(f"Error listing templates: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list templates: {str(e)}"
+        )
 
 @router.get("/templates/{template_name}/preview")
 async def preview_template(template_name: str):
