@@ -96,6 +96,12 @@ class CertificationEntry(BaseModel):
     credentialId: Optional[str] = None
     url: Optional[str] = None
 
+class LanguageEntry(BaseModel):
+    """Language entry"""
+    id: Optional[str] = None
+    name: str
+    proficiency: str
+
 class AchievementEntry(BaseModel):
     """Achievement entry"""
     id: Optional[str] = None
@@ -113,6 +119,7 @@ class CreateResumeRequest(BaseModel):
     skills: SkillsData
     projects: List[ProjectEntry] = []
     certifications: List[CertificationEntry] = []
+    languages: List[LanguageEntry] = []
     achievements: List[AchievementEntry] = []
 
 class ResumeMetadata(BaseModel):
@@ -139,6 +146,7 @@ class ResumeMetadata(BaseModel):
     projects: Optional[List[dict]] = None
     education: Optional[List[dict]] = None
     certifications: Optional[List[dict]] = None
+    languages: Optional[List[dict]] = None
     achievements: Optional[List[dict]] = None
     layout_type: Optional[str] = None
     parsed_at: Optional[datetime] = None
@@ -197,6 +205,7 @@ class ResumeDetailResponse(BaseModel):
     projects: Optional[List[dict]] = None
     education: Optional[List[dict]] = None
     certifications: Optional[List[dict]] = None
+    languages: Optional[List[dict]] = None
     achievements: Optional[List[dict]] = None
     layout_type: Optional[str] = None
     parsed_at: Optional[datetime] = None

@@ -16,10 +16,10 @@ from app.services.latex_utils import prepare_template_data
 logger = logging.getLogger(__name__)
 
 # Template types
-TemplateType = Literal["modern", "classic", "minimalist"]
+TemplateType = Literal["modern", "classic", "minimalist", "awesomecv", "moderncv", "engineering", "simple", "onepage"]
 
 # Get templates directory
-TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates" / "latex"
+TEMPLATES_DIR = Path(__file__).parent.parent / "templates" / "latex"
 
 
 class LaTeXCompiler:
@@ -27,26 +27,57 @@ class LaTeXCompiler:
     
     def __init__(self):
         """Initialize Jinja2 environment for LaTeX templates"""
-        # Use default Jinja2 delimiters but change comment syntax
-        # to avoid conflicts with LaTeX {#1} parameter syntax
+        # Configure Jinja2 with LaTeX-friendly delimiters
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(TEMPLATES_DIR)),
+            block_start_string='\\BLOCK{',
+            block_end_string='}',
+            variable_start_string='\\VAR{',
+            variable_end_string='}',
+            comment_start_string='\\#{',
+            comment_end_string='}',
+            line_statement_prefix='%%',
+            line_comment_prefix='%#',
             trim_blocks=True,
-            lstrip_blocks=True,
-            comment_start_string='{##',  # Change from {# to {## to avoid LaTeX {#1} conflicts
-            comment_end_string='##}',
+            autoescape=False,
         )
+        
+        # Register filters
+        self.jinja_env.filters['escape_tex'] = self.escape_latex
     
+    def escape_latex(self, s: Any) -> str:
+        """
+        Escape special LaTeX characters.
+        
+        Args:
+            s: String to escape
+            
+        Returns:
+            Escaped string safe for LaTeX
+        """
+        if not s:
+            return ""
+            
+        return str(s).replace('&', '\\&') \
+                     .replace('%', '\\%') \
+                     .replace('$', '\\$') \
+                     .replace('#', '\\#') \
+                     .replace('_', '\\_') \
+                     .replace('{', '\\{') \
+                     .replace('}', '\\}') \
+                     .replace('~', '\\textasciitilde') \
+                     .replace('^', '\\textasciicircum')
+
     def render_template(
         self,
-        template_name: TemplateType,
+        template_name: str,
         resume_data: Dict[str, Any]
     ) -> str:
         """
         Render LaTeX template with resume data.
         
         Args:
-            template_name: Template type (modern/classic/minimalist)
+            template_name: Name of the template folder (e.g., 'awesomecv')
             resume_data: Resume data from Firestore
             
         Returns:
@@ -55,7 +86,8 @@ class LaTeXCompiler:
         Raises:
             ValueError: If template not found
         """
-        template_file = f"{template_name}.tex"
+        # We expect the main file to be named 'main.tex' inside the template folder
+        template_file = f"{template_name}/main.tex"
 
         try:
             template = self.jinja_env.get_template(template_file)
@@ -80,14 +112,14 @@ class LaTeXCompiler:
     def compile_pdf(
         self,
         latex_source: str,
-        output_filename: str = "resume.pdf"
+        template_name: str = "modern"
     ) -> bytes:
         """
         Compile LaTeX source to PDF.
         
         Args:
             latex_source: LaTeX source code
-            output_filename: Desired PDF filename
+            template_name: Name of the template (to find assets)
             
         Returns:
             PDF file contents as bytes
@@ -95,33 +127,41 @@ class LaTeXCompiler:
         Raises:
             RuntimeError: If compilation fails
         """
-        # Try local compilation first
-        try:
-            return self._compile_pdf_local(latex_source, output_filename)
-        except RuntimeError as e:
-            # If local compilation fails, try online service
-            logger.warning(f"Local LaTeX compilation failed: {e}")
-            logger.info("Attempting online LaTeX compilation...")
-            return self._compile_pdf_online(latex_source)
+        return self._compile_pdf_local(latex_source, template_name)
     
     def _compile_pdf_local(
         self,
         latex_source: str,
-        output_filename: str = "resume.pdf"
+        template_name: str
     ) -> bytes:
         """
-        Compile LaTeX source to PDF using local LaTeX installation.
+        Compile LaTeX source to PDF using local LaTeX installation (Tectonic preferred).
         """
+        # Path to the original template assets (fonts, cls, sty)
+        template_dir = TEMPLATES_DIR / template_name
+        
         # Create temporary directory for compilation
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             
-            # Write LaTeX source to file
-            tex_file = temp_path / "resume.tex"
+            # 1. Copy all template files (fonts, images, cls) to the temp dir
+            # This ensures Tectonic/LaTeX can find all dependencies
+            if template_dir.exists():
+                try:
+                    # shutil.copytree requires destination to not exist usually, 
+                    # but dirs_exist_ok=True (Python 3.8+) allows merging
+                    shutil.copytree(template_dir, temp_path, dirs_exist_ok=True)
+                except Exception as e:
+                    logger.warning(f"Could not copy template assets from {template_dir}: {e}")
+            
+            # 2. Write the dynamic main.tex
+            # We overwrite the template's main.tex with our rendered version
+            tex_file = temp_path / "main.tex"
             tex_file.write_text(latex_source, encoding='utf-8')
             
-            # Try xelatex first (better Unicode support), fall back to pdflatex
-            compilers = ['xelatex', 'pdflatex']
+            # 3. Compile
+            # Try Tectonic first, then xelatex/pdflatex
+            compilers = ['tectonic', 'xelatex', 'pdflatex']
             pdf_path = None
             
             for compiler in compilers:
@@ -137,140 +177,76 @@ class LaTeXCompiler:
                     if result.returncode != 0:
                         continue  # Compiler not found, try next
                     
-                    # Run LaTeX compiler twice (for references)
-                    for run_num in range(2):
+                    logger.info(f"Compiling with {compiler}...")
+                    
+                    if compiler == 'tectonic':
+                        # Tectonic compilation
                         cmd = [
                             compiler,
-                            '-interaction=nonstopmode',
-                            '-output-directory=' + str(temp_path),
-                            str(tex_file)
+                            "main.tex"
                         ]
-                        
-                        # Set environment for MiKTeX auto-install
-                        env = os.environ.copy()
-                        env['MIKTEX_AUTOINSTALL'] = 'yes'
-                        
                         result = subprocess.run(
                             cmd,
                             cwd=temp_path,
                             capture_output=True,
                             text=True,
-                            timeout=120,  # Increased timeout for package installation
-                            env=env
+                            timeout=120
                         )
+                    else:
+                        # Standard LaTeX compilation (run twice for refs)
+                        for _ in range(2):
+                            cmd = [
+                                compiler,
+                                '-interaction=nonstopmode',
+                                "main.tex"
+                            ]
+                            result = subprocess.run(
+                                cmd,
+                                cwd=temp_path,
+                                capture_output=True,
+                                text=True,
+                                timeout=120
+                            )
                     
+                    if result.returncode != 0:
+                        logger.warning(f"{compiler} compilation failed: {result.stderr or result.stdout}")
+                        # If tectonic fails, we might want to try others, or just fail hard.
+                        # For now, let's try others if this one failed.
+                        continue
+
                     # Check if PDF was created
-                    pdf_path = temp_path / "resume.pdf"
+                    # Tectonic output might be named differently depending on args, but usually matches input
+                    pdf_path = temp_path / "main.pdf"
                     if pdf_path.exists():
                         break  # Success!
-                    else:
-                        # Compilation failed, check log
-                        log_file = temp_path / "resume.log"
-                        if log_file.exists():
-                            log_content = log_file.read_text(encoding='utf-8', errors='ignore')
-                            # Extract errors from log
-                            errors = self._extract_latex_errors(log_content)
-                            raise RuntimeError(f"LaTeX compilation failed with {compiler}: {errors}")
                 
                 except subprocess.TimeoutExpired:
-                    raise RuntimeError(f"LaTeX compilation timed out with {compiler}")
-                except FileNotFoundError:
-                    continue  # Compiler not found, try next
+                    logger.error(f"LaTeX compilation timed out with {compiler}")
+                    continue
+                except Exception as e:
+                    logger.error(f"Error running {compiler}: {e}")
+                    continue
             
             if pdf_path is None or not pdf_path.exists():
+                # Try to read log for debugging
+                log_file = temp_path / "main.log"
+                log_content = "No log file generated."
+                if log_file.exists():
+                    log_content = log_file.read_text(encoding='utf-8', errors='ignore')
+                
                 raise RuntimeError(
-                    "LaTeX compilation failed. Please ensure xelatex or pdflatex is installed. "
-                    "Install TeX Live or MiKTeX."
+                    f"LaTeX compilation failed. Log output:\n{log_content[:1000]}..."
                 )
             
             # Read PDF file
             pdf_content = pdf_path.read_bytes()
             
             return pdf_content
-    
-    def _extract_latex_errors(self, log_content: str) -> str:
-        """
-        Extract error messages from LaTeX log file.
-        
-        Args:
-            log_content: Content of .log file
-            
-        Returns:
-            Formatted error message
-        """
-        errors = []
-        lines = log_content.split('\n')
-        
-        for i, line in enumerate(lines):
-            if line.startswith('!'):
-                # Error line found
-                error_msg = line[1:].strip()
-                # Get next few lines for context
-                context = '\n'.join(lines[i:i+3])
-                errors.append(context)
-        
-        if errors:
-            return '\n'.join(errors[:5])  # Return first 5 errors
-        else:
-            return "Unknown compilation error. Check LaTeX syntax."
-    
-    def _compile_pdf_online(self, latex_source: str) -> bytes:
-        """
-        Compile LaTeX source to PDF using Overleaf's public API or alternative service.
-        """
-        import requests
-        import json
-        services = [
-            {
-                'name': 'texlive.net',
-                'url': 'https://texlive.net/cgi-bin/latexcgi',
-                'method': 'post_form'
-            }
-        ]
-        
-        for service in services:
-            try:
-                logger.info(f"Trying online LaTeX service: {service['name']}")
-                
-                if service['method'] == 'post_form':
-                    # Try texlive.net
-                    response = requests.post(
-                        service['url'],
-                        data={
-                            'filecontents': latex_source,
-                            'filename': 'resume.tex',
-                            'engine': 'pdflatex',
-                            'return': 'pdf'
-                        },
-                        timeout=60
-                    )
-                    
-                    if response.status_code == 200:
-                        # Check if response is PDF
-                        if response.content.startswith(b'%PDF'):
-                            logger.info(f"Successfully compiled with {service['name']}")
-                            return response.content
-                        else:
-                            logger.warning(f"Response from {service['name']} is not a PDF")
-                    else:
-                        logger.warning(f"{service['name']} returned status {response.status_code}")
-                        
-            except Exception as e:
-                logger.warning(f"Failed with {service['name']}: {str(e)}")
-                continue
-        
-        # If all services fail, provide helpful error
-        raise RuntimeError(
-            "LaTeX compilation failed. Please install a LaTeX distribution:\n"
-            "- Windows: Download MiKTeX from https://miktex.org/download\n"
-            "- Or: Download TeX Live from https://www.tug.org/texlive/\n\n"
-            "After installation, restart the server and try again."
-        )
-    
+
     def generate_pdf(
         self,
         resume_data: Dict[str, Any],
-        template_name: TemplateType = "modern"
+        template_name: str = "modern"
     ) -> bytes:
         """
         Complete PDF generation pipeline: render template + compile PDF.
@@ -286,7 +262,7 @@ class LaTeXCompiler:
         latex_source = self.render_template(template_name, resume_data)
         
         # Compile to PDF
-        pdf_content = self.compile_pdf(latex_source)
+        pdf_content = self.compile_pdf(latex_source, template_name)
         
         return pdf_content
 

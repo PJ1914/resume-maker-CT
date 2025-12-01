@@ -1,4 +1,6 @@
 import { Plus, Trash2, Briefcase } from 'lucide-react'
+import { AIEnhancedTextarea } from '../ui/ai-enhanced-textarea'
+import { InfoTooltip } from '../ui/info-tooltip'
 
 interface ExperienceEntry {
   id: string
@@ -175,17 +177,19 @@ export default function ExperienceStepForm({ data, onChange }: ExperienceStepFor
 
                 {/* Description */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+                  <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
                     Description & Achievements
+                    <InfoTooltip content="Focus on quantifiable results (e.g., 'Increased sales by 20%'). Use the magic wand for AI help!" />
                   </label>
-                  <textarea
+                  <AIEnhancedTextarea
                     value={experience.description}
                     onChange={(e) =>
                       updateExperience(experience.id, 'description', e.target.value)
                     }
+                    context="experience"
                     placeholder="• Developed and maintained web applications using React and Node.js&#10;• Led a team of 5 engineers to deliver features on time&#10;• Improved application performance by 40%"
                     rows={6}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none font-mono text-sm"
+                    className="font-mono"
                   />
                   <p className="text-xs text-secondary-500 dark:text-secondary-400 mt-1">
                     Use bullet points (•) for each achievement or responsibility

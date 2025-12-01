@@ -1,5 +1,5 @@
-import { FileText, Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { FileText } from 'lucide-react'
+import { AIEnhancedTextarea } from '../ui/ai-enhanced-textarea'
 
 interface SummaryStepFormProps {
   data: string
@@ -7,19 +7,6 @@ interface SummaryStepFormProps {
 }
 
 export default function SummaryStepForm({ data, onChange }: SummaryStepFormProps) {
-  const [generatingAI, setGeneratingAI] = useState(false)
-
-  const handleGenerateAI = async () => {
-    setGeneratingAI(true)
-    // TODO: Implement AI generation
-    setTimeout(() => {
-      onChange(
-        'Results-driven software engineer with 5+ years of experience building scalable web applications. Proven track record of delivering high-quality solutions using modern technologies and best practices.'
-      )
-      setGeneratingAI(false)
-    }, 2000)
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -35,25 +22,18 @@ export default function SummaryStepForm({ data, onChange }: SummaryStepFormProps
           <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300">
             Your Summary <span className="text-danger-600 dark:text-danger-400">*</span>
           </label>
-          <button
-            onClick={handleGenerateAI}
-            disabled={generatingAI}
-            className="text-sm text-primary-900 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 flex items-center gap-1 disabled:opacity-50 font-medium self-start sm:self-auto"
-          >
-            <Sparkles className="h-4 w-4" />
-            {generatingAI ? 'Generating...' : 'Generate with AI'}
-          </button>
         </div>
         <div className="relative">
-          <FileText className="absolute left-3 top-3 h-5 w-5 text-secondary-400" />
-          <textarea
+          <AIEnhancedTextarea
             value={data}
             onChange={(e) => onChange(e.target.value)}
+            context="summary"
             placeholder="Example: Results-driven software engineer with 5+ years of experience building scalable web applications..."
             rows={6}
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm sm:text-base"
+            className="pl-10"
             required
           />
+          <FileText className="absolute left-3 top-3 h-5 w-5 text-secondary-400 pointer-events-none" />
         </div>
         <div className="flex items-center justify-between mt-2">
           <p className="text-xs sm:text-sm text-secondary-500 dark:text-secondary-400">

@@ -3,13 +3,14 @@ PDF Export Router
 Handles resume PDF generation and export
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Literal
 import io
 import logging
 import json
+from pathlib import Path
 from datetime import timedelta
 
 from app.dependencies import get_current_user
@@ -319,6 +320,8 @@ async def download_original_resume(
         )
 
 
+
+
 @router.get("/templates")
 async def list_templates():
     """
@@ -330,19 +333,103 @@ async def list_templates():
     return {
         "templates": [
             {
-                "name": "modern",
-                "display_name": "Modern",
-                "description": "Clean, ATS-friendly design with visual hierarchy and color accents"
+                "name": "resume_1",
+                "display_name": "Resume 1",
+                "description": "Professional template with clean layout"
             },
             {
-                "name": "classic",
-                "display_name": "Classic",
-                "description": "Traditional, professional format with simple layout"
+                "name": "resume_2",
+                "display_name": "Resume 2",
+                "description": "Classic resume style"
             },
             {
-                "name": "minimalist",
-                "display_name": "Minimalist",
-                "description": "Clean, spacious design with minimal styling"
+                "name": "resume_3",
+                "display_name": "Resume 3",
+                "description": "Clean and modern design"
+            },
+            {
+                "name": "resume_4",
+                "display_name": "Resume 4",
+                "description": "Structured professional layout"
+            },
+            {
+                "name": "resume_5",
+                "display_name": "Resume 5",
+                "description": "AltaCV style - Modern and colorful"
+            },
+            {
+                "name": "resume_6",
+                "display_name": "Resume 6",
+                "description": "Professional CV format"
+            },
+            {
+                "name": "resume_7",
+                "display_name": "Resume 7",
+                "description": "Comprehensive resume template"
             }
         ]
     }
+
+@router.get("/templates/{template_name}/preview")
+async def preview_template(template_name: str):
+    """
+    Generate a preview PDF for a specific template.
+    Caches the result to avoid re-compilation.
+    
+    Args:
+        template_name: Name of the template to preview
+        
+    Returns:
+        PDF file response
+    """
+    try:
+        # Define cache directory and file path
+        cache_dir = Path(__file__).parent.parent / "static" / "previews"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cached_pdf_path = cache_dir / f"{template_name}.pdf"
+        
+        # Check if cached PDF exists
+        if cached_pdf_path.exists():
+            logger.info(f"Serving cached preview for {template_name}")
+            pdf_content = cached_pdf_path.read_bytes()
+            return Response(
+                content=pdf_content,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"inline; filename={template_name}_preview.pdf",
+                    "Cache-Control": "public, max-age=86400" # Cache for 24 hours
+                }
+            )
+
+        # Path to the template's main.tex
+        template_dir = Path(__file__).parent.parent / "templates" / "latex" / template_name
+        main_tex_path = template_dir / "main.tex"
+        
+        if not main_tex_path.exists():
+            raise HTTPException(status_code=404, detail=f"Template '{template_name}' not found")
+            
+        # Read the raw LaTeX content
+        latex_source = main_tex_path.read_text(encoding="utf-8")
+        
+        # Compile to PDF
+        logger.info(f"Compiling preview for {template_name}")
+        pdf_content = latex_compiler.compile_pdf(latex_source, template_name)
+        
+        # Save to cache
+        try:
+            cached_pdf_path.write_bytes(pdf_content)
+            logger.info(f"Cached preview for {template_name}")
+        except Exception as e:
+            logger.warning(f"Failed to cache preview for {template_name}: {e}")
+        
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"inline; filename={template_name}_preview.pdf",
+                "Cache-Control": "public, max-age=86400"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error generating preview for {template_name}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

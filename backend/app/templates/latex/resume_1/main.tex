@@ -1,0 +1,188 @@
+\documentclass[a4paper,11pt]{article}
+
+% Packages
+\usepackage{latexsym,xcolor,float,ragged2e,wrapfig,lipsum,tabularx,titlesec,geometry,marvosym,verbatim,enumitem,fancyhdr,multicol,graphicx,mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{fontawesome5}
+\usepackage[hidelinks]{hyperref}
+
+% Colors
+\definecolor{primaryColor}{HTML}{\VAR{theme.primary_color|default('00008B')}}
+\definecolor{secondaryColor}{HTML}{\VAR{theme.secondary_color|default('4B4B4B')}}
+
+% Page layout
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\geometry{left=1.2cm, top=1cm, right=1.2cm, bottom=1.5cm}
+
+% Hyperlink style
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryColor,
+    filecolor=primaryColor,
+    urlcolor=primaryColor,
+}
+\urlstyle{same}
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Section formatting
+\titleformat{\section}{
+  \vspace{6pt}\scshape\raggedright\large
+}{}{0em}{}[\color{primaryColor}\titlerule \vspace{-4pt}]
+
+% ATS-Friendly Subheading commands
+\newcommand{\resumeSubheading}[4]{
+  \item
+    \textbf{#1} \hfill {\color{secondaryColor}\small #4} \\
+    \textit{\small#3} \hfill {\color{secondaryColor}\small #2}
+    \vspace{2pt}
+}
+
+\newcommand{\resumeProject}[3]{
+  \item
+    \textbf{#1} \hfill {\color{secondaryColor}\small #3} \\
+    \textit{\small#2}
+    \vspace{2pt}
+}
+
+\renewcommand{\labelitemi}{$\vcenter{\hbox{\tiny$\bullet$}}$}
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=12pt, itemsep=0pt, topsep=2pt, parsep=2pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0pt, itemsep=8pt, topsep=4pt]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+
+% Font
+\newcommand{\mainfont}{\fontfamily{ppl}\selectfont}
+
+\begin{document}
+\mainfont
+
+% --- HEADER ---
+\begin{center}
+    {\Huge\textbf{\VAR{full_name}}} \\
+    \vspace{2pt}
+    \small{
+        \BLOCK{ if phone }
+        \faPhone\ \VAR{phone} \textbar{}
+        \BLOCK{ endif }
+        \BLOCK{ if email }
+        \faEnvelope\ \href{mailto:\VAR{email}}{\VAR{email}} \textbar{}
+        \BLOCK{ endif }
+        \BLOCK{ if linkedin }
+        \faLinkedin\ \href{\VAR{linkedin}}{LinkedIn} \textbar{}
+        \BLOCK{ endif }
+        \BLOCK{ if github }
+        \faGithub\ \href{\VAR{github}}{GitHub}
+        \BLOCK{ endif }
+    } \\
+    \small{\VAR{location}}
+\end{center}
+
+% --- SUMMARY ---
+\BLOCK{ if summary }
+\section*{Professional Summary}
+\noindent \VAR{summary}
+\BLOCK{ endif }
+
+% --- EXPERIENCE ---
+\BLOCK{ if experience }
+\section{Experience}
+\resumeSubHeadingListStart
+
+\BLOCK{ for exp in experience }
+  \resumeSubheading
+    {\VAR{exp.company}}{\VAR{exp.location}}
+    {\VAR{exp.position}}{\VAR{exp.start_date} -- \VAR{exp.end_date}}
+    \resumeItemListStart
+        \BLOCK{ if exp.description }
+        \item \VAR{exp.description}
+        \BLOCK{ endif }
+        \BLOCK{ for highlight in exp.highlights }
+        \item \VAR{highlight}
+        \BLOCK{ endfor }
+    \resumeItemListEnd
+\BLOCK{ endfor }
+
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
+
+% --- PROJECTS ---
+\BLOCK{ if projects }
+\section{Projects}
+\resumeSubHeadingListStart
+
+\BLOCK{ for proj in projects }
+    \resumeProject
+        {\VAR{proj.name}}
+        {\VAR{proj.technologies|join(', ')}}
+        {\VAR{proj.start_date} \BLOCK{ if proj.end_date } -- \VAR{proj.end_date} \BLOCK{ endif }}
+        \resumeItemListStart
+            \BLOCK{ if proj.description }
+            \item \VAR{proj.description}
+            \BLOCK{ endif }
+            \BLOCK{ if proj.link }
+            \item \href{\VAR{proj.link}}{Project Link}
+            \BLOCK{ endif }
+        \resumeItemListEnd
+\BLOCK{ endfor }
+
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
+
+% --- TECHNICAL SKILLS ---
+\BLOCK{ if skills }
+\section{Technical Skills}
+\resumeSubHeadingListStart
+    \BLOCK{ for skill in skills }
+    \item \textbf{\VAR{skill.category}:} \VAR{skill.items|join(', ')}
+    \BLOCK{ endfor }
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
+
+% --- CERTIFICATIONS ---
+\BLOCK{ if certifications }
+\section{Certifications}
+\resumeSubHeadingListStart
+    \BLOCK{ for cert in certifications }
+    \item \textbf{\VAR{cert.name}} -- \VAR{cert.issuer} \hfill {\color{secondaryColor}\small \VAR{cert.date}}
+    \BLOCK{ endfor }
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
+
+% --- LANGUAGES ---
+\BLOCK{ if languages }
+\section{Languages}
+\resumeSubHeadingListStart
+    \BLOCK{ for lang in languages }
+    \item \textbf{\VAR{lang.language}:} \VAR{lang.proficiency}
+    \BLOCK{ endfor }
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
+
+% --- ACHIEVEMENTS ---
+\BLOCK{ if achievements }
+\section{Achievements}
+\resumeSubHeadingListStart
+    \BLOCK{ for ach in achievements }
+    \item \textbf{\VAR{ach.title}} \hfill {\color{secondaryColor}\small \VAR{ach.date}} \\
+    \textit{\small \VAR{ach.description}}
+    \BLOCK{ endfor }
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
+
+% --- EDUCATION ---
+\BLOCK{ if education }
+\section{Education}
+\resumeSubHeadingListStart
+\BLOCK{ for edu in education }
+    \resumeSubheading
+        {\VAR{edu.institution}}{\VAR{edu.location}}
+        {\VAR{edu.degree} in \VAR{edu.field} \BLOCK{ if edu.gpa }, GPA: \VAR{edu.gpa}\BLOCK{ endif }}{\VAR{edu.start_date} -- \VAR{edu.end_date}}
+\BLOCK{ endfor }
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
+
+\end{document}

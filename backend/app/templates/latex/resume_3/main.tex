@@ -1,0 +1,170 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Medium Length Professional CV
+% LaTeX Template
+% Version 2.0 (8/5/13)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Trey Hunner (http://www.treyhunner.com/)
+%
+% Important note:
+% This template requires the resume.cls file to be in the same directory as the
+% .tex file. The resume.cls file provides the resume style used for structuring the
+% document.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass{resume} % Use the custom resume.cls style
+
+\usepackage[left=0.4 in,top=0.4in,right=0.4 in,bottom=0.4in]{geometry} % Document margins
+\newcommand{\tab}[1]{\hspace{.2667\textwidth}\rlap{#1}} 
+\newcommand{\itab}[1]{\hspace{0em}\rlap{#1}}
+\name{\VAR{full_name}} % Your name
+\address{\VAR{phone} \\ \VAR{email}}  % Your phone number and email
+\address{\VAR{location}}
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	OBJECTIVE
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if summary }
+\begin{rSection}{OBJECTIVE}
+{\VAR{summary}}
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	EDUCATION SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if education }
+\begin{rSection}{Education}
+
+\BLOCK{ for edu in education }
+{\bf \VAR{edu.degree} in \VAR{edu.field}} \hfill {\VAR{edu.start_date} - \VAR{edu.end_date}}
+\\ 
+\VAR{edu.institution}, \VAR{edu.location}.
+\BLOCK{ if edu.gpa }
+\\ Percentage/GPA : \VAR{edu.gpa}
+\BLOCK{ endif }
+\smallskip \\
+\BLOCK{ endfor }
+
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	TECHNICAL STRENGTHS SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if skills }
+\begin{rSection}{Skills}
+
+\begin{tabular}{ @{} >{\bfseries}l @{\hspace{6ex}} l }
+\BLOCK{ for skill in skills }
+\VAR{skill.category} & \VAR{skill.items|join(', ')} \\
+\BLOCK{ endfor }
+\end{tabular}
+
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	WORK EXPERIENCE SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if experience }
+\begin{rSection}{Work Experience}
+
+\BLOCK{ for exp in experience }
+\begin{rSubsection}{\VAR{exp.position}}{\VAR{exp.start_date} - \VAR{exp.end_date}}{\VAR{exp.company}}{\VAR{exp.location}}
+\BLOCK{ if exp.description }
+\item \VAR{exp.description}
+\BLOCK{ endif }
+\BLOCK{ for highlight in exp.highlights }
+\item \VAR{highlight}
+\BLOCK{ endfor }
+\end{rSubsection}
+\BLOCK{ endfor }
+
+\end{rSection} 
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	PROJECTS SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if projects }
+\begin{rSection}{PROJECTS}
+
+\BLOCK{ for proj in projects }
+\begin{rSubsection}{\VAR{proj.name}}{}{}{}
+\BLOCK{ if proj.description }
+\item \VAR{proj.description}
+\BLOCK{ endif }
+\BLOCK{ if proj.technologies }
+\item Technologies: \VAR{proj.technologies|join(', ')}
+\BLOCK{ endif }
+\BLOCK{ if proj.link }
+\item \VAR{proj.link}
+\BLOCK{ endif }
+\end{rSubsection} 
+\BLOCK{ endfor }
+
+\end{rSection} 
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	CERTIFICATIONS SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if certifications }
+\begin{rSection}{Certifications}
+\begin{itemize}
+    \BLOCK{ for cert in certifications }
+    \item {\bf \VAR{cert.name}} - \VAR{cert.issuer} \hfill {\em \VAR{cert.date}}
+    \BLOCK{ endfor }
+\end{itemize}
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	LANGUAGES SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if languages }
+\begin{rSection}{Languages}
+\begin{itemize}
+    \BLOCK{ for lang in languages }
+    \item {\bf \VAR{lang.language}}: \VAR{lang.proficiency}
+    \BLOCK{ endfor }
+\end{itemize}
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	ACHIEVEMENTS SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if achievements }
+\begin{rSection}{Achievements} 
+\begin{itemize}
+    \BLOCK{ for ach in achievements }
+    \item {\bf \VAR{ach.title}} \hfill {\em \VAR{ach.date}}
+    \BLOCK{ if ach.description }
+    \\ \VAR{ach.description}
+    \BLOCK{ endif }
+    \BLOCK{ endfor }
+\end{itemize}
+\end{rSection}
+\BLOCK{ endif }
+
+\end{document}

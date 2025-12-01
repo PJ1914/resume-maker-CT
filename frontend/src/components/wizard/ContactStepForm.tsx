@@ -1,4 +1,5 @@
 import { User, Mail, Phone, MapPin, Linkedin, Globe } from 'lucide-react'
+import { InfoTooltip } from '../ui/info-tooltip'
 
 interface ContactData {
   name: string
@@ -68,8 +69,9 @@ export default function ContactStepForm({ data, onChange }: ContactStepFormProps
 
         {/* Phone */}
         <div>
-          <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+          <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
             Phone Number
+            <InfoTooltip content="Include your country code if applying internationally (e.g., +1 for USA)." />
           </label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
@@ -85,7 +87,10 @@ export default function ContactStepForm({ data, onChange }: ContactStepFormProps
 
         {/* Location */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">Location</label>
+          <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+            Location
+            <InfoTooltip content="City and State/Country is usually sufficient. Full address is rarely needed nowadays." />
+          </label>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
             <input
@@ -100,8 +105,9 @@ export default function ContactStepForm({ data, onChange }: ContactStepFormProps
 
         {/* LinkedIn */}
         <div>
-          <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+          <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
             LinkedIn Profile
+            <InfoTooltip content="Customize your public profile URL (e.g., linkedin.com/in/yourname) for a cleaner look." />
           </label>
           <div className="relative">
             <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
@@ -117,8 +123,9 @@ export default function ContactStepForm({ data, onChange }: ContactStepFormProps
 
         {/* Website */}
         <div>
-          <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+          <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
             Personal Website
+            <InfoTooltip content="Link to your portfolio, GitHub, or personal blog if relevant to the job." />
           </label>
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />

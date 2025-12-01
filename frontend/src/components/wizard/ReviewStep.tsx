@@ -1,8 +1,13 @@
-import { CheckCircle2, User, FileText, Briefcase, GraduationCap, Code, Folder, Award, Globe, Trophy, AlertCircle } from 'lucide-react'
+import { CheckCircle2, User, FileText, Briefcase, GraduationCap, Code, Folder, Award, Globe, Trophy, AlertCircle, Edit2 } from 'lucide-react'
+import ThemeCustomizer from './ThemeCustomizer'
 
 interface ReviewStepProps {
   data: {
     template?: string
+    theme?: {
+      primary_color: string
+      secondary_color: string
+    }
     contact: {
       name: string
       email: string
@@ -23,9 +28,12 @@ interface ReviewStepProps {
     languages?: any[]
     achievements?: any[]
   }
+  onThemeChange?: (theme: { primary_color: string; secondary_color: string }) => void
+  onUpdate?: (section: string, data: any) => void
+  onJumpToStep?: (stepId: number) => void
 }
 
-export default function ReviewStep({ data }: ReviewStepProps) {
+export default function ReviewStep({ data, onThemeChange, onJumpToStep }: ReviewStepProps) {
   // Defensive data validation
   const contact = data?.contact || {}
   const summary = data?.summary || ''
@@ -40,9 +48,11 @@ export default function ReviewStep({ data }: ReviewStepProps) {
   const languages = Array.isArray(data?.languages) ? data.languages : []
   const achievements = Array.isArray(data?.achievements) ? data.achievements : []
   const template = data?.template || 'modern'
+  const theme = data?.theme || { primary_color: '00008B', secondary_color: '4B4B4B' }
 
   const sections = [
     {
+      id: 1,
       icon: User,
       title: 'Contact Information',
       complete: !!(contact.name && contact.email),
@@ -51,6 +61,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       required: true,
     },
     {
+      id: 2,
       icon: FileText,
       title: 'Professional Summary',
       complete: summary.length > 50,
@@ -59,6 +70,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       required: false,
     },
     {
+      id: 3,
       icon: Briefcase,
       title: 'Work Experience',
       complete: experience.length > 0,
@@ -67,6 +79,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       required: true,
     },
     {
+      id: 4,
       icon: GraduationCap,
       title: 'Education',
       complete: education.length > 0,
@@ -75,6 +88,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       required: true,
     },
     {
+      id: 5,
       icon: Code,
       title: 'Skills',
       complete: skills.technical.length > 0 || skills.soft.length > 0,
@@ -83,6 +97,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       required: true,
     },
     {
+      id: 6,
       icon: Folder,
       title: 'Projects',
       complete: projects.length > 0,
@@ -91,6 +106,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       required: false,
     },
     {
+      id: 7,
       icon: Award,
       title: 'Certifications',
       complete: certifications.length > 0,
@@ -99,6 +115,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       required: false,
     },
     {
+      id: 8,
       icon: Globe,
       title: 'Languages',
       complete: languages.length > 0,
@@ -107,6 +124,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
       required: false,
     },
     {
+      id: 9,
       icon: Trophy,
       title: 'Achievements',
       complete: achievements.length > 0,
@@ -197,6 +215,11 @@ export default function ReviewStep({ data }: ReviewStepProps) {
         </div>
       </div>
 
+      {/* Theme Customizer */}
+      {onThemeChange && (
+        <ThemeCustomizer theme={theme} onChange={onThemeChange} />
+      )}
+
       {/* Section Grid */}
       <div>
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Section Details</h3>
@@ -208,7 +231,7 @@ export default function ReviewStep({ data }: ReviewStepProps) {
               <div
                 key={index}
                 className={`
-                  relative rounded-xl p-5 border-2 transition-all
+                  relative rounded-xl p-5 border-2 transition-all group
                   ${section.complete
                     ? 'bg-white dark:bg-secondary-800 border-green-200 dark:border-green-800 shadow-sm'
                     : 'bg-gray-50 dark:bg-secondary-900 border-gray-200 dark:border-secondary-800'
@@ -251,6 +274,16 @@ export default function ReviewStep({ data }: ReviewStepProps) {
                     }`}>
                     {section.complete ? 'Complete' : section.required ? 'Incomplete' : 'Optional'}
                   </span>
+
+                  {onJumpToStep && (
+                    <button
+                      onClick={() => onJumpToStep(section.id)}
+                      className="p-2 text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-700"
+                      title="Edit Section"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             )

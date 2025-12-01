@@ -6,7 +6,13 @@ RUN apt-get update && apt-get install -y \
     texlive-fonts-recommended \
     texlive-fonts-extra \
     texlive-latex-extra \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Tectonic
+RUN curl -L https://github.com/tectonic-typesetting/tectonic/releases/latest/download/tectonic-linux \
+    -o /usr/local/bin/tectonic \
+    && chmod +x /usr/local/bin/tectonic
 
 WORKDIR /app
 

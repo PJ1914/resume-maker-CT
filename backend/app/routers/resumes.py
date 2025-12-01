@@ -319,6 +319,31 @@ async def create_resume(
                 }
                 for p in request.projects
             ],
+            'certifications': [
+                {
+                    'name': c.name,
+                    'issuer': c.issuer,
+                    'date': c.date,
+                    'credentialId': c.credentialId,
+                    'url': c.url,
+                }
+                for c in request.certifications
+            ],
+            'languages': [
+                {
+                    'language': l.name,
+                    'proficiency': l.proficiency,
+                }
+                for l in request.languages
+            ],
+            'achievements': [
+                {
+                    'title': a.title,
+                    'description': a.description,
+                    'date': a.date,
+                }
+                for a in request.achievements
+            ],
         }
         
         # Create metadata for the new resume
@@ -388,6 +413,31 @@ async def create_resume(
                     'endDate': p.endDate,
                 }
                 for p in request.projects
+            ],
+            certifications=[
+                {
+                    'name': c.name,
+                    'issuer': c.issuer,
+                    'date': c.date,
+                    'credentialId': c.credentialId,
+                    'url': c.url,
+                }
+                for c in request.certifications
+            ],
+            languages=[
+                {
+                    'language': l.name,
+                    'proficiency': l.proficiency,
+                }
+                for l in request.languages
+            ],
+            achievements=[
+                {
+                    'title': a.title,
+                    'description': a.description,
+                    'date': a.date,
+                }
+                for a in request.achievements
             ],
         )
         

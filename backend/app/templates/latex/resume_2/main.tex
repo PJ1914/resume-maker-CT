@@ -1,0 +1,138 @@
+\documentclass{resume} % Use the custom resume.cls style
+
+\usepackage[left=0.75in,top=0.6in,right=0.75in,bottom=0.6in]{geometry} % Document margins
+\newcommand{\tab}[1]{\hspace{.2667\textwidth}\rlap{#1}}
+\newcommand{\itab}[1]{\hspace{0em}\rlap{#1}}
+\name{\VAR{full_name}} % Your name
+\address{\VAR{location} \\ \VAR{phone} \\ \VAR{email}} 
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	EDUCATION SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if education }
+\begin{rSection}{Education}
+
+\BLOCK{ for edu in education }
+{\bf \VAR{edu.institution}} \hfill {\em \VAR{edu.end_date}} 
+\\ \VAR{edu.degree} in \VAR{edu.field}
+\BLOCK{ if edu.gpa }
+\\ GPA: \VAR{edu.gpa}
+\BLOCK{ endif }
+\smallskip \\
+\BLOCK{ endfor }
+
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	WORK EXPERIENCE SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if experience }
+\begin{rSection}{Work Experience}
+
+\BLOCK{ for exp in experience }
+{\bf \VAR{exp.position}, \VAR{exp.company}} \hfill {\em \VAR{exp.start_date} - \VAR{exp.end_date}} 
+
+\begin{itemize} 
+    \BLOCK{ if exp.description }
+    \item \VAR{exp.description}
+    \BLOCK{ endif }
+    \BLOCK{ for highlight in exp.highlights }
+    \item \VAR{highlight}
+    \BLOCK{ endfor }
+\end{itemize}
+\BLOCK{ endfor }
+
+\end{rSection}
+\BLOCK{ endif }
+
+%--------------------------------------------------------------------------------
+%    Projects
+%-----------------------------------------------------------------------------------------------
+\BLOCK{ if projects }
+\begin{rSection}{Projects}
+
+\BLOCK{ for proj in projects }
+{\bf \VAR{proj.name}}
+    \begin{itemize}
+        \BLOCK{ if proj.description }
+        \item \VAR{proj.description}
+        \BLOCK{ endif }
+        \BLOCK{ if proj.technologies }
+        \item Technologies: \VAR{proj.technologies|join(', ')}
+        \BLOCK{ endif }
+        \BLOCK{ if proj.link }
+        \item \VAR{proj.link}
+        \BLOCK{ endif }
+    \end{itemize}
+\BLOCK{ endfor }
+
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	TECHNICAL STRENGTHS SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if skills }
+\begin{rSection}{Technical Skills}
+
+\begin{tabular}{ @{} >{\bfseries}l @{\hspace{6ex}} l }
+\BLOCK{ for skill in skills }
+\VAR{skill.category} & \VAR{skill.items|join(', ')} \\
+\BLOCK{ endfor }
+\end{tabular}
+
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	CERTIFICATIONS SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if certifications }
+\begin{rSection}{Certifications}
+\begin{itemize}
+    \BLOCK{ for cert in certifications }
+    \item {\bf \VAR{cert.name}} - \VAR{cert.issuer} \hfill {\em \VAR{cert.date}}
+    \BLOCK{ endfor }
+\end{itemize}
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	LANGUAGES SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if languages }
+\begin{rSection}{Languages}
+\begin{itemize}
+    \BLOCK{ for lang in languages }
+    \item {\bf \VAR{lang.language}}: \VAR{lang.proficiency}
+    \BLOCK{ endfor }
+\end{itemize}
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
+%	ACHIEVEMENTS SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if achievements }
+\begin{rSection}{Achievements} 
+\begin{itemize}
+    \BLOCK{ for ach in achievements }
+    \item {\bf \VAR{ach.title}} \hfill {\em \VAR{ach.date}}
+    \BLOCK{ if ach.description }
+    \\ \VAR{ach.description}
+    \BLOCK{ endif }
+    \BLOCK{ endfor }
+\end{itemize}
+\end{rSection}
+\BLOCK{ endif }
+
+\end{document}
