@@ -124,6 +124,7 @@ export default function ResumeDetailPage() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showAICreditModal, setShowAICreditModal] = useState(false)
+  const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false)
   const [reparsing, setReparsing] = useState(false)
   const [useAIScorer, setUseAIScorer] = useState(true) // Toggle between CodeTapasya AI and Local scorer
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -193,8 +194,21 @@ export default function ResumeDetailPage() {
           // Only refetch resume data to sync latest_score in the sidebar
           refetch()
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error('Scoring failed:', error)
+          
+          // Check for 402 Payment Required (credits exhausted)
+          // axios error structure: error.response.status
+          // or error.status for fetch errors
+          const statusCode = error?.response?.status || error?.status
+          
+          if (statusCode === 402) {
+            setShowCreditsExhaustedModal(true)
+          } else {
+            // For other errors, show generic error toast
+            const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to calculate ATS score'
+            toast.error(errorMessage)
+          }
         }
       }
     )
@@ -909,6 +923,29 @@ export default function ResumeDetailPage() {
         confirmText="Use AI Analysis"
         cancelText="Cancel"
         type="credits"
+      />
+
+      {/* Credits Exhausted Modal */}
+      <ConfirmModal
+        isOpen={showCreditsExhaustedModal}
+        onClose={() => setShowCreditsExhaustedModal(false)}
+        onConfirm={() => {
+          setShowCreditsExhaustedModal(false)
+          navigate('/credits/purchase')
+        }}
+        onCancel={() => {
+          // Switch to local scoring and score
+          setShowCreditsExhaustedModal(false)
+          setUseAIScorer(false)
+          if (id && resume) {
+            handleCheckScore(false, true, true) // Use local (free) scoring
+          }
+        }}
+        title="Credits Exhausted"
+        message="You don't have enough credits for AI scoring. Switch to local (free) scoring or purchase credits to continue using AI features."
+        confirmText="Buy Credits"
+        cancelText="Use Local Scoring"
+        type="danger"
       />
     </div>
   )
