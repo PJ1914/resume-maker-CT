@@ -440,5 +440,11 @@ async def preview_template(template_name: str):
             }
         )
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         logger.error(f"Error generating preview for {template_name}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Traceback: {error_trace}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Preview generation failed: {str(e)}\nTraceback: {error_trace}"
+        )
