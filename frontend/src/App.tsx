@@ -3,6 +3,8 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import AppRoutes from './routes'
 import { LoaderProvider } from './context/LoaderContext'
+import { TourProvider } from './context/TourContext'
+import AppTour from './components/AppTour'
 
 import { useState } from 'react'
 import Preloader from '@/components/ui/preloader'
@@ -21,30 +23,33 @@ function App() {
       >
         <AuthProvider>
           <LoaderProvider>
-            <AppRoutes />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#fff',
-                  color: '#0f172a',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#22c55e',
-                    secondary: '#fff',
+            <TourProvider>
+              <AppRoutes />
+              <AppTour />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#fff',
+                    color: '#0f172a',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                   },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#fff',
+                  success: {
+                    iconTheme: {
+                      primary: '#22c55e',
+                      secondary: '#fff',
+                    },
                   },
-                },
-              }}
-            />
+                  error: {
+                    iconTheme: {
+                      primary: '#ef4444',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+            </TourProvider>
           </LoaderProvider>
         </AuthProvider>
       </BrowserRouter>

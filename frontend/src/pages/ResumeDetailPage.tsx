@@ -125,7 +125,7 @@ export default function ResumeDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showAICreditModal, setShowAICreditModal] = useState(false)
   const [reparsing, setReparsing] = useState(false)
-  const [useAIScorer, setUseAIScorer] = useState(true) // Toggle between AI (Gemini) and Local scorer
+  const [useAIScorer, setUseAIScorer] = useState(true) // Toggle between CodeTapasya AI and Local scorer
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const initialScorerSet = useRef(false)
 
@@ -202,7 +202,7 @@ export default function ResumeDetailPage() {
 
   // Handle toggle change - automatically re-score with new scorer
   const handleScorerToggle = (checked: boolean) => {
-    console.log('Toggle changed to:', checked ? 'AI (Gemini)' : 'Local')
+    console.log('Toggle changed to:', checked ? 'CodeTapasya AI' : 'Local')
 
     // If switching to AI and already have a score, show credit confirmation
     if (checked && scoreData && id && resume) {
@@ -506,7 +506,7 @@ export default function ResumeDetailPage() {
                     onCheckedChange={handleScorerToggle}
                     leftLabel="Local"
                     leftSubLabel="Free"
-                    rightLabel="AI (Gemini)"
+                    rightLabel="CodeTapasya AI"
                     rightSubLabel="Detailed"
                   />
                   {scoring && (
@@ -638,7 +638,7 @@ export default function ResumeDetailPage() {
                   onCheckedChange={setUseAIScorer}
                   leftLabel="Local"
                   leftSubLabel="Free"
-                  rightLabel="AI (Gemini)"
+                  rightLabel="CodeTapasya AI"
                   rightSubLabel="Detailed"
                 />
               </div>
@@ -680,7 +680,7 @@ export default function ResumeDetailPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Analyzing with {useAIScorer ? 'Gemini AI' : 'Local Engine'}...
+                    Analyzing with {useAIScorer ? 'CodeTapasya AI' : 'Local Engine'}...
                   </>
                 ) : (
                   <>
@@ -866,7 +866,7 @@ export default function ResumeDetailPage() {
                   {scoreData?.scoring_method && (
                     <div className="text-xs text-secondary-500 mt-1 flex items-center gap-1">
                       {scoreData.scoring_method.includes('gemini') ? (
-                        <><Sparkles className="h-3 w-3 text-primary-500" /> Gemini AI</>
+                        <><Sparkles className="h-3 w-3 text-primary-500" /> CodeTapasya AI</>
                       ) : (
                         <><Cpu className="h-3 w-3" /> Local</>
                       )}
