@@ -1,7 +1,7 @@
 // Credit service for frontend
 import { auth } from '@/lib/firebase';
+import { API_URL } from '@/config/firebase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const API_BASE_URL = `${API_URL}/api/credits`;
 
 

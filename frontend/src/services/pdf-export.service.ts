@@ -4,8 +4,9 @@
  */
 
 import { getAuthToken } from './auth.service';
+import { API_URL } from '@/config/firebase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = API_URL;
 
 export interface Template {
   name: string;

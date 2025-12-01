@@ -1,4 +1,5 @@
 import { apiClient } from './api'
+import { API_URL } from '@/config/firebase'
 
 export interface UploadUrlResponse {
   upload_url: string
@@ -92,9 +93,8 @@ export const resumeService = {
 
     // Use apiClient but override for multipart/form-data
     const token = await import('./auth.service').then(m => m.getAuthToken())
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-    const response = await fetch(`${API_BASE_URL}/api/upload-direct`, {
+    const response = await fetch(`${API_URL}/api/upload-direct`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
