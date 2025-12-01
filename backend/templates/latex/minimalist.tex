@@ -171,7 +171,7 @@
 {% for skill in skills %}
 \noindent
 \textbf{ {{- skill.category -}} } \\
-{{ skill.items|join(', ') }}
+{{ skill['items']|join(', ') }}
 
 {% endfor %}
 {% endif %}

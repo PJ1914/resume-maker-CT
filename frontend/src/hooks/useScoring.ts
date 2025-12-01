@@ -24,10 +24,13 @@ export function useScoreResume() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ resumeId, preferGemini = true }: { resumeId: string; preferGemini?: boolean }) =>
-      resumeService.scoreResume(resumeId, preferGemini),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: scoringKeys.score(variables.resumeId) });
+    mutationFn: ({ resumeId, preferGemini = true, useCache = true }: { resumeId: string; preferGemini?: boolean; useCache?: boolean }) =>
+      resumeService.scoreResume(resumeId, preferGemini, useCache),
+    onSuccess: (data, variables) => {
+      // Directly update the cache with the new score from POST response
+      // This ensures we show the correct score immediately without refetching
+      console.log('[useScoreResume] Score received:', data.scoring_method, 'Total:', data.total_score);
+      queryClient.setQueryData(scoringKeys.score(variables.resumeId), data);
       toast.success('ATS score calculated successfully!');
     },
     onError: (error: Error) => {

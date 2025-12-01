@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List, Any, Union
 from datetime import datetime
 from enum import Enum
 
@@ -17,6 +17,9 @@ class ResumeFileType(str, Enum):
     PDF = "application/pdf"
     DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     DOC = "application/msword"
+    TEX = "application/x-tex"
+    TEX_ALT = "text/x-tex"
+    PLAIN = "text/plain"  # For .tex files that might come as text/plain
 
 class UploadUrlRequest(BaseModel):
     """Request for presigned upload URL"""
@@ -131,7 +134,7 @@ class ResumeMetadata(BaseModel):
     parsed_text: Optional[str] = None
     contact_info: Optional[dict] = None
     skills: Optional[dict] = None  # Changed from Optional[list] to Optional[dict]
-    sections: Optional[dict] = None
+    sections: Optional[Any] = None  # Dynamic sections - can be list or dict for backwards compatibility
     experience: Optional[List[dict]] = None
     projects: Optional[List[dict]] = None
     education: Optional[List[dict]] = None
@@ -146,6 +149,19 @@ class ResumeMetadata(BaseModel):
     
     # Error tracking
     error_message: Optional[str] = None
+    
+    @field_validator('sections', mode='before')
+    @classmethod
+    def convert_sections(cls, v):
+        """Convert dict to list or keep as list for backwards compatibility"""
+        if v is None:
+            return []
+        if isinstance(v, dict):
+            # Old format was dict, convert to empty list
+            return []
+        if isinstance(v, list):
+            return v
+        return []
 
 class ResumeListItem(BaseModel):
     """Resume item in list view"""
@@ -176,7 +192,7 @@ class ResumeDetailResponse(BaseModel):
     parsed_text: Optional[str] = None
     contact_info: Optional[dict] = None
     skills: Optional[dict] = None  # Changed from Optional[list] to Optional[dict]
-    sections: Optional[dict] = None
+    sections: Optional[Any] = None  # Dynamic sections - can be list or dict for backwards compatibility
     experience: Optional[List[dict]] = None
     projects: Optional[List[dict]] = None
     education: Optional[List[dict]] = None
@@ -187,3 +203,16 @@ class ResumeDetailResponse(BaseModel):
     latest_score: Optional[float] = None
     template: Optional[str] = "modern"
     error_message: Optional[str] = None
+    
+    @field_validator('sections', mode='before')
+    @classmethod
+    def convert_sections(cls, v):
+        """Convert dict to list or keep as list for backwards compatibility"""
+        if v is None:
+            return []
+        if isinstance(v, dict):
+            # Old format was dict, convert to empty list
+            return []
+        if isinstance(v, list):
+            return v
+        return []

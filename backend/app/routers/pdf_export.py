@@ -8,6 +8,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Literal
 import io
+import logging
+import json
 from datetime import timedelta
 
 from app.dependencies import get_current_user
@@ -16,6 +18,7 @@ from app.services.latex_compiler import latex_compiler, TemplateType
 from app.services.storage import upload_resume_pdf, get_signed_url
 from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["PDF Export"])
 
 
@@ -74,12 +77,47 @@ async def export_resume_pdf(
                 detail=f"Resume {resume_id} not found or has not been edited yet"
             )
         
+        # Debug: log available data
+        logger.info(f"PDF Export - Resume data keys: {list(resume_data.keys())}")
+        logger.info(f"PDF Export - contact: {resume_data.get('contact')}")
+        logger.info(f"PDF Export - contact_info: {resume_data.get('contact_info')}")
+        logger.info(f"PDF Export - experience type: {type(resume_data.get('experience'))}")
+        logger.info(f"PDF Export - education type: {type(resume_data.get('education'))}")
+        logger.info(f"PDF Export - projects type: {type(resume_data.get('projects'))}")
+        logger.info(f"PDF Export - skills type: {type(resume_data.get('skills'))}")
+        
+        # Check experience items
+        if 'experience' in resume_data:
+            exp_list = resume_data['experience']
+            if isinstance(exp_list, list) and len(exp_list) > 0:
+                logger.info(f"PDF Export - First experience item type: {type(exp_list[0])}")
+                logger.info(f"PDF Export - First experience item: {exp_list[0]}")
+        
+        # Check projects items
+        if 'projects' in resume_data:
+            proj_list = resume_data['projects']
+            if isinstance(proj_list, list) and len(proj_list) > 0:
+                logger.info(f"PDF Export - First project item type: {type(proj_list[0])}")
+                logger.info(f"PDF Export - First project item: {proj_list[0]}")
+        
+        # Check skills items
+        if 'skills' in resume_data:
+            skills_data = resume_data['skills']
+            logger.info(f"PDF Export - Skills structure: {type(skills_data)}")
+            logger.info(f"PDF Export - Skills content: {skills_data}")
+        
         # Check if resume has contact info (minimum requirement)
-        if "contact" not in resume_data or not resume_data["contact"]:
+        # Data can come as 'contact' (from editor) or 'contact_info' (from parser)
+        contact = resume_data.get("contact") or resume_data.get("contact_info")
+        if not contact:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Resume data incomplete. Please fill in contact information."
             )
+        
+        # Normalize contact field for template processing
+        if "contact" not in resume_data and "contact_info" in resume_data:
+            resume_data["contact"] = resume_data["contact_info"]
         
         # Generate PDF
         try:
@@ -88,6 +126,9 @@ async def export_resume_pdf(
                 template_name=request.template
             )
         except Exception as e:
+            import traceback
+            logger.error(f"PDF generation failed: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"PDF generation failed: {str(e)}"

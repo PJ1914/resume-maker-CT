@@ -3,6 +3,7 @@ from firebase_admin import credentials, auth as firebase_auth
 from app.config import settings
 from typing import Optional
 import os
+import logging
 
 # Check if service account files exist
 codetapasya_exists = settings.CODETAPASYA_SERVICE_ACCOUNT_PATH and os.path.exists(settings.CODETAPASYA_SERVICE_ACCOUNT_PATH)
@@ -15,11 +16,11 @@ if codetapasya_exists:
         codetapasya_cred,
         name="codetapasya"
     )
-    print("✅ CodeTapasya Firebase initialized")
+    logging.info("CodeTapasya Firebase initialized")
 else:
     codetapasya_app = None
-    print("⚠️  CodeTapasya service account not found. Auth verification disabled.")
-    print(f"   Expected path: {settings.CODETAPASYA_SERVICE_ACCOUNT_PATH}")
+    logging.warning("CodeTapasya service account not found. Auth verification disabled.")
+    logging.debug("Expected path: %s", settings.CODETAPASYA_SERVICE_ACCOUNT_PATH)
 
 # Initialize Firebase Admin SDK for Resume Maker (Firestore + Storage)
 if resume_maker_exists:
@@ -31,12 +32,12 @@ if resume_maker_exists:
         },
         name="resume-maker"
     )
-    print("✅ Resume-Maker Firebase initialized")
-    print(f"   Storage bucket: {settings.STORAGE_BUCKET_NAME}")
+    logging.info("Resume-Maker Firebase initialized")
+    logging.debug("Storage bucket: %s", settings.STORAGE_BUCKET_NAME)
 else:
     resume_maker_app = None
-    print("⚠️  Resume-Maker service account not found. Firestore/Storage disabled.")
-    print(f"   Expected path: {settings.RESUME_MAKER_SERVICE_ACCOUNT_PATH}")
+    logging.warning("Resume-Maker service account not found. Firestore/Storage disabled.")
+    logging.debug("Expected path: %s", settings.RESUME_MAKER_SERVICE_ACCOUNT_PATH)
 
 async def verify_firebase_token(id_token: str) -> Optional[dict]:
     """
@@ -49,7 +50,7 @@ async def verify_firebase_token(id_token: str) -> Optional[dict]:
         Decoded token dict with user info, or None if invalid
     """
     if not codetapasya_app:
-        print("⚠️  Firebase Auth not initialized - returning mock user for development")
+        logging.warning("Firebase Auth not initialized - returning mock user for development")
         # Return mock user for development when service account is not configured
         return {
             "uid": "dev-user-123",
@@ -65,7 +66,7 @@ async def verify_firebase_token(id_token: str) -> Optional[dict]:
         )
         return decoded_token
     except Exception as e:
-        print(f"Token verification error: {e}")
+        logging.exception("Token verification error")
         return None
 
 def get_firestore_client():

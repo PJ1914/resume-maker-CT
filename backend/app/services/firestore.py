@@ -342,6 +342,7 @@ def update_resume_parsed_data_sync(
 ) -> bool:
     """
     Update resume with parsed data (synchronous version).
+    Also saves to resume_data collection in the format the editor expects.
     
     Args:
         resume_id: Resume ID
@@ -361,29 +362,191 @@ def update_resume_parsed_data_sync(
         from firebase_admin import firestore
         db = firestore.client(app=resume_maker_app)
         
+        # Helper function to clean dict keys (remove empty strings)
+        def clean_dict(d):
+            """Remove empty string keys from dict"""
+            if not isinstance(d, dict):
+                return d
+            return {k: v for k, v in d.items() if k and isinstance(k, str)}
+        
+        # Clean custom_sections if present
+        custom_sections = parsed_data.get('custom_sections', {})
+        if isinstance(custom_sections, dict):
+            custom_sections = clean_dict(custom_sections)
+        
+        # Original parsed data for metadata - save ALL parsed fields
         update_data = {
             'parsed_text': parsed_data.get('parsed_text', ''),
             'contact_info': parsed_data.get('contact_info', {}),
-            'skills': parsed_data.get('skills', []),
-            'sections': parsed_data.get('sections', {}),
+            'professional_summary': parsed_data.get('professional_summary', ''),
+            'skills': parsed_data.get('skills', {}),
+            'sections': parsed_data.get('sections', []),  # Dynamic sections array from Gemini parser
             'experience': parsed_data.get('experience', []),
             'projects': parsed_data.get('projects', []),
             'education': parsed_data.get('education', []),
+            'certifications': parsed_data.get('certifications', []),
+            'hackathons_competitions': parsed_data.get('hackathons_competitions', []),
+            'awards': parsed_data.get('awards', []),
+            'publications': parsed_data.get('publications', []),
+            'languages': parsed_data.get('languages', []),
+            'volunteer': parsed_data.get('volunteer', []),
+            'custom_sections': custom_sections,
             'layout_type': parsed_data.get('layout_type', 'unknown'),
+            'parsing_method': parsed_data.get('parsing_method', 'unknown'),
             'parsed_at': parsed_data.get('parsed_at'),
             'updated_at': datetime.utcnow(),
         }
         
-        # Update both locations
+        # Update both locations for metadata
         db.collection('users').document(user_id)\
           .collection('resumes').document(resume_id)\
           .update(update_data)
         
         db.collection('resumes').document(resume_id).update(update_data)
         
+        # Also save to resume_data collection in the format the frontend editor expects
+        contact_info = parsed_data.get('contact_info', {})
+        experience_list = parsed_data.get('experience', [])
+        education_list = parsed_data.get('education', [])
+        projects_list = parsed_data.get('projects', [])
+        skills_dict = parsed_data.get('skills', {})
+        certifications_list = parsed_data.get('certifications', [])
+        achievements_list = parsed_data.get('achievements', [])
+        
+        # Transform contact info
+        editor_contact = {
+            'fullName': contact_info.get('name', ''),
+            'email': contact_info.get('email', ''),
+            'phone': contact_info.get('phone', ''),
+            'location': contact_info.get('location', ''),
+            'linkedin': contact_info.get('linkedin', ''),
+            'github': contact_info.get('github', ''),
+            'portfolio': contact_info.get('portfolio', ''),
+        }
+        
+        # Transform experience (add id and map fields)
+        import uuid
+        editor_experience = []
+        for exp in experience_list:
+            editor_experience.append({
+                'id': str(uuid.uuid4()),
+                'company': exp.get('company', ''),
+                'position': exp.get('position', ''),
+                'title': exp.get('position', ''),  # Alias
+                'location': exp.get('location', ''),
+                'startDate': exp.get('startDate', ''),
+                'endDate': exp.get('endDate', ''),
+                'current': exp.get('endDate', '').lower() in ['present', 'current', 'now', ''],
+                'description': exp.get('description', ''),
+                'highlights': exp.get('highlights', []) if isinstance(exp.get('highlights'), list) else [],
+            })
+        
+        # Transform education (add id and map fields)
+        editor_education = []
+        for edu in education_list:
+            editor_education.append({
+                'id': str(uuid.uuid4()),
+                'institution': edu.get('school', ''),
+                'degree': edu.get('degree', ''),
+                'field': edu.get('field', ''),
+                'location': edu.get('location', ''),
+                'startDate': edu.get('startDate', ''),
+                'endDate': edu.get('endDate', ''),
+                'gpa': edu.get('gpa', ''),
+                'honors': '',
+            })
+        
+        # Transform projects (add id and fix technologies)
+        editor_projects = []
+        for proj in projects_list:
+            tech = proj.get('technologies', '')
+            # Ensure technologies is a list
+            if isinstance(tech, str):
+                tech = [t.strip() for t in tech.split(',') if t.strip()] if tech else []
+            editor_projects.append({
+                'id': str(uuid.uuid4()),
+                'name': proj.get('name', ''),
+                'description': proj.get('description', ''),
+                'technologies': tech,
+                'link': proj.get('link', ''),
+                'highlights': [],
+                'startDate': proj.get('startDate', ''),
+                'endDate': proj.get('endDate', ''),
+            })
+        
+        # Transform skills to editor format (list of categories)
+        editor_skills = []
+        if isinstance(skills_dict, dict):
+            for category, items in skills_dict.items():
+                if items:
+                    editor_skills.append({
+                        'category': category.replace('_', ' ').title(),
+                        'items': items if isinstance(items, list) else [items],
+                    })
+        elif isinstance(skills_dict, list):
+            # Already in list format
+            editor_skills = skills_dict
+        
+        # Transform certifications
+        editor_certifications = []
+        for cert in certifications_list:
+            editor_certifications.append({
+                'name': cert.get('name', ''),
+                'issuer': cert.get('issuer', ''),
+                'date': cert.get('date', ''),
+            })
+        
+        # Transform achievements
+        editor_achievements = []
+        for ach in achievements_list:
+            editor_achievements.append({
+                'title': ach.get('title', ''),
+                'description': ach.get('description', ''),
+                'date': ach.get('date', ''),
+            })
+        
+        # Extract summary from sections array if available
+        summary_text = ''
+        sections = parsed_data.get('sections', [])
+        if isinstance(sections, list):
+            for section in sections:
+                if isinstance(section, dict) and section.get('type') == 'summary':
+                    items = section.get('items', [])
+                    if items:
+                        first_item = items[0]
+                        summary_text = first_item.get('text', '') if isinstance(first_item, dict) else str(first_item)
+                    break
+        # Also check direct professional_summary field
+        if not summary_text:
+            summary_text = parsed_data.get('professional_summary', '')
+        
+        # Build editor data structure
+        editor_data = {
+            'id': resume_id,
+            'userId': user_id,
+            'contact': editor_contact,
+            'summary': summary_text,
+            'experience': editor_experience,
+            'education': editor_education,
+            'skills': editor_skills,
+            'projects': editor_projects,
+            'certifications': editor_certifications,
+            'achievements': editor_achievements,
+            'updatedAt': datetime.utcnow(),
+        }
+        
+        # Save to resume_data collection
+        db.collection('users').document(user_id)\
+          .collection('resume_data').document(resume_id)\
+          .set(editor_data, merge=True)
+        
+        print(f"✅ Saved parsed data to resume_data collection for {resume_id}")
+        
         return True
     except Exception as e:
         print(f"Error updating parsed data: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
@@ -546,6 +709,7 @@ def update_resume_latest_score(
         print(f"Error updating latest_score: {e}")
         return False
 
+
 def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
     """
     Get resume data, preferring edited data from resume_data collection
@@ -564,28 +728,50 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
     # Start with metadata converted to dict
     result = metadata.model_dump()
     
-    # If we have edited data, override the content sections
+    # Debug logging
+    print(f"🔍 get_merged_resume_data for {resume_id}:")
+    print(f"   metadata.experience: {len(metadata.experience or [])} items")
+    print(f"   metadata.projects: {len(metadata.projects or [])} items")
+    print(f"   metadata.sections: {len(metadata.sections or [])} items")
+    print(f"   edited_data: {'exists' if edited_data else 'None'}")
+    if edited_data:
+        print(f"   edited_data.experience: {len(edited_data.get('experience', []))} items")
+        print(f"   edited_data.projects: {len(edited_data.get('projects', []))} items")
+    
+    # Helper to check if a value has actual content
+    def has_content(value):
+        if value is None:
+            return False
+        if isinstance(value, list):
+            return len(value) > 0
+        if isinstance(value, dict):
+            return bool(value)
+        if isinstance(value, str):
+            return bool(value.strip())
+        return True
+    
+    # If we have edited data, override the content sections ONLY if they have content
     if edited_data:
         # Map edited data fields to metadata structure
-        if 'summary' in edited_data:
-            # Update the summary in sections
-            if 'sections' not in result or result['sections'] is None:
-                result['sections'] = {}
-            result['sections']['summary'] = edited_data['summary']
+        if has_content(edited_data.get('summary')):
+            result['professional_summary'] = edited_data['summary']
+            result['summary'] = edited_data['summary']  # Also set for templates
             
-        if 'contact' in edited_data:
+        if has_content(edited_data.get('contact')):
             result['contact_info'] = edited_data['contact']
+            result['contact'] = edited_data['contact']  # Also set for templates
             
-        if 'experience' in edited_data:
+        # For arrays, only override if the edited version has actual items
+        if has_content(edited_data.get('experience')):
             result['experience'] = edited_data['experience']
             
-        if 'education' in edited_data:
+        if has_content(edited_data.get('education')):
             result['education'] = edited_data['education']
             
-        if 'projects' in edited_data:
+        if has_content(edited_data.get('projects')):
             result['projects'] = edited_data['projects']
             
-        if 'skills' in edited_data:
+        if has_content(edited_data.get('skills')):
             # Edited skills are usually a list of categories
             # Metadata skills are {technical: [], soft: []}
             # We need to adapt if structure differs, but for now let's assume
@@ -613,5 +799,11 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
                     'technical': technical,
                     'soft': soft
                 }
+    
+    # Ensure 'contact' and 'summary' keys exist for templates (even if not edited)
+    if 'contact' not in result and 'contact_info' in result:
+        result['contact'] = result['contact_info']
+    if 'summary' not in result and 'professional_summary' in result:
+        result['summary'] = result['professional_summary']
     
     return result

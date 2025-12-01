@@ -89,12 +89,24 @@ class SectionAnalyzer:
         Analyze section presence and content quality.
         
         Args:
-            sections: Dict of section_name -> content
+            sections: Dict of section_name -> content OR list of section objects
             
         Returns:
             Analysis with scores
         """
-        section_names = set(sections.keys())
+        # Handle both dict and list formats for sections
+        if isinstance(sections, list):
+            # Convert list format to dict format for scoring
+            section_names = set()
+            sections_dict = {}
+            for section in sections:
+                if isinstance(section, dict):
+                    section_type = section.get('type', 'custom')
+                    section_names.add(section_type)
+                    sections_dict[section_type] = str(section.get('items', []))
+            sections = sections_dict
+        else:
+            section_names = set(sections.keys()) if sections else set()
         
         # Required sections (20 points max)
         required_present = sum(1 for s in SectionAnalyzer.REQUIRED_SECTIONS if s in section_names)

@@ -17,6 +17,7 @@ from app.services.templates import (
 )
 from pydantic import BaseModel
 import uuid
+import logging
 
 router = APIRouter()
 
@@ -54,7 +55,7 @@ async def create_template(
     # Use provided ID or generate a new UUID
     template_id = request.template_id if request.template_id else str(uuid.uuid4())
     
-    print(f"[API] Creating template for user {user_id}: {request.name} (ID: {template_id})")
+    logging.info("[API] Creating template for user %s: %s (ID: %s)", user_id, request.name, template_id)
     
     try:
         # Validate template type
@@ -81,17 +82,17 @@ async def create_template(
             description=request.description,
         )
         
-        print(f"[API] Template object created: {template.id}")
+        logging.debug("[API] Template object created: %s", template.id)
         
         # Save to Firestore
         if not save_template(template):
-            print(f"[API] Failed to save template {template_id}")
+            logging.error("[API] Failed to save template %s", template_id)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to save template to database"
             )
         
-        print(f"[API] Successfully created template {template_id}")
+        logging.info("[API] Successfully created template %s", template_id)
         
         return TemplateResponse(
             id=template.id,
@@ -105,9 +106,7 @@ async def create_template(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[API ERROR] Error creating template: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("[API ERROR] Error creating template: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create template: {str(e)}"
@@ -120,12 +119,12 @@ async def list_templates(
     """List all custom templates for the user"""
     user_id = current_user["uid"]
     
-    print(f"[API] Listing templates for user {user_id}")
+    logging.info("[API] Listing templates for user %s", user_id)
     
     try:
         templates = list_user_templates(user_id)
         
-        print(f"[API] Found {len(templates)} templates for user {user_id}")
+        logging.info("[API] Found %s templates for user %s", len(templates), user_id)
         
         return [
             TemplateResponse(
@@ -140,9 +139,7 @@ async def list_templates(
             for t in templates
         ]
     except Exception as e:
-        print(f"[API ERROR] Error listing templates: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("[API ERROR] Error listing templates: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list templates"
@@ -156,19 +153,19 @@ async def get_template_detail(
     """Get a specific template"""
     user_id = current_user["uid"]
     
-    print(f"[API] Getting template {template_id} for user {user_id}")
+    logging.info("[API] Getting template %s for user %s", template_id, user_id)
     
     try:
         template = get_template(template_id, user_id)
         
         if not template:
-            print(f"[API] Template {template_id} not found for user {user_id}")
+            logging.info("[API] Template %s not found for user %s", template_id, user_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Template not found"
             )
         
-        print(f"[API] Retrieved template {template_id}")
+        logging.debug("[API] Retrieved template %s", template_id)
         
         return TemplateResponse(
             id=template.id,
@@ -182,9 +179,7 @@ async def get_template_detail(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[API ERROR] Error getting template: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("[API ERROR] Error getting template: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get template"
@@ -199,14 +194,14 @@ async def update_template_detail(
     """Update a custom template"""
     user_id = current_user["uid"]
     
-    print(f"[API] Updating template {template_id} for user {user_id}")
+    logging.info("[API] Updating template %s for user %s", template_id, user_id)
     
     try:
         # Get existing template
         template = get_template(template_id, user_id)
         
         if not template:
-            print(f"[API] Template {template_id} not found for user {user_id}")
+            logging.info("[API] Template %s not found for user %s", template_id, user_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Template not found"
@@ -217,17 +212,17 @@ async def update_template_detail(
         template.content = request.content
         template.description = request.description
         
-        print(f"[API] Updated template object {template_id}")
+        logging.debug("[API] Updated template object %s", template_id)
         
         # Save updated template
         if not update_template(template):
-            print(f"[API] Failed to save updated template {template_id}")
+            logging.error("[API] Failed to save updated template %s", template_id)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update template"
             )
         
-        print(f"[API] Successfully updated template {template_id}")
+        logging.info("[API] Successfully updated template %s", template_id)
         
         return TemplateResponse(
             id=template.id,
@@ -241,9 +236,7 @@ async def update_template_detail(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[API ERROR] Error updating template: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("[API ERROR] Error updating template: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update template"
@@ -257,14 +250,14 @@ async def delete_template_detail(
     """Delete a custom template"""
     user_id = current_user["uid"]
     
-    print(f"[API] Deleting template {template_id} for user {user_id}")
+    logging.info("[API] Deleting template %s for user %s", template_id, user_id)
     
     try:
         # Verify template exists and belongs to user
         template = get_template(template_id, user_id)
         
         if not template:
-            print(f"[API] Template {template_id} not found for user {user_id}")
+            logging.info("[API] Template %s not found for user %s", template_id, user_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Template not found"
@@ -272,20 +265,18 @@ async def delete_template_detail(
         
         # Delete template
         if not delete_template(template_id, user_id):
-            print(f"[API] Failed to delete template {template_id}")
+            logging.error("[API] Failed to delete template %s", template_id)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete template"
             )
         
-        print(f"[API] Successfully deleted template {template_id}")
+        logging.info("[API] Successfully deleted template %s", template_id)
         return {"status": "success", "message": "Template deleted successfully"}
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[API ERROR] Error deleting template: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("[API ERROR] Error deleting template: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete template"
@@ -315,7 +306,7 @@ async def upload_template(
     """Upload a template file (Admin only)"""
     user_id = current_user["uid"]
     
-    print(f"[API] Uploading template file for user {user_id}: {file.filename}")
+    logging.info("[API] Uploading template file for user %s: %s", user_id, file.filename)
     
     try:
         # Validate file type
@@ -327,7 +318,7 @@ async def upload_template(
                 break
         
         if not file_ext:
-            print(f"[API] Invalid file type: {file.filename}")
+            logging.info("[API] Invalid file type: %s", file.filename)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Only HTML and LaTeX files are supported"
@@ -337,7 +328,7 @@ async def upload_template(
         content = await file.read()
         content_str = content.decode('utf-8')
         
-        print(f"[API] Read {len(content_str)} bytes from {file.filename}")
+        logging.debug("[API] Read %s bytes from %s", len(content_str), file.filename)
         
         # Determine template type
         template_type = 'html' if file_ext in ['.html', '.htm'] else 'latex'
@@ -353,17 +344,17 @@ async def upload_template(
             description=f"Uploaded from {file.filename}",
         )
         
-        print(f"[API] Template object created: {template_id}")
+        logging.debug("[API] Template object created: %s", template_id)
         
         # Save to Firestore
         if not save_template(template):
-            print(f"[API] Failed to save uploaded template {template_id}")
+            logging.error("[API] Failed to save uploaded template %s", template_id)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to save template"
             )
         
-        print(f"[API] Successfully uploaded template {template_id}")
+        logging.info("[API] Successfully uploaded template %s", template_id)
         
         return TemplateResponse(
             id=template.id,
@@ -377,9 +368,7 @@ async def upload_template(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[API ERROR] Error uploading template: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("[API ERROR] Error uploading template: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload template: {str(e)}"

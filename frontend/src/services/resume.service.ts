@@ -163,10 +163,11 @@ export const resumeService = {
   /**
    * Trigger ATS scoring for a resume
    */
-  async scoreResume(resumeId: string, preferGemini: boolean = true): Promise<any> {
+  async scoreResume(resumeId: string, preferGemini: boolean = true, useCache: boolean = true): Promise<any> {
+    console.log(`[resume.service] Scoring resume ${resumeId} with preferGemini=${preferGemini}, useCache=${useCache}`)
     return apiClient.post(`/api/scoring/${resumeId}`, {
       prefer_gemini: preferGemini,
-      use_cache: true
+      use_cache: useCache
     })
   },
 

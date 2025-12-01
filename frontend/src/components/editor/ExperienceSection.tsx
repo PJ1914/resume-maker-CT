@@ -66,38 +66,38 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-secondary-900">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <h2 className="text-xl font-semibold text-secondary-900 dark:text-white">
           Work Experience
         </h2>
-        <button onClick={addExperience} className="btn-primary text-sm">
+        <button onClick={addExperience} className="btn-primary text-sm w-full sm:w-auto">
           + Add Experience
         </button>
       </div>
 
       <div className="space-y-4">
         {experience.length === 0 ? (
-          <p className="text-secondary-500 text-center py-8">
+          <p className="text-secondary-500 dark:text-secondary-400 text-center py-8">
             No experience added yet. Click "Add Experience" to get started.
           </p>
         ) : (
           experience.map((exp) => (
             <div
               key={exp.id}
-              className="border border-secondary-200 rounded-lg overflow-hidden"
+              className="border border-secondary-200 dark:border-secondary-700 rounded-lg overflow-hidden"
             >
               {/* Header */}
               <div
-                className="p-4 bg-secondary-50 cursor-pointer flex items-center justify-between hover:bg-secondary-100 transition-colors"
+                className="p-4 bg-secondary-50 dark:bg-secondary-800/50 cursor-pointer flex items-center justify-between hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
                 onClick={() =>
                   setExpandedId(expandedId === exp.id ? null : exp.id)
                 }
               >
                 <div className="flex-1">
-                  <h3 className="font-medium text-secondary-900">
+                  <h3 className="font-medium text-secondary-900 dark:text-white">
                     {exp.position || 'Untitled Position'} {exp.company && `at ${exp.company}`}
                   </h3>
-                  <p className="text-sm text-secondary-600">
+                  <p className="text-sm text-secondary-600 dark:text-secondary-400">
                     {exp.startDate || 'Start'} - {exp.current ? 'Present' : exp.endDate || 'End'}
                   </p>
                 </div>
@@ -107,7 +107,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       e.stopPropagation();
                       removeExperience(exp.id);
                     }}
-                    className="text-danger-600 hover:text-danger-700 p-1"
+                    className="text-danger-600 hover:text-danger-700 dark:text-danger-400 dark:hover:text-danger-300 p-1"
                   >
                     <svg
                       className="w-5 h-5"
@@ -124,9 +124,8 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                     </svg>
                   </button>
                   <svg
-                    className={`w-5 h-5 text-secondary-400 transition-transform ${
-                      expandedId === exp.id ? 'rotate-180' : ''
-                    }`}
+                    className={`w-5 h-5 text-secondary-400 dark:text-secondary-500 transition-transform ${expandedId === exp.id ? 'rotate-180' : ''
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -143,7 +142,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 
               {/* Expanded Form */}
               {expandedId === exp.id && (
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 bg-white dark:bg-secondary-900">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="label">Position *</label>
@@ -193,7 +192,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       <div className="flex-1">
                         <label className="label">Start Date</label>
                         <input
-                          type="month"
+                          type="text"
                           className="input"
                           value={exp.startDate}
                           onChange={(e) =>
@@ -201,21 +200,23 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                               startDate: e.target.value,
                             })
                           }
+                          placeholder="May 2024"
                         />
                       </div>
 
                       <div className="flex-1">
                         <label className="label">End Date</label>
                         <input
-                          type="month"
+                          type="text"
                           className="input"
-                          value={exp.endDate}
+                          value={exp.current ? 'Present' : exp.endDate}
                           onChange={(e) =>
                             updateExperience(exp.id, {
                               endDate: e.target.value,
                             })
                           }
                           disabled={exp.current}
+                          placeholder="Aug 2024 or Present"
                         />
                       </div>
                     </div>
@@ -231,9 +232,9 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                               endDate: e.target.checked ? '' : exp.endDate,
                             })
                           }
-                          className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                          className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500 border-secondary-300 dark:border-secondary-600 bg-white dark:bg-secondary-800"
                         />
-                        <span className="text-sm text-secondary-700">
+                        <span className="text-sm text-secondary-700 dark:text-secondary-300">
                           I currently work here
                         </span>
                       </label>
@@ -260,7 +261,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       <label className="label mb-0">Key Achievements</label>
                       <button
                         onClick={() => addHighlight(exp.id)}
-                        className="text-sm text-primary-600 hover:text-primary-700"
+                        className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
                       >
                         + Add Achievement
                       </button>
@@ -269,7 +270,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                     <div className="space-y-2">
                       {exp.highlights.map((highlight, hIndex) => (
                         <div key={hIndex} className="flex gap-2">
-                          <span className="text-secondary-500 mt-2">•</span>
+                          <span className="text-secondary-500 dark:text-secondary-400 mt-2">•</span>
                           <input
                             type="text"
                             className="input flex-1"
@@ -281,7 +282,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                           />
                           <button
                             onClick={() => removeHighlight(exp.id, hIndex)}
-                            className="text-danger-600 hover:text-danger-700 p-2"
+                            className="text-danger-600 hover:text-danger-700 dark:text-danger-400 dark:hover:text-danger-300 p-2"
                           >
                             <svg
                               className="w-5 h-5"

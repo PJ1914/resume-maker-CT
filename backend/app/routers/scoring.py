@@ -87,12 +87,21 @@ async def score_resume(
             if sections.get('summary'):
                 parsed_text += f"\n\n{sections.get('summary')}"
         
-        # Check cache if enabled
+        # Determine requested scorer type
+        requested_scorer = 'gemini' if request.prefer_gemini else 'local'
+        logger.info(f"Scoring request for resume {resume_id} with prefer_gemini={request.prefer_gemini} (scorer: {requested_scorer})")
+        
+        # Check cache if enabled - pass scorer type to ensure we get the right cached result
         cached_result = None
         if request.use_cache:
-            cached_result = await get_cached_score(resume_id, request.job_description)
+            cached_result = await get_cached_score(resume_id, request.job_description, scorer_type=requested_scorer)
             
             if cached_result:
+                # Add current credits balance to cached response
+                user_credits = get_user_credits(uid)
+                cached_result['credits_remaining'] = user_credits['balance']
+                cached_result['credits_used'] = 0  # No credits used for cached response
+                
                 # Log cache hit
                 await log_scoring_request(
                     resume_id=resume_id,
@@ -107,17 +116,18 @@ async def score_resume(
                 
                 return ScoringResponse(**cached_result)
         
-        # Check credits before proceeding with expensive scoring
-        if not has_sufficient_credits(uid, FeatureType.ATS_SCORING):
-            user_credits = get_user_credits(uid)
-            raise HTTPException(
-                status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail={
-                    "message": "Insufficient credits for ATS scoring",
-                    "current_balance": user_credits["balance"],
-                    "required": FEATURE_COSTS[FeatureType.ATS_SCORING]
-                }
-            )
+        # Check credits ONLY for Gemini/AI scoring (Local is free)
+        if request.prefer_gemini:
+            if not has_sufficient_credits(uid, FeatureType.ATS_SCORING):
+                user_credits = get_user_credits(uid)
+                raise HTTPException(
+                    status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                    detail={
+                        "message": "Insufficient credits for AI scoring. Use Local (Free) instead.",
+                        "current_balance": user_credits["balance"],
+                        "required": FEATURE_COSTS[FeatureType.ATS_SCORING]
+                    }
+                )
 
         # Check rate limit for Gemini calls
         if request.prefer_gemini:
@@ -139,15 +149,33 @@ async def score_resume(
         }
         
         # Score resume using HybridScorer (prefers Gemini if available)
+        logger.info(f"Calling HybridScorer with prefer_gemini={request.prefer_gemini}")
         scorer = HybridScorer()
         score_result = scorer.score_resume(
             parsed_data,
             job_description=request.job_description,
             prefer_gemini=request.prefer_gemini
         )
+        logger.info(f"Scoring completed. Method used: {score_result.get('scoring_method', 'unknown')}")
         
-        # Deduct credits after successful scoring
-        deduct_credits(uid, FeatureType.ATS_SCORING, f"ATS Scoring for resume {resume_id}")
+        # Deduct credits ONLY for Gemini/AI scoring (Local is free)
+        actual_method = score_result.get('scoring_method', 'local')
+        credits_result = None
+        if actual_method == 'gemini':
+            credits_result = deduct_credits(uid, FeatureType.ATS_SCORING, f"AI Scoring for resume {resume_id}")
+            if credits_result['success']:
+                logger.info(f"Credits deducted for Gemini AI scoring. New balance: {credits_result['new_balance']}")
+                score_result['credits_remaining'] = credits_result['new_balance']
+                score_result['credits_used'] = credits_result['cost']
+            else:
+                # This shouldn't happen as we checked before, but handle it
+                logger.error(f"Credit deduction failed unexpectedly")
+        else:
+            logger.info(f"Local scoring - no credits deducted (free)")
+            # For local scoring, still return current balance
+            user_credits = get_user_credits(uid)
+            score_result['credits_remaining'] = user_credits['balance']
+            score_result['credits_used'] = 0
         
         # Add scoring method
         score_result['scoring_method'] = score_result.get('scoring_method', 'hybrid')
@@ -171,16 +199,15 @@ async def score_resume(
             success=True
         )
         
-        # Cache result
-        if request.use_cache:
-            await set_cached_score(resume_id, score_result, request.job_description)
+        # ALWAYS cache result to Firestore (use_cache only controls reading, not writing)
+        await set_cached_score(resume_id, score_result, request.job_description)
         
-        # Update latest_score in Firestore
+        # Update latest_score in resume metadata
         try:
             from app.services.firestore import update_resume_latest_score
             update_resume_latest_score(resume_id, uid, score_result.get('total_score', 0))
         except Exception as e:
-            logger.warning(f"Failed to update latest_score in Firestore: {e}")
+            logger.warning(f"Failed to update latest_score: {e}")
         
         # Add resume_id and cached flag
         score_result['resume_id'] = resume_id
@@ -222,7 +249,7 @@ async def get_resume_score(
     
     - **resume_id**: ID of the resume
     
-    Returns the cached score if available, otherwise returns None.
+    Returns the cached score if available.
     """
     uid = current_user['uid']
     
@@ -235,7 +262,7 @@ async def get_resume_score(
                 detail="Resume not found"
             )
         
-        # Try to get cached score
+        # Get cached score from Firestore
         cached_result = await get_cached_score(resume_id, job_description=None)
         
         if cached_result:

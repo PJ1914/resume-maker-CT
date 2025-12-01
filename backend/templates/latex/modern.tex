@@ -165,7 +165,7 @@
 {% if skills %}
 \section{Skills}
 {% for skill in skills %}
-\textbf{ {{- skill.category -}} :} {{ skill.items|join(', ') }}
+\textbf{ {{- skill.category -}} :} {{ skill['items']|join(', ') }}
 
 {% endfor %}
 {% endif %}

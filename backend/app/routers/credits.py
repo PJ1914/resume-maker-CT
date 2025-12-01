@@ -34,6 +34,7 @@ class CreditBalanceResponse(BaseModel):
     total_earned: int
     total_spent: int
     subscription_tier: str
+    is_admin: bool = False
     last_reset: Optional[str] = None
 
 class CreditTransactionResponse(BaseModel):
@@ -64,19 +65,21 @@ class PurchaseCreditsRequest(BaseModel):
 
 @router.get("/balance", response_model=CreditBalanceResponse)
 async def get_balance(current_user: dict = Depends(get_current_user)):
-    """Get current credit balance"""
+    """Get current credit balance. Admins get unlimited credits."""
     user_id = current_user["uid"]
+    user_email = current_user.get("email", "")
     
-    # Check and reset monthly credits if needed
+    # Check and reset monthly credits if needed (not for admins)
     check_and_reset_monthly_credits(user_id)
     
-    credits = get_user_credits(user_id)
+    credits = get_user_credits(user_id, user_email)
     
     return CreditBalanceResponse(
         balance=credits["balance"],
         total_earned=credits["total_earned"],
         total_spent=credits["total_spent"],
         subscription_tier=credits["subscription_tier"],
+        is_admin=credits.get("is_admin", False),
         last_reset=credits["last_reset"].isoformat() if credits.get("last_reset") else None,
     )
 
@@ -99,8 +102,9 @@ async def deduct_user_credits(
     request: DeductCreditsRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Deduct credits for feature usage"""
+    """Deduct credits for feature usage. Admins are not charged."""
     user_id = current_user["uid"]
+    user_email = current_user.get("email", "")
     
     try:
         feature = FeatureType(request.feature)
@@ -110,9 +114,9 @@ async def deduct_user_credits(
             detail=f"Invalid feature type: {request.feature}"
         )
     
-    # Check if user has sufficient credits
-    if not has_sufficient_credits(user_id, feature):
-        credits = get_user_credits(user_id)
+    # Check if user has sufficient credits (admins always pass)
+    if not has_sufficient_credits(user_id, feature, user_email):
+        credits = get_user_credits(user_id, user_email)
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
@@ -122,13 +126,14 @@ async def deduct_user_credits(
             }
         )
     
-    # Deduct credits
-    if deduct_credits(user_id, feature, request.description):
-        credits = get_user_credits(user_id)
+    # Deduct credits (admins are not charged)
+    if deduct_credits(user_id, feature, request.description, user_email):
+        credits = get_user_credits(user_id, user_email)
         return {
             "success": True,
-            "message": f"Deducted {FEATURE_COSTS[feature]} credits",
+            "message": f"Deducted {FEATURE_COSTS[feature]} credits" if not credits.get("is_admin") else "Admin - no credits deducted",
             "new_balance": credits["balance"],
+            "is_admin": credits.get("is_admin", False),
         }
     else:
         raise HTTPException(
@@ -235,8 +240,9 @@ async def check_feature_access(
     feature: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Check if user has sufficient credits for a feature"""
+    """Check if user has sufficient credits for a feature. Admins always have access."""
     user_id = current_user["uid"]
+    user_email = current_user.get("email", "")
     
     try:
         feature_type = FeatureType(feature)
@@ -246,13 +252,15 @@ async def check_feature_access(
             detail=f"Invalid feature type: {feature}"
         )
     
-    credits = get_user_credits(user_id)
+    credits = get_user_credits(user_id, user_email)
     required = FEATURE_COSTS[feature_type]
-    has_access = credits["balance"] >= required
+    is_admin = credits.get("is_admin", False)
+    has_access = is_admin or credits["balance"] >= required
     
     return {
         "has_access": has_access,
         "current_balance": credits["balance"],
         "required": required,
         "feature": feature,
+        "is_admin": is_admin,
     }

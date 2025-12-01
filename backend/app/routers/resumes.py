@@ -31,6 +31,7 @@ from app.services.firestore import (
 )
 from app.services.tasks import process_resume_parsing
 from app.config import settings
+import logging
 
 router = APIRouter()
 
@@ -40,6 +41,9 @@ ALLOWED_CONTENT_TYPES = [
     ResumeFileType.PDF.value,
     ResumeFileType.DOCX.value,
     ResumeFileType.DOC.value,
+    ResumeFileType.TEX.value,
+    ResumeFileType.TEX_ALT.value,
+    ResumeFileType.PLAIN.value,  # For .tex files
 ]
 
 @router.get("/health")
@@ -140,12 +144,14 @@ async def upload_callback(
         )
     
     # Trigger parsing in background
+    logging.info("Triggering background parsing for resume %s (storage_path=%s, filename=%s)", request.resume_id, request.storage_path, metadata.filename if metadata else '')
     background_tasks.add_task(
         process_resume_parsing,
         resume_id=request.resume_id,
         uid=user_id,
         storage_path=request.storage_path,
-        content_type=metadata.content_type
+        content_type=metadata.content_type,
+        filename=metadata.filename if metadata else ''
     )
     
     return {"message": "Upload confirmed, processing started", "resume_id": request.resume_id}
@@ -231,19 +237,16 @@ async def upload_direct(
         )
     
     # Trigger parsing in background
-    print(f"📋 Triggering background parsing for resume {resume_id}")
-    print(f"   Storage path: {storage_path}")
-    print(f"   Content type: {file.content_type}")
-    
+    logging.info("Triggering background parsing for resume %s (storage_path=%s, filename=%s)", resume_id, storage_path, file.filename)
     background_tasks.add_task(
         process_resume_parsing,
         resume_id=resume_id,
         uid=user_id,
         storage_path=storage_path,
-        content_type=file.content_type or "application/pdf"
+        content_type=file.content_type or "application/pdf",
+        filename=file.filename or ''
     )
-    
-    print(f"✅ Background task added for resume {resume_id}")
+    logging.info("Background task added for resume %s", resume_id)
     
     return {
         "message": "File uploaded successfully",
@@ -267,10 +270,7 @@ async def create_resume(
     resume_id = generate_resume_id()
     
     try:
-        print(f"Creating resume for user: {user_id}")
-        print(f"Resume ID: {resume_id}")
-        print(f"Contact name: {request.contact.name}")
-        print(f"Template: {request.template}")
+        logging.info("Creating resume for user: %s (resume_id=%s, template=%s)", user_id, resume_id, request.template)
         
         # Build sections dict safely
         sections = {
@@ -391,7 +391,7 @@ async def create_resume(
             ],
         )
         
-        print(f"Metadata created successfully")
+        logging.debug("Metadata created successfully for resume %s", resume_id)
         
         # Save metadata to Firestore
         if not save_resume_metadata(metadata):
@@ -400,7 +400,7 @@ async def create_resume(
                 detail="Failed to save resume data to Firestore"
             )
         
-        print(f"Resume saved successfully")
+        logging.info("Resume saved successfully: %s", resume_id)
         
         return {
             "status": "success",
@@ -410,10 +410,7 @@ async def create_resume(
     except HTTPException:
         raise
     except Exception as e:
-        error_msg = f"Error creating resume: {str(e)}"
-        print(error_msg)
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error creating resume: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create resume: {str(e)}"
@@ -456,6 +453,9 @@ async def get_resume(
                 detail="Resume not found"
             )
         
+        # Debug logging (safe access)
+        logging.debug("API returning resume %s: experience=%s projects=%s education=%s sections=%s", resume_id, len(resume_data.get('experience') or []), len(resume_data.get('projects') or []), len(resume_data.get('education') or []), len(resume_data.get('sections') or []))
+        
         # Generate download URL if needed
         storage_url = None
         if resume_data.get('storage_path'):
@@ -487,9 +487,7 @@ async def get_resume(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error getting resume: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error getting resume: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get resume: {str(e)}"
@@ -555,7 +553,8 @@ async def reparse_resume(
         resume_id=resume_id,
         uid=user_id,
         storage_path=metadata.storage_path,
-        content_type=metadata.content_type
+        content_type=metadata.content_type,
+        filename=metadata.filename if metadata else ''
     )
     
     return {

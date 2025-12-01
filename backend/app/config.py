@@ -14,10 +14,6 @@ class Settings(BaseSettings):
     # Gemini API - Required for AI features
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-2.0-flash-exp"
-    
-    # Redis - Optional, falls back to no caching if unavailable
-    REDIS_ENABLED: bool = False
-    REDIS_URL: str = "redis://localhost:6379/0"
   
     CORS_ORIGINS: Union[str, List[str]]
     
@@ -37,7 +33,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", 
         env_file_encoding="utf-8",
-        case_sensitive=True
+        case_sensitive=True,
+        extra="ignore"  # Ignore extra env vars like REDIS_URL
     )
     
     @field_validator('CORS_ORIGINS', mode='before')

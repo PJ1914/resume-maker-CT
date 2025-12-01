@@ -6,6 +6,7 @@ from typing import Optional
 from datetime import datetime, timedelta
 import uuid
 from app.config import settings
+import logging
 
 def generate_resume_id() -> str:
     """Generate a unique resume ID"""
@@ -51,7 +52,7 @@ def generate_signed_upload_url(
         )
         return url
     except Exception as e:
-        print(f"Error generating signed URL: {e}")
+        logging.exception("Error generating signed URL: %s", str(e))
         raise
 
 def generate_signed_download_url(
@@ -82,7 +83,7 @@ def generate_signed_download_url(
         )
         return url
     except Exception as e:
-        print(f"Error generating download URL: {e}")
+        logging.exception("Error generating download URL: %s", str(e))
         return None
 
 def delete_file(storage_path: str) -> bool:
@@ -90,7 +91,7 @@ def delete_file(storage_path: str) -> bool:
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would delete: {storage_path}")
+        logging.info("[DEV] Would delete: %s", storage_path)
         return True
     
     try:
@@ -100,7 +101,7 @@ def delete_file(storage_path: str) -> bool:
         blob.delete()
         return True
     except Exception as e:
-        print(f"Error deleting file: {e}")
+        logging.exception("Error deleting file: %s", str(e))
         return False
 
 
@@ -117,7 +118,7 @@ async def get_file_content(storage_path: str) -> Optional[bytes]:
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would download: {storage_path}")
+        logging.info("[DEV] Would download: %s", storage_path)
         # Return empty bytes in dev mode
         return b"Mock file content for development"
     
@@ -127,7 +128,7 @@ async def get_file_content(storage_path: str) -> Optional[bytes]:
         blob = bucket.blob(storage_path)
         
         if not blob.exists():
-            print(f"File not found: {storage_path}")
+            logging.warning("File not found: %s", storage_path)
             return None
         
         # Download file content
@@ -135,7 +136,7 @@ async def get_file_content(storage_path: str) -> Optional[bytes]:
         return content
         
     except Exception as e:
-        print(f"Error downloading file: {e}")
+        logging.exception("Error downloading file: %s", str(e))
         return None
 
 
@@ -152,7 +153,7 @@ def get_file_content_sync(storage_path: str) -> Optional[bytes]:
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would download: {storage_path}")
+        logging.info("[DEV] Would download: %s", storage_path)
         # Return empty bytes in dev mode
         return b"Mock file content for development"
     
@@ -162,7 +163,7 @@ def get_file_content_sync(storage_path: str) -> Optional[bytes]:
         blob = bucket.blob(storage_path)
         
         if not blob.exists():
-            print(f"File not found: {storage_path}")
+            logging.warning("File not found: %s", storage_path)
             return None
         
         # Download file content
@@ -170,9 +171,7 @@ def get_file_content_sync(storage_path: str) -> Optional[bytes]:
         return content
         
     except Exception as e:
-        print(f"Error downloading file: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error downloading file: %s", str(e))
         return None
 
 
@@ -210,11 +209,11 @@ async def upload_resume_pdf(
             content_type='application/pdf'
         )
         
-        print(f"✅ PDF uploaded: {storage_path}")
+        logging.info("PDF uploaded: %s", storage_path)
         return storage_path
         
     except Exception as e:
-        print(f"Error uploading PDF: {e}")
+        logging.exception("Error uploading PDF: %s", str(e))
         raise
 
 
@@ -252,5 +251,5 @@ async def get_signed_url(
         return url
         
     except Exception as e:
-        print(f"Error generating signed URL: {e}")
+        logging.exception("Error generating signed URL: %s", str(e))
         raise

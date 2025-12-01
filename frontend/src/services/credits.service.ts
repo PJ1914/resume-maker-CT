@@ -7,9 +7,14 @@ const API_BASE_URL = `${API_URL}/api/credits`;
 
 export interface CreditBalance {
   balance: number;
-  free_credits_remaining: number;
-  last_reset_date: string | null;
-  next_reset_date: string;
+  total_earned: number;
+  total_spent: number;
+  subscription_tier: string;
+  is_admin: boolean;
+  free_credits_remaining?: number;
+  last_reset_date?: string | null;
+  last_reset?: string | null;
+  next_reset_date?: string;
 }
 
 export interface CreditPackage {

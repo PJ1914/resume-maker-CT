@@ -3,6 +3,7 @@ User roles and permissions management
 """
 from typing import Optional, List
 from datetime import datetime
+import logging
 
 # Admin email list - configure via environment or database
 # For now, we'll use Firestore to store admin list
@@ -29,7 +30,7 @@ def is_user_admin(user_email: str, user_id: str) -> bool:
         return True
     
     if not resume_maker_app:
-        print(f"[DEV] Admin check for {user_email}: False (Firebase not configured)")
+        logging.info("[DEV] Admin check for %s: False (Firebase not configured)", user_email)
         return False
     
     try:
@@ -45,7 +46,7 @@ def is_user_admin(user_email: str, user_id: str) -> bool:
         
         return False
     except Exception as e:
-        print(f"Error checking admin status: {e}")
+        logging.exception("Error checking admin status")
         return False
 
 
@@ -64,7 +65,7 @@ def add_admin(user_id: str, user_email: str, added_by: str = "system") -> bool:
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would add admin: {user_email}")
+        logging.info("[DEV] Would add admin: %s", user_email)
         return True
     
     try:
@@ -83,10 +84,10 @@ def add_admin(user_id: str, user_email: str, added_by: str = "system") -> bool:
         
         db.collection('admins').document(user_id).set(admin_data)
         
-        print(f"✅ Added admin: {user_email} ({user_id})")
+        logging.info("Added admin: %s (%s)", user_email, user_id)
         return True
     except Exception as e:
-        print(f"Error adding admin: {e}")
+        logging.exception("Error adding admin")
         return False
 
 
@@ -103,7 +104,7 @@ def remove_admin(user_id: str) -> bool:
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would remove admin: {user_id}")
+        logging.info("[DEV] Would remove admin: %s", user_id)
         return True
     
     try:
@@ -116,10 +117,10 @@ def remove_admin(user_id: str) -> bool:
             'updated_at': datetime.utcnow(),
         })
         
-        print(f"✅ Removed admin: {user_id}")
+        logging.info("Removed admin: %s", user_id)
         return True
     except Exception as e:
-        print(f"Error removing admin: {e}")
+        logging.exception("Error removing admin")
         return False
 
 
@@ -153,5 +154,5 @@ def list_admins() -> List[dict]:
         
         return admins
     except Exception as e:
-        print(f"Error listing admins: {e}")
+        logging.exception("Error listing admins")
         return []

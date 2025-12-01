@@ -1,10 +1,12 @@
 """
 Credit management service for Resume Maker
 Handles credit balance, transactions, and feature access
+Admins have unlimited credits
 """
 from typing import Optional, Dict, List
 from datetime import datetime, timezone
 from enum import Enum
+import logging
 
 class CreditTransactionType(str, Enum):
     """Types of credit transactions"""
@@ -35,6 +37,49 @@ FREE_MONTHLY_CREDITS = 10
 # Special December 2025 bonus
 DECEMBER_2025_BONUS = 50
 
+# Admin unlimited credits indicator
+ADMIN_UNLIMITED_BALANCE = 999999
+
+
+def is_admin_user(user_id: str, user_email: str = None) -> bool:
+    """
+    Check if a user is an admin (has unlimited credits).
+    
+    Args:
+        user_id: User's Firebase UID
+        user_email: Optional user email for additional check
+        
+    Returns:
+        True if user is admin
+    """
+    from app.services.user_roles import is_user_admin
+    
+    # If we have email, use full check
+    if user_email:
+        return is_user_admin(user_email, user_id)
+    
+    # Otherwise check by user_id only in Firestore
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        return False
+    
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        # Check if user is in admins collection
+        admin_doc = db.collection('admins').document(user_id).get()
+        
+        if admin_doc.exists:
+            data = admin_doc.to_dict()
+            return data.get('is_admin', False) and data.get('active', True)
+        
+        return False
+    except Exception as e:
+        logging.exception("Error checking admin status for credits")
+        return False
+
 
 def should_give_december_bonus(user_id: str) -> bool:
     """
@@ -62,7 +107,7 @@ def should_give_december_bonus(user_id: str) -> bool:
         return not bonus_doc.exists
         
     except Exception as e:
-        print(f"Error checking December bonus: {e}")
+        logging.exception("Error checking December bonus")
         return False
 
 
@@ -73,7 +118,7 @@ def give_december_bonus(user_id: str) -> bool:
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would give December bonus to {user_id}")
+        logging.info("[DEV] Would give December bonus to %s", user_id)
         return True
     
     try:
@@ -114,22 +159,38 @@ def give_december_bonus(user_id: str) -> bool:
         db.collection('users').document(user_id)\
           .collection('credit_transactions').add(transaction_data)
         
-        print(f"🎄 Gave December bonus ({DECEMBER_2025_BONUS} credits) to {user_id}")
+        logging.info("🎄 Gave December bonus (%s credits) to %s", DECEMBER_2025_BONUS, user_id)
         return True
         
     except Exception as e:
-        print(f"Error giving December bonus: {e}")
+        logging.exception("Error giving December bonus")
         return False
 
-def get_user_credits(user_id: str) -> Dict:
+def get_user_credits(user_id: str, user_email: str = None) -> Dict:
     """
     Get user's current credit balance and info.
     Automatically handles monthly reset and December bonus.
+    Admins get unlimited credits.
+    
+    Args:
+        user_id: User's Firebase UID
+        user_email: Optional email for admin check
     
     Returns:
         Dict with balance, tier, last_reset, etc.
     """
     from app.firebase import resume_maker_app
+    
+    # Check if user is admin - return unlimited credits
+    if is_admin_user(user_id, user_email):
+        return {
+            "balance": ADMIN_UNLIMITED_BALANCE,
+            "total_earned": ADMIN_UNLIMITED_BALANCE,
+            "total_spent": 0,
+            "subscription_tier": "admin",
+            "is_admin": True,
+            "last_reset": datetime.now(timezone.utc),
+        }
     
     if not resume_maker_app:
         # Dev mode
@@ -138,6 +199,7 @@ def get_user_credits(user_id: str) -> Dict:
             "total_earned": 100,
             "total_spent": 0,
             "subscription_tier": "free",
+            "is_admin": False,
             "last_reset": datetime.now(timezone.utc),
         }
     
@@ -193,7 +255,7 @@ def get_user_credits(user_id: str) -> Dict:
                 db.collection('users').document(user_id)\
                   .collection('credit_transactions').add(transaction_data)
                 
-                print(f"✅ Reset monthly credits for {user_id}: +{FREE_MONTHLY_CREDITS} credits")
+                logging.info("Reset monthly credits for %s: +%s credits", user_id, FREE_MONTHLY_CREDITS)
                 
                 # Update data for return
                 data["balance"] = new_balance
@@ -213,6 +275,7 @@ def get_user_credits(user_id: str) -> Dict:
                 "total_earned": data.get("total_earned", 0),
                 "total_spent": data.get("total_spent", 0),
                 "subscription_tier": data.get("subscription_tier", "free"),
+                "is_admin": False,
                 "last_reset": data.get("last_reset"),
             }
         else:
@@ -265,24 +328,31 @@ def get_user_credits(user_id: str) -> Dict:
                 db.collection('users').document(user_id)\
                   .collection('credit_transactions').add(bonus_transaction)
                 
-                print(f"🎄 New user {user_id} received December bonus!")
+                logging.info("New user %s received December bonus", user_id)
             
+            initial_credits["is_admin"] = False
             return initial_credits
     except Exception as e:
-        print(f"Error getting user credits: {e}")
+        logging.exception("Error getting user credits")
         return {
             "balance": 0,
             "total_earned": 0,
             "total_spent": 0,
             "subscription_tier": "free",
+            "is_admin": False,
             "last_reset": None,
         }
 
 
-def has_sufficient_credits(user_id: str, feature: FeatureType) -> bool:
+def has_sufficient_credits(user_id: str, feature: FeatureType, user_email: str = None) -> bool:
     """
     Check if user has enough credits for a feature.
+    Admins always have sufficient credits.
     """
+    # Admins have unlimited credits
+    if is_admin_user(user_id, user_email):
+        return True
+    
     credits = get_user_credits(user_id)
     required = FEATURE_COSTS.get(feature, 0)
     return credits["balance"] >= required
@@ -291,63 +361,88 @@ def has_sufficient_credits(user_id: str, feature: FeatureType) -> bool:
 def deduct_credits(
     user_id: str,
     feature: FeatureType,
-    description: Optional[str] = None
-) -> bool:
+    description: Optional[str] = None,
+    user_email: str = None
+) -> Dict:
     """
     Deduct credits for feature usage.
+    Admins are not charged (unlimited credits).
     
     Returns:
-        True if successful, False if insufficient credits
+        Dict with 'success' (bool), 'new_balance' (int), 'cost' (int)
+        Returns {'success': False, 'new_balance': current_balance, 'cost': cost} if insufficient
     """
     from app.firebase import resume_maker_app
     
     cost = FEATURE_COSTS.get(feature, 0)
     
+    # Admins have unlimited credits - don't deduct
+    if is_admin_user(user_id, user_email):
+        logging.info("Admin %s used %s - no credits deducted", user_id, feature.value)
+        return {'success': True, 'new_balance': ADMIN_UNLIMITED_BALANCE, 'cost': 0}
+    
     if not resume_maker_app:
-        print(f"[DEV] Would deduct {cost} credits from {user_id} for {feature}")
-        return True
+        logging.info("[DEV] Would deduct %s credits from %s for %s", cost, user_id, feature)
+        return {'success': True, 'new_balance': 100, 'cost': cost}
     
     try:
         from firebase_admin import firestore
         db = firestore.client(app=resume_maker_app)
-        
-        # Check balance
-        credits = get_user_credits(user_id)
-        if credits["balance"] < cost:
-            return False
-        
-        # Deduct credits
-        new_balance = credits["balance"] - cost
-        new_spent = credits["total_spent"] + cost
-        
+
         balance_ref = db.collection('users').document(user_id)\
                        .collection('credits').document('balance')
-        
-        balance_ref.update({
-            "balance": new_balance,
-            "total_spent": new_spent,
-            "updated_at": datetime.now(timezone.utc),
-        })
-        
-        # Record transaction
-        transaction_data = {
-            "type": CreditTransactionType.USAGE.value,
-            "amount": -cost,
-            "feature": feature.value,
-            "description": description or f"Used {feature.value}",
-            "balance_after": new_balance,
-            "timestamp": datetime.now(timezone.utc),
-        }
-        
-        db.collection('users').document(user_id)\
-          .collection('credit_transactions').add(transaction_data)
-        
-        print(f"✅ Deducted {cost} credits from {user_id}. New balance: {new_balance}")
-        return True
-        
+
+        @firestore.transactional
+        def _tx_deduct(transaction, ref, amt, feature_val, desc):
+            snapshot = ref.get(transaction=transaction)
+            if not snapshot.exists:
+                raise ValueError("Balance document does not exist")
+            data = snapshot.to_dict()
+            current_balance = data.get('balance', 0)
+            if current_balance < amt:
+                # Indicate insufficient funds
+                raise ValueError("INSUFFICIENT_FUNDS")
+
+            new_balance = current_balance - amt
+            # Use transaction update
+            transaction.update(ref, {
+                'balance': new_balance,
+                'total_spent': firestore.Increment(amt),
+                'updated_at': datetime.now(timezone.utc),
+            })
+
+            # Create a new transaction doc with auto id
+            txn_ref = db.collection('users').document(user_id)\
+                       .collection('credit_transactions').document()
+            transaction.set(txn_ref, {
+                'type': CreditTransactionType.USAGE.value,
+                'amount': -amt,
+                'feature': feature_val,
+                'description': desc or f"Used {feature_val}",
+                'balance_after': new_balance,
+                'timestamp': datetime.now(timezone.utc),
+            })
+
+            return new_balance
+
+        try:
+            transaction = db.transaction()
+            new_balance = _tx_deduct(transaction, balance_ref, cost, feature.value, description)
+            logging.info("Deducted %s credits from %s. New balance: %s", cost, user_id, new_balance)
+            return {'success': True, 'new_balance': new_balance, 'cost': cost}
+        except ValueError as ve:
+            if str(ve) == "INSUFFICIENT_FUNDS":
+                # Get current balance for response
+                snapshot = balance_ref.get()
+                current = snapshot.to_dict().get('balance', 0) if snapshot.exists else 0
+                logging.warning("Insufficient credits for %s. Current: %s, Required: %s", user_id, current, cost)
+                return {'success': False, 'new_balance': current, 'cost': cost}
+            logging.exception("Error in credit deduction transaction")
+            return {'success': False, 'new_balance': 0, 'cost': cost}
+
     except Exception as e:
-        print(f"Error deducting credits: {e}")
-        return False
+        logging.exception("Error deducting credits")
+        return {'success': False, 'new_balance': 0, 'cost': cost}
 
 
 def get_credit_history(user_id: str, limit: int = 50) -> List[Dict]:
@@ -385,7 +480,7 @@ def get_credit_history(user_id: str, limit: int = 50) -> List[Dict]:
         return transactions
         
     except Exception as e:
-        print(f"Error getting credit history: {e}")
+        logging.exception("Error getting credit history")
         return []
 
 
@@ -404,45 +499,53 @@ def add_credits(
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would add {amount} credits to {user_id}")
+        logging.info("[DEV] Would add %s credits to %s", amount, user_id)
         return True
     
     try:
         from firebase_admin import firestore
         db = firestore.client(app=resume_maker_app)
         
-        # Get current balance
-        credits = get_user_credits(user_id)
-        new_balance = credits["balance"] + amount
-        new_earned = credits["total_earned"] + amount
-        
-        # Update balance
         balance_ref = db.collection('users').document(user_id)\
                        .collection('credits').document('balance')
-        
-        balance_ref.update({
-            "balance": new_balance,
-            "total_earned": new_earned,
-            "updated_at": datetime.now(timezone.utc),
-        })
-        
-        # Record transaction
-        transaction_data = {
-            "type": transaction_type.value,
-            "amount": amount,
-            "description": description or f"Added {amount} credits",
-            "balance_after": new_balance,
-            "timestamp": datetime.now(timezone.utc),
-        }
-        
-        db.collection('users').document(user_id)\
-          .collection('credit_transactions').add(transaction_data)
-        
-        print(f"✅ Added {amount} credits to {user_id}. New balance: {new_balance}")
-        return True
-        
+
+        @firestore.transactional
+        def _tx_add(transaction, ref, amt, txn_type_val, desc):
+            snapshot = ref.get(transaction=transaction)
+            if not snapshot.exists:
+                raise ValueError("Balance document does not exist")
+            data = snapshot.to_dict()
+            current_balance = data.get('balance', 0)
+            new_balance = current_balance + amt
+            transaction.update(ref, {
+                'balance': new_balance,
+                'total_earned': firestore.Increment(amt),
+                'updated_at': datetime.now(timezone.utc),
+            })
+
+            txn_ref = db.collection('users').document(user_id)\
+                       .collection('credit_transactions').document()
+            transaction.set(txn_ref, {
+                'type': txn_type_val,
+                'amount': amt,
+                'description': desc or f'Added {amt} credits',
+                'balance_after': new_balance,
+                'timestamp': datetime.now(timezone.utc),
+            })
+
+            return new_balance
+
+        try:
+            transaction = db.transaction()
+            new_balance = _tx_add(transaction, balance_ref, amount, transaction_type.value, description)
+            logging.info("Added %s credits to %s. New balance: %s", amount, user_id, new_balance)
+            return True
+        except ValueError:
+            logging.exception("Error in credit add transaction")
+            return False
+
     except Exception as e:
-        print(f"Error adding credits: {e}")
+        logging.exception("Error adding credits")
         return False
 
 
@@ -484,6 +587,6 @@ def check_and_reset_monthly_credits(user_id: str) -> bool:
         return False
         
     except Exception as e:
-        print(f"Error checking monthly credits: {e}")
+        logging.exception("Error checking monthly credits")
         return False
 

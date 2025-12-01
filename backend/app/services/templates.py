@@ -4,6 +4,7 @@ Template service for managing user templates
 from typing import List, Optional
 from datetime import datetime
 from app.schemas.resume import ResumeStatus
+import logging
 
 class Template:
     """Template model"""
@@ -45,7 +46,7 @@ def save_template(template: Template) -> bool:
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would save template: {template.id}")
+        logging.info("[DEV] Would save template: %s", template.id)
         return True
     
     try:
@@ -53,20 +54,18 @@ def save_template(template: Template) -> bool:
         db = firestore.client(app=resume_maker_app)
         
         template_data = template.to_dict()
-        print(f"[TEMPLATES] Saving template {template.id} for user {template.owner_uid}")
-        print(f"[TEMPLATES] Template data: {template_data}")
+        logging.info("Saving template %s for user %s", template.id, template.owner_uid)
+        logging.debug("Template data: %s", template_data)
         
         # Save to user's templates collection
         db.collection('users').document(template.owner_uid)\
           .collection('templates').document(template.id)\
           .set(template_data)
         
-        print(f"[TEMPLATES] Successfully saved template {template.id}")
+        logging.info("Successfully saved template %s", template.id)
         return True
     except Exception as e:
-        print(f"[ERROR] Error saving template: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error saving template: %s", str(e))
         return False
 
 def get_template(template_id: str, user_id: str) -> Optional[Template]:
@@ -80,16 +79,16 @@ def get_template(template_id: str, user_id: str) -> Optional[Template]:
         from firebase_admin import firestore
         db = firestore.client(app=resume_maker_app)
         
-        print(f"[TEMPLATES] Getting template {template_id} for user {user_id}")
+        logging.info("Getting template %s for user %s", template_id, user_id)
         doc = db.collection('users').document(user_id)\
                .collection('templates').document(template_id).get()
         
         if not doc.exists:
-            print(f"[TEMPLATES] Template {template_id} not found")
+            logging.info("Template %s not found", template_id)
             return None
         
         data = doc.to_dict()
-        print(f"[TEMPLATES] Retrieved template data: {data}")
+        logging.debug("Retrieved template data: %s", data)
         
         # Convert Firestore timestamp to datetime
         for date_field in ['created_at', 'updated_at']:
@@ -99,13 +98,11 @@ def get_template(template_id: str, user_id: str) -> Optional[Template]:
                     if hasattr(ts, 'timestamp'):
                         data[date_field] = datetime.utcfromtimestamp(ts.timestamp())
                 except Exception as e:
-                    print(f"[WARNING] Could not convert {date_field}: {e}")
+                    logging.exception("Could not convert %s: %s", date_field, str(e))
         
         return Template(**data)
     except Exception as e:
-        print(f"[ERROR] Error getting template: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error getting template: %s", str(e))
         return None
 
 def list_user_templates(user_id: str) -> List[Template]:
@@ -119,7 +116,7 @@ def list_user_templates(user_id: str) -> List[Template]:
         from firebase_admin import firestore
         db = firestore.client(app=resume_maker_app)
         
-        print(f"[TEMPLATES] Listing templates for user {user_id}")
+        logging.info("Listing templates for user %s", user_id)
         docs = db.collection('users').document(user_id)\
                .collection('templates')\
                .order_by('created_at', direction=firestore.Query.DESCENDING)\
@@ -128,7 +125,7 @@ def list_user_templates(user_id: str) -> List[Template]:
         templates = []
         for doc in docs:
             data = doc.to_dict()
-            print(f"[TEMPLATES] Processing template: {data.get('id')}")
+            logging.debug("Processing template: %s", data.get('id'))
             
             # Convert Firestore timestamp to datetime
             for date_field in ['created_at', 'updated_at']:
@@ -138,16 +135,14 @@ def list_user_templates(user_id: str) -> List[Template]:
                         if hasattr(ts, 'timestamp'):
                             data[date_field] = datetime.utcfromtimestamp(ts.timestamp())
                     except Exception as e:
-                        print(f"[WARNING] Could not convert {date_field}: {e}")
+                        logging.exception("Could not convert %s: %s", date_field, str(e))
             
             templates.append(Template(**data))
         
-        print(f"[TEMPLATES] Found {len(templates)} templates for user {user_id}")
+        logging.info("Found %s templates for user %s", len(templates), user_id)
         return templates
     except Exception as e:
-        print(f"[ERROR] Error listing templates: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error listing templates: %s", str(e))
         return []
 
 def delete_template(template_id: str, user_id: str) -> bool:
@@ -155,23 +150,20 @@ def delete_template(template_id: str, user_id: str) -> bool:
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
-        print(f"[DEV] Would delete template: {template_id}")
+        logging.info("[DEV] Would delete template: %s", template_id)
         return True
     
     try:
         from firebase_admin import firestore
         db = firestore.client(app=resume_maker_app)
-        
-        print(f"[TEMPLATES] Deleting template {template_id} for user {user_id}")
+
+        logging.info("Deleting template %s for user %s", template_id, user_id)
         db.collection('users').document(user_id)\
           .collection('templates').document(template_id).delete()
-        
-        print(f"[TEMPLATES] Successfully deleted template {template_id}")
+        logging.info("Successfully deleted template %s", template_id)
         return True
     except Exception as e:
-        print(f"[ERROR] Error deleting template: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error deleting template: %s", str(e))
         return False
 
 def update_template(template: Template) -> bool:

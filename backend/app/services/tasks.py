@@ -5,7 +5,7 @@ Background task processing for resume parsing and scoring.
 import asyncio
 from typing import Optional
 from app.services.extractor import ResumeExtractor
-from app.services.parser import ResumeParser
+from app.services.gemini_parser import HybridResumeParser
 from app.services.gemini_scorer import HybridScorer
 from app.services.firestore import (
     get_resume_metadata,
@@ -24,7 +24,8 @@ def process_resume_parsing(
     resume_id: str,
     uid: str,
     storage_path: str,
-    content_type: str
+    content_type: str,
+    filename: str = ''
 ):
     """
     Background task to parse uploaded resume.
@@ -32,7 +33,7 @@ def process_resume_parsing(
     Steps:
     1. Update status to PARSING
     2. Download file from storage
-    3. Extract text
+    3. Extract text (with LaTeX detection)
     4. Parse and normalize
     5. Update Firestore with parsed data
     6. Update status to PARSED
@@ -42,6 +43,7 @@ def process_resume_parsing(
         uid: User ID
         storage_path: Firebase Storage path
         content_type: File MIME type
+        filename: Original filename (for format detection)
     """
     try:
         logger.info(f"Starting parsing for resume {resume_id}")
@@ -56,26 +58,50 @@ def process_resume_parsing(
         if not file_content:
             raise Exception("Failed to download file from storage")
         
-        # Extract text from file
+        # Extract text from file with LaTeX detection
         extractor = ResumeExtractor()
-        extraction_result = extractor.extract_with_fallback(file_content, content_type)
+        
+        # Use extract_with_latex_detection for better format handling
+        extraction_result = extractor.extract_with_latex_detection(
+            file_content, 
+            content_type,
+            filename=filename
+        )
         
         raw_text = extraction_result.get('text', '')
+        structured_data = extraction_result.get('structured_data')  # From LaTeX parser
+        is_latex = extraction_result.get('is_latex', False)
+        hyperlinks = extraction_result.get('hyperlinks', [])  # From PDF extraction
         
         if not raw_text or len(raw_text.strip()) < 50:
             raise Exception("Extracted text is too short or empty")
         
-        # Parse text
-        parser = ResumeParser()
+        logger.info(f"Resume {resume_id}: Extracted {len(raw_text)} chars, LaTeX: {is_latex}, Hyperlinks: {len(hyperlinks)}")
+        
+        # Parse text using Gemini AI (with fallback)
+        parser = HybridResumeParser()
         parsed_data = parser.parse(
             raw_text,
             metadata={
                 'content_type': content_type,
+                'filename': filename,
                 'extraction_metadata': extraction_result.get('metadata', {}),
                 'extraction_method': extraction_result.get('extraction_method'),
                 'num_pages': extraction_result.get('num_pages'),
-            }
+                'is_latex': is_latex,
+            },
+            structured_data=structured_data,
+            hyperlinks=hyperlinks
         )
+        
+        # Debug: Log what Gemini returned
+        logger.info(f"🤖 Gemini parsed data for {resume_id}:")
+        logger.info(f"   contact_info: {parsed_data.get('contact_info', {}).get('name', 'N/A')}")
+        logger.info(f"   experience: {len(parsed_data.get('experience', []))} items")
+        logger.info(f"   projects: {len(parsed_data.get('projects', []))} items")
+        logger.info(f"   education: {len(parsed_data.get('education', []))} items")
+        logger.info(f"   sections: {len(parsed_data.get('sections', []))} items")
+        logger.info(f"   parsing_method: {parsed_data.get('parsing_method', 'unknown')}")
         
         # Update Firestore with parsed data (sync version)
         update_resume_parsed_data_sync(resume_id, uid, parsed_data)

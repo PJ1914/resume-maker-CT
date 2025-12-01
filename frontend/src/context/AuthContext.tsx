@@ -35,21 +35,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('authToken', token)
           console.log('[AUTH] Stored Firebase ID token in localStorage')
           
-          // Fetch user profile to get admin status
+          // Fetch user profile to get admin status (non-blocking with timeout)
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-          const response = await fetch(`${API_URL}/me`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          })
           
-          if (response.ok) {
-            const profile = await response.json()
-            setIsAdmin(profile.isAdmin || false)
-            console.log('[AUTH] User admin status:', profile.isAdmin)
+          // Use AbortController for timeout
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+          
+          try {
+            const response = await fetch(`${API_URL}/me`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
+              signal: controller.signal
+            })
+            clearTimeout(timeoutId)
+            
+            if (response.ok) {
+              const profile = await response.json()
+              setIsAdmin(profile.isAdmin || false)
+              console.log('[AUTH] User admin status:', profile.isAdmin)
+            } else {
+              console.warn('[AUTH] /me endpoint returned status:', response.status)
+              setIsAdmin(false)
+            }
+          } catch (fetchError: any) {
+            clearTimeout(timeoutId)
+            if (fetchError.name === 'AbortError') {
+              console.warn('[AUTH] /me request timed out - continuing without admin check')
+            } else {
+              console.error('[AUTH] Error fetching profile:', fetchError.message)
+            }
+            setIsAdmin(false)
           }
         } catch (error) {
-          console.error('[AUTH] Error getting ID token or profile:', error)
+          console.error('[AUTH] Error getting ID token:', error)
           setIsAdmin(false)
         }
       } else {

@@ -20,7 +20,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
   return (
     <div className="card">
-      <h2 className="text-xl font-semibold text-secondary-900 mb-4">
+      <h2 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
         Contact Information
       </h2>
 

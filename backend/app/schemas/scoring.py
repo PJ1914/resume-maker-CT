@@ -84,6 +84,10 @@ class ScoringResponse(BaseModel):
     job_description_provided: bool = False
     cached: bool = False
     
+    # Credit tracking
+    credits_remaining: Optional[int] = Field(None, description="User's remaining credit balance after this operation")
+    credits_used: Optional[int] = Field(None, description="Credits deducted for this operation")
+    
     # Legacy compatibility
     suggestions: Optional[List[str]] = None
     keyword_matches: Optional[List[str]] = None

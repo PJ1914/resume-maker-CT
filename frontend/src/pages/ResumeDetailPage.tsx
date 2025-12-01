@@ -10,6 +10,9 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Cpu,
+  Sparkles,
+  RefreshCw,
 } from 'lucide-react'
 import { useResume, useDeleteResume } from '@/hooks/useResumes'
 import { useResumeScore, useScoreResume } from '@/hooks/useScoring'
@@ -18,6 +21,8 @@ import toast from 'react-hot-toast'
 import PdfExportModal from '@/components/PdfExportModal'
 import ComprehensiveATSScore from '@/components/ComprehensiveATSScore'
 import { TemplateRenderer } from '@/components/TemplateRenderer'
+import { ScorerToggle } from '@/components/ui/toggle'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 // Helper function to format resume text into HTML
 function formatResumeText(text: string): string {
@@ -113,12 +118,25 @@ export default function ResumeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: resume, isLoading: loading, refetch } = useResume(id)
-  const { data: scoreData } = useResumeScore(id)
+  const { data: scoreData, refetch: refetchScore } = useResumeScore(id)
   const { mutate: scoreResume, isPending: scoring } = useScoreResume()
   const { mutate: deleteResumeMutation } = useDeleteResume()
   const [showExportModal, setShowExportModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showAICreditModal, setShowAICreditModal] = useState(false)
   const [reparsing, setReparsing] = useState(false)
+  const [useAIScorer, setUseAIScorer] = useState(true) // Toggle between AI (Gemini) and Local scorer
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const initialScorerSet = useRef(false)
+
+  // Set initial toggle state based on cached score's scoring method
+  useEffect(() => {
+    if (scoreData?.scoring_method && !initialScorerSet.current) {
+      const isGemini = scoreData.scoring_method.includes('gemini')
+      setUseAIScorer(isGemini)
+      initialScorerSet.current = true
+    }
+  }, [scoreData?.scoring_method])
 
   useEffect(() => {
     if (!id || !resume) return
@@ -152,10 +170,61 @@ export default function ResumeDetailPage() {
     refetch()
   }
 
-  const handleCheckScore = async () => {
+  const handleCheckScore = (preferGemini?: boolean, skipCache: boolean = false, skipCreditCheck: boolean = false) => {
     if (!resume || !id) return
 
-    scoreResume({ resumeId: id, preferGemini: true })
+    // Use provided value or fall back to current state
+    const useGemini = preferGemini !== undefined ? preferGemini : useAIScorer
+
+    // If using AI and not skipping credit check, show confirmation first
+    if (useGemini && !skipCreditCheck) {
+      setShowAICreditModal(true)
+      return
+    }
+
+    console.log('Scoring with preferGemini:', useGemini, 'skipCache:', skipCache)
+
+    scoreResume(
+      { resumeId: id, preferGemini: useGemini, useCache: !skipCache },
+      {
+        onSuccess: (data) => {
+          console.log('Score completed successfully, method:', data?.scoring_method, 'score:', data?.total_score)
+          // Don't refetchScore - the mutation already updates the cache with the POST response
+          // Only refetch resume data to sync latest_score in the sidebar
+          refetch()
+        },
+        onError: (error) => {
+          console.error('Scoring failed:', error)
+        }
+      }
+    )
+  }
+
+  // Handle toggle change - automatically re-score with new scorer
+  const handleScorerToggle = (checked: boolean) => {
+    console.log('Toggle changed to:', checked ? 'AI (Gemini)' : 'Local')
+
+    // If switching to AI and already have a score, show credit confirmation
+    if (checked && scoreData && id && resume) {
+      setShowAICreditModal(true)
+      return // Don't change toggle yet, wait for confirmation
+    }
+
+    setUseAIScorer(checked)
+    // Only auto-score if we already have a score (user has scored before)
+    if (scoreData && id && resume) {
+      // Skip cache to force new scoring with selected scorer (Local is free, no credit check)
+      handleCheckScore(checked, true, true)
+    }
+  }
+
+  // Confirm AI scoring (after credit modal)
+  const confirmAIScoring = () => {
+    setShowAICreditModal(false)
+    setUseAIScorer(true)
+    if (id && resume) {
+      handleCheckScore(true, true, true) // Skip credit check since already confirmed
+    }
   }
 
   const handleReparse = async () => {
@@ -179,9 +248,14 @@ export default function ResumeDetailPage() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!resume || !id || !confirm(`Delete "${resume.original_filename}"?`)) return
+  const handleDelete = () => {
+    if (!resume || !id) return
+    setShowDeleteModal(true)
+  }
 
+  const confirmDelete = () => {
+    if (!id) return
+    setShowDeleteModal(false)
     deleteResumeMutation(id, {
       onSuccess: () => {
         navigate('/resumes')
@@ -321,7 +395,7 @@ export default function ResumeDetailPage() {
   const canScore = resume.status === 'PARSED' || resume.status === 'SCORED' || resume.status === 'UPLOADED'
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto overflow-x-hidden">
       {/* Header with Back Button */}
       <div className="mb-6">
         <button
@@ -332,41 +406,41 @@ export default function ResumeDetailPage() {
           Back to Resumes
         </button>
 
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex items-start gap-4 flex-1 min-w-0">
-            <div className="h-14 w-14 rounded-lg bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center flex-shrink-0">
-              <FileText className="h-7 w-7 text-secondary-600 dark:text-secondary-400" />
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
+          <div className="flex items-start gap-3 sm:gap-4 flex-1 w-full sm:w-auto min-w-0">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center flex-shrink-0">
+              <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-secondary-600 dark:text-secondary-400" />
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-secondary-900 dark:text-secondary-50 mb-2 break-words">
+              <h1 className="text-lg sm:text-2xl font-bold text-secondary-900 dark:text-secondary-50 mb-1.5 sm:mb-2 break-words">
                 {resume.original_filename}
               </h1>
 
-              <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-400 mb-3">
-                <div className="flex items-center gap-1.5">
-                  <HardDrive className="h-4 w-4" />
+              <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 mb-2 sm:mb-3">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <HardDrive className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   {formatFileSize(resume.file_size)}
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" />
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   {formatDate(resume.created_at)}
                 </div>
               </div>
 
               {/* Status Badge */}
-              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${statusInfo.className}`}>
-                <StatusIcon className="h-4 w-4" />
-                <span className="font-medium text-sm">{statusInfo.label}</span>
+              <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg ${statusInfo.className}`}>
+                <StatusIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="font-medium text-xs sm:text-sm">{statusInfo.label}</span>
               </div>
             </div>
           </div>
 
           {/* Action Buttons Row */}
-          <div className="flex items-start gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
             <button
               onClick={() => navigate(`/editor/${resume.resume_id}`)}
-              className="px-4 py-2 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2"
+              className="flex-1 sm:flex-none justify-center px-3 py-2 sm:px-4 sm:py-2 bg-primary-900 text-white rounded-lg font-medium text-sm sm:text-base hover:bg-primary-800 transition-colors flex items-center gap-2"
               title="Edit Resume"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,12 +462,12 @@ export default function ResumeDetailPage() {
 
       {/* Processing Banner */}
       {isParsing && (
-        <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
+        <div className="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg p-4">
           <div className="flex items-center gap-3">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-warning-600 border-t-transparent"></div>
             <div>
-              <h3 className="font-semibold text-warning-900 text-sm">Processing Your Resume</h3>
-              <p className="text-sm text-warning-700 mt-0.5">
+              <h3 className="font-semibold text-warning-900 dark:text-warning-100 text-sm">Processing Your Resume</h3>
+              <p className="text-sm text-warning-700 dark:text-warning-300 mt-0.5">
                 Extracting text and analyzing content. This typically takes 10-30 seconds.
               </p>
             </div>
@@ -403,12 +477,12 @@ export default function ResumeDetailPage() {
 
       {/* Error Message */}
       {resume.status === 'ERROR' && (
-        <div className="bg-danger-50 border border-danger-200 rounded-lg p-4">
+        <div className="bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-danger-600 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 text-danger-600 dark:text-danger-400 mt-0.5 flex-shrink-0" />
             <div>
-              <h3 className="font-semibold text-danger-900 text-sm">Processing Error</h3>
-              <p className="text-sm text-danger-700 mt-0.5">
+              <h3 className="font-semibold text-danger-900 dark:text-danger-100 text-sm">Processing Error</h3>
+              <p className="text-sm text-danger-700 dark:text-danger-300 mt-0.5">
                 We encountered an issue processing your resume. Please try uploading it again.
               </p>
             </div>
@@ -423,19 +497,129 @@ export default function ResumeDetailPage() {
           {/* ATS Score Card */}
           {scoreData ? (
             <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
-              <ComprehensiveATSScore
-                score={scoreData.total_score}
-                rating={scoreData.rating}
-                breakdown={scoreData.breakdown}
-                strengths={scoreData.strengths || []}
-                weaknesses={scoreData.weaknesses || []}
-                missing_keywords={scoreData.missing_keywords || []}
-                section_feedback={scoreData.section_feedback || {}}
-                recommendations={scoreData.recommendations || []}
-                improved_bullets={scoreData.improved_bullets || []}
-                job_description_provided={scoreData.job_description_provided || false}
-                loading={scoring}
-              />
+              {/* Scorer Type Toggle */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-secondary-600 dark:text-secondary-400">Scorer:</span>
+                  <ScorerToggle
+                    checked={useAIScorer}
+                    onCheckedChange={handleScorerToggle}
+                    leftLabel="Local"
+                    leftSubLabel="Free"
+                    rightLabel="AI (Gemini)"
+                    rightSubLabel="Detailed"
+                  />
+                  {scoring && (
+                    <span className="flex items-center gap-1.5 text-xs text-secondary-500 dark:text-secondary-400">
+                      <RefreshCw className="animate-spin h-3 w-3" />
+                      Scoring...
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Check if this is a Local score (simple view) or AI score (detailed view) */}
+              {scoreData.scoring_method?.includes('gemini') ? (
+                /* AI/Gemini Score - Full Detailed View */
+                <>
+                  {/* Score Engine Indicator */}
+                  <div className="mb-4 px-3 py-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-xs text-primary-700 dark:text-primary-400 flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span className="font-medium">AI-Powered Analysis</span>
+                    <span className="text-primary-500 dark:text-primary-400/70">• Detailed breakdown included</span>
+                  </div>
+                  <ComprehensiveATSScore
+                    score={scoreData.total_score}
+                    rating={scoreData.rating}
+                    breakdown={scoreData.breakdown}
+                    strengths={scoreData.strengths || []}
+                    weaknesses={scoreData.weaknesses || []}
+                    missing_keywords={scoreData.missing_keywords || []}
+                    section_feedback={scoreData.section_feedback || {}}
+                    recommendations={scoreData.recommendations || []}
+                    improved_bullets={scoreData.improved_bullets || []}
+                    job_description_provided={scoreData.job_description_provided || false}
+                    loading={scoring}
+                  />
+                </>
+              ) : (
+                /* Local Score - Simple View (Score Only) */
+                <>
+                  {/* Score Engine Indicator */}
+                  <div className="mb-4 px-3 py-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg text-xs text-secondary-600 dark:text-secondary-400 flex items-center gap-2">
+                    <Cpu className="h-3.5 w-3.5" />
+                    <span className="font-medium">Local Engine</span>
+                    <span className="text-secondary-400">• Free basic score</span>
+                  </div>
+
+                  {/* Simple Score Display */}
+                  <div className="text-center py-8">
+                    <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-50 mb-4">ATS Compatibility Score</h2>
+                    <div className="relative inline-flex items-center justify-center">
+                      <svg className="w-36 h-36 transform -rotate-90">
+                        <circle
+                          cx="72"
+                          cy="72"
+                          r="60"
+                          stroke="currentColor"
+                          strokeWidth="12"
+                          fill="none"
+                          className="text-secondary-200 dark:text-secondary-700"
+                        />
+                        <circle
+                          cx="72"
+                          cy="72"
+                          r="60"
+                          stroke="currentColor"
+                          strokeWidth="12"
+                          fill="none"
+                          strokeDasharray={`${(scoreData.total_score / 100) * 377} 377`}
+                          strokeLinecap="round"
+                          className={
+                            scoreData.total_score >= 80 ? 'text-green-500' :
+                              scoreData.total_score >= 60 ? 'text-yellow-500' :
+                                'text-red-500'
+                          }
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className={`text-4xl font-bold ${scoreData.total_score >= 80 ? 'text-green-600 dark:text-green-400' :
+                          scoreData.total_score >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
+                            'text-red-600 dark:text-red-400'
+                          }`}>
+                          {Math.round(scoreData.total_score)}
+                        </span>
+                        <span className="text-sm text-secondary-500 dark:text-secondary-400">/ 100</span>
+                      </div>
+                    </div>
+
+                    {/* Rating Badge */}
+                    <div className="mt-4">
+                      <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-medium ${scoreData.total_score >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                        scoreData.total_score >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                          'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        }`}>
+                        {scoreData.rating || (scoreData.total_score >= 80 ? 'Excellent' : scoreData.total_score >= 60 ? 'Good' : 'Needs Work')}
+                      </span>
+                    </div>
+
+                    {/* Upgrade CTA */}
+                    <div className="mt-6 p-4 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-lg">
+                      <p className="text-sm text-secondary-700 dark:text-secondary-300 mb-3">
+                        Want detailed insights, improvement suggestions, and keyword analysis?
+                      </p>
+                      <button
+                        onClick={() => handleScorerToggle(true)}
+                        disabled={scoring}
+                        className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors flex items-center gap-2 mx-auto disabled:opacity-50"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Get AI-Powered Analysis
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
@@ -446,10 +630,48 @@ export default function ResumeDetailPage() {
                   : 'Check how well your resume performs with Applicant Tracking Systems.'
                 }
               </p>
+              {/* Scorer Type Selection */}
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-sm text-secondary-600 dark:text-secondary-400">Choose scorer:</span>
+                <ScorerToggle
+                  checked={useAIScorer}
+                  onCheckedChange={setUseAIScorer}
+                  leftLabel="Local"
+                  leftSubLabel="Free"
+                  rightLabel="AI (Gemini)"
+                  rightSubLabel="Detailed"
+                />
+              </div>
+
+              {/* Info about selected scorer */}
+              <div className={`mb-4 p-3 rounded-lg text-sm ${useAIScorer
+                ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400'
+                : 'bg-secondary-50 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400'
+                }`}>
+                {useAIScorer ? (
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>AI-Powered Analysis</strong>
+                      <p className="text-xs mt-1 opacity-80">Get detailed breakdown, improvement suggestions, keyword analysis, and actionable recommendations.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2">
+                    <Cpu className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Basic Score (Free)</strong>
+                      <p className="text-xs mt-1 opacity-80">Quick ATS compatibility score. Upgrade to AI for detailed insights.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
-                onClick={handleCheckScore}
+                onClick={() => handleCheckScore()}
                 disabled={scoring || isParsing}
-                className="px-5 py-2.5 bg-success-600 text-white rounded-lg font-medium hover:bg-success-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-5 py-2.5 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${useAIScorer ? 'bg-primary-600 hover:bg-primary-700' : 'bg-success-600 hover:bg-success-700'
+                  }`}
                 title={isParsing ? 'Resume is being parsed. Try again in a moment.' : ''}
               >
                 {scoring ? (
@@ -458,14 +680,16 @@ export default function ResumeDetailPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Analyzing...
+                    Analyzing with {useAIScorer ? 'Gemini AI' : 'Local Engine'}...
                   </>
                 ) : (
                   <>
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Check ATS Score
+                    {useAIScorer ? <Sparkles className="h-4 w-4" /> : (
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                    {useAIScorer ? 'Get AI Analysis' : 'Check Score (Free)'}
                   </>
                 )}
               </button>
@@ -489,7 +713,7 @@ export default function ResumeDetailPage() {
               </div>
 
               {/* PDF Viewer - Full Size with proper aspect ratio */}
-              <div className="w-full bg-secondary-100 dark:bg-secondary-800" style={{ height: 'calc(100vh - 250px)', minHeight: '900px' }}>
+              <div className="w-full bg-secondary-100 dark:bg-secondary-800 h-[500px] sm:h-[calc(100vh-250px)] sm:min-h-[800px]">
                 <iframe
                   src={`${resume.storage_url}#view=FitH&toolbar=0&navpanes=0`}
                   className="w-full h-full"
@@ -499,9 +723,9 @@ export default function ResumeDetailPage() {
               </div>
             </div>
           ) : resume.parsed_text || resume.contact_info ? (
-            <div className="bg-white rounded-lg border border-secondary-200 p-6">
+            <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-secondary-900">Resume Preview</h2>
+                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-50">Resume Preview</h2>
                 <button
                   onClick={() => navigate(`/editor/${resume.resume_id}`)}
                   className="px-4 py-2 bg-primary-900 text-white rounded-lg text-sm font-medium hover:bg-primary-800 transition-colors flex items-center gap-2"
@@ -519,39 +743,39 @@ export default function ResumeDetailPage() {
               </div>
             </div>
           ) : resume.status === 'PARSING' || resume.status === 'UPLOADED' ? (
-            <div className="bg-white rounded-lg border border-secondary-200 p-6">
-              <h2 className="text-lg font-semibold text-secondary-900 mb-4">Resume Preview</h2>
-              <div className="bg-secondary-50 rounded-lg p-4 text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-900 border-t-transparent mx-auto mb-3"></div>
-                <p className="text-sm text-secondary-600">Extracting and formatting your resume...</p>
+            <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
+              <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-50 mb-4">Resume Preview</h2>
+              <div className="bg-secondary-50 dark:bg-secondary-800 rounded-lg p-4 text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-900 dark:border-primary-500 border-t-transparent mx-auto mb-3"></div>
+                <p className="text-sm text-secondary-600 dark:text-secondary-400">Extracting and formatting your resume...</p>
               </div>
             </div>
           ) : null}
 
           {/* Contact Info */}
           {resume.contact_info && Object.keys(resume.contact_info).length > 0 ? (
-            <div className="bg-white rounded-lg border border-secondary-200 p-6">
-              <h2 className="text-lg font-semibold text-secondary-900 mb-4">Contact Information</h2>
+            <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
+              <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-50 mb-4">Contact Information</h2>
               <div className="space-y-2">
                 {Object.entries(resume.contact_info).map(([key, value]) => {
                   if (!value) return null;
                   return (
                     <div key={key} className="flex items-start gap-3">
-                      <span className="text-sm font-medium text-secondary-600 capitalize min-w-24">
+                      <span className="text-sm font-medium text-secondary-600 dark:text-secondary-400 capitalize min-w-24">
                         {key.replace(/_/g, ' ')}:
                       </span>
-                      <span className="text-sm text-secondary-900">{String(value)}</span>
+                      <span className="text-sm text-secondary-900 dark:text-secondary-200">{String(value)}</span>
                     </div>
                   );
                 })}
               </div>
             </div>
           ) : resume.status === 'PARSING' || resume.status === 'UPLOADED' ? (
-            <div className="bg-white rounded-lg border border-secondary-200 p-6">
-              <h2 className="text-lg font-semibold text-secondary-900 mb-4">Contact Information</h2>
-              <div className="bg-secondary-50 rounded-lg p-4 text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-900 border-t-transparent mx-auto mb-3"></div>
-                <p className="text-sm text-secondary-600">Extracting contact information...</p>
+            <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">
+              <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-50 mb-4">Contact Information</h2>
+              <div className="bg-secondary-50 dark:bg-secondary-800 rounded-lg p-4 text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-900 dark:border-primary-500 border-t-transparent mx-auto mb-3"></div>
+                <p className="text-sm text-secondary-600 dark:text-secondary-400">Extracting contact information...</p>
               </div>
             </div>
           ) : null}
@@ -632,10 +856,22 @@ export default function ResumeDetailPage() {
                 <div className="text-sm text-secondary-900 dark:text-secondary-50">{formatDate(resume.created_at)}</div>
               </div>
 
-              {resume.latest_score && (
+              {(scoreData?.total_score || resume.latest_score) && (
                 <div>
                   <div className="text-xs font-medium text-secondary-500 dark:text-secondary-400 mb-1">Latest ATS Score</div>
-                  <div className="text-2xl font-bold text-success-600">{resume.latest_score}%</div>
+                  <div className="text-2xl font-bold text-success-600">
+                    {scoreData?.total_score ?? resume.latest_score}
+                    <span className="text-base font-normal text-secondary-400">/100</span>
+                  </div>
+                  {scoreData?.scoring_method && (
+                    <div className="text-xs text-secondary-500 mt-1 flex items-center gap-1">
+                      {scoreData.scoring_method.includes('gemini') ? (
+                        <><Sparkles className="h-3 w-3 text-primary-500" /> Gemini AI</>
+                      ) : (
+                        <><Cpu className="h-3 w-3" /> Local</>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -649,6 +885,30 @@ export default function ResumeDetailPage() {
         onClose={() => setShowExportModal(false)}
         resumeId={resume.resume_id}
         resumeName={resume.original_filename}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Resume"
+        message={`Are you sure you want to delete "${resume.original_filename}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      {/* AI Credits Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showAICreditModal}
+        onClose={() => setShowAICreditModal(false)}
+        onConfirm={confirmAIScoring}
+        title="Use AI-Powered Analysis"
+        message="AI scoring provides detailed insights, improvement suggestions, and keyword analysis. This will use credits from your account. Continue?"
+        confirmText="Use AI Analysis"
+        cancelText="Cancel"
+        type="credits"
       />
     </div>
   )

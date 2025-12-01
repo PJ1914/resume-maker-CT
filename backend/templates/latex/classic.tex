@@ -143,7 +143,7 @@
 {% if projects %}
 \section{Projects}
 {% for proj in projects %}
-\project{ {{- proj.name -}} }{% if proj.description %}{{{ proj.description }}}{% else %}{}{% endif %}{ {{- proj.technologies|join(', ') -}} }{
+\project{ {{- proj.name -}} }{ {{ proj.description }} }{ {{- proj.technologies|join(', ') -}} }{
   {% if proj.highlights %}
   \begin{itemize}
     {% for highlight in proj.highlights %}
@@ -160,7 +160,7 @@
 \section{Technical Skills}
 \begin{itemize}[label={}]
 {% for skill in skills %}
-  \item \textbf{ {{- skill.category -}} :} {{ skill.items|join(', ') }}
+  \item \textbf{ {{- skill.category -}} :} {{ skill['items']|join(', ') }}
 {% endfor %}
 \end{itemize}
 {% endif %}

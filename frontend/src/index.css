@@ -100,7 +100,7 @@
   }
 
   .card {
-    @apply rounded-xl bg-white p-6 shadow-soft border border-secondary-100 dark:bg-secondary-900 dark:border-secondary-800;
+    @apply rounded-xl bg-white p-4 sm:p-6 shadow-soft border border-secondary-100 dark:bg-secondary-900 dark:border-secondary-800;
   }
 
   .label {

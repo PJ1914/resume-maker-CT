@@ -5,6 +5,7 @@ Provides LaTeX sanitization and helper functions
 
 import re
 from typing import Any, Dict
+import logging
 
 
 def latex_escape(text: str) -> str:
@@ -130,12 +131,22 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Deep copy to avoid modifying original
     import copy
+    logger = logging.getLogger(__name__)
+
+    logger.debug("PREPARE_TEMPLATE_DATA called")
+
     data = copy.deepcopy(resume_data)
+
+    logger.info("Preparing template data. Keys: %s", list(data.keys()))
     
-    # Sanitize contact info
-    contact = data.get('contact', {})
+    # Sanitize contact info (handle both 'contact' and 'contact_info' keys)
+    contact = data.get('contact', {}) or data.get('contact_info', {})
+    if not isinstance(contact, dict):
+        logger.warning(f"Contact is not a dict, it's {type(contact)}: {contact}")
+        contact = {}
+    
     sanitized_contact = {
-        'full_name': latex_escape(contact.get('fullName', '')),
+        'full_name': latex_escape(contact.get('fullName', '') or contact.get('name', '')),
         'email': latex_escape(contact.get('email', '')),
         'phone': latex_escape(contact.get('phone', '')),
         'location': latex_escape(contact.get('location', '')),
@@ -144,12 +155,19 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         'portfolio': latex_escape_url(contact.get('portfolio', '')),
     }
     
-    # Sanitize summary
-    summary = latex_escape(data.get('summary', ''))
+    # Sanitize summary (handle both 'summary' and 'professional_summary' keys)
+    summary = latex_escape(data.get('summary', '') or data.get('professional_summary', ''))
     
     # Sanitize and format experience
     experience = []
-    for exp in data.get('experience', []):
+    exp_data = data.get('experience', [])
+    logger.info(f"Experience type: {type(exp_data)}, length: {len(exp_data) if isinstance(exp_data, list) else 'N/A'}")
+    
+    for i, exp in enumerate(exp_data):
+        # Skip if exp is not a dict
+        if not isinstance(exp, dict):
+            logger.warning(f"Experience[{i}] is not a dict, it's {type(exp)}: {exp}")
+            continue
         experience.append({
             'position': latex_escape(exp.get('position', exp.get('title', ''))),
             'company': latex_escape(exp.get('company', '')),
@@ -164,6 +182,9 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     # Sanitize and format education
     education = []
     for edu in data.get('education', []):
+        # Skip if edu is not a dict
+        if not isinstance(edu, dict):
+            continue
         education.append({
             'degree': latex_escape(edu.get('degree', '')),
             'field': latex_escape(edu.get('field', '')),
@@ -178,6 +199,9 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     # Sanitize projects
     projects = []
     for proj in data.get('projects', []):
+        # Skip if proj is not a dict
+        if not isinstance(proj, dict):
+            continue
         projects.append({
             'name': latex_escape(proj.get('name', '')),
             'description': latex_escape(proj.get('description', '')),
@@ -188,13 +212,50 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     
     # Sanitize skills
     skills = []
-    for skill in data.get('skills', []):
-        skills.append({
-            'category': latex_escape(skill.get('category', '')),
-            'items': [latex_escape(item) for item in skill.get('items', []) if item],
-        })
+    skills_data = data.get('skills', [])
     
-    return {
+    logger.debug("Skills type: %s", type(skills_data))
+    logger.debug("Skills content: %s", skills_data)
+    
+    # Handle different skills formats
+    if isinstance(skills_data, dict):
+        # Format: {technical: [...], soft: [...]}
+        logger.info("Processing skills as dict format")
+        for category, items in skills_data.items():
+            logger.debug("Category: %s, Items type: %s", category, type(items))
+            if isinstance(items, list):
+                skills.append({
+                    'category': latex_escape(category.title()),
+                    'items': [latex_escape(str(item)) for item in items if item],
+                })
+    elif isinstance(skills_data, list):
+        # Format: [{category: "...", items: [...]}, ...]
+        logger.info("Processing skills as list format")
+        for i, skill in enumerate(skills_data):
+            logger.debug("Skill[%s] type: %s", i, type(skill))
+            if not isinstance(skill, dict):
+                logger.warning("Skill item is not a dict, it's %s: %s", type(skill), skill)
+                continue
+
+            # Get items safely - could be a list or the dict.items method
+            skill_items = skill.get('items', [])
+            logger.debug("Skill[%s] items type: %s", i, type(skill_items))
+
+            # Make sure items is a list, not the dict.items() method
+            if not isinstance(skill_items, list):
+                logger.warning("Skill[%s] items is not a list, skipping", i)
+                continue
+
+            skills.append({
+                'category': latex_escape(skill.get('category', '')),
+                'items': [latex_escape(str(item)) for item in skill_items if item],
+            })
+    
+    logger.debug("Final skills count: %s", len(skills))
+    for i, skill in enumerate(skills):
+        logger.debug("Final skill[%s]: %s", i, skill)
+    
+    result = {
         **sanitized_contact,
         'summary': summary,
         'experience': experience,
@@ -202,3 +263,8 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         'projects': projects,
         'skills': skills,
     }
+    
+    logger.debug("Result skills type: %s", type(result['skills']))
+    logger.debug("Result skills: %s", result['skills'])
+    
+    return result

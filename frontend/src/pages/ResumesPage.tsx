@@ -79,17 +79,17 @@ export default function ResumesPage() {
               {resumes.length} {resumes.length === 1 ? 'resume' : 'resumes'}
             </p>
           </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
             <button
               onClick={() => navigate('/resume/create')}
-              className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2.5 bg-white dark:bg-secondary-900 border-2 border-secondary-200 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-lg font-medium hover:border-primary-900 dark:hover:border-primary-500 hover:text-primary-900 dark:hover:text-primary-500 transition-colors flex items-center gap-2 text-sm sm:text-base"
+              className="justify-center px-4 sm:px-5 py-2.5 bg-white dark:bg-secondary-900 border-2 border-secondary-200 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-lg font-medium hover:border-primary-900 dark:hover:border-primary-500 hover:text-primary-900 dark:hover:text-primary-500 transition-colors flex items-center gap-2 text-sm sm:text-base"
             >
               <Sparkles className="h-4 w-4" />
               Create New
             </button>
             <button
               onClick={() => navigate('/upload')}
-              className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2 text-sm sm:text-base"
+              className="justify-center px-4 sm:px-5 py-2.5 bg-primary-900 text-white rounded-lg font-medium hover:bg-primary-800 transition-colors flex items-center gap-2 text-sm sm:text-base"
             >
               <Upload className="h-4 w-4" />
               Upload Resume

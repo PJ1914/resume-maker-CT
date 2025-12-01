@@ -52,43 +52,47 @@ export const SummarySection: React.FC<SummarySectionProps> = ({
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-secondary-900">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <h2 className="text-xl font-semibold text-secondary-900 dark:text-white">
           Professional Summary
         </h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {onAIImprove && (
             <button
               onClick={handleAIImprove}
               disabled={!summary.trim() || improving || rewriting}
-              className="btn-secondary text-sm flex items-center gap-2"
+              className="btn-secondary text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-2"
               title="Enhance existing content while keeping the main ideas"
             >
               <svg
-                className="w-4 h-4"
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${improving ? 'animate-spin' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
+                {improving ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                )}
               </svg>
-              {improving ? 'Improving...' : 'Improve with AI'}
+              {improving ? 'Improving...' : 'Improve'}
             </button>
           )}
           {onAIRewrite && (
             <button
               onClick={handleAIRewrite}
               disabled={!summary.trim() || improving || rewriting}
-              className="btn-outline text-sm flex items-center gap-2"
+              className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-2"
               title="Completely rewrite for better impact and ATS optimization"
             >
               <svg
-                className="w-4 h-4"
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${rewriting ? 'animate-spin' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -100,7 +104,7 @@ export const SummarySection: React.FC<SummarySectionProps> = ({
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              {rewriting ? 'Rewriting...' : 'Rewrite with AI'}
+              {rewriting ? 'Rewriting...' : 'Rewrite'}
             </button>
           )}
         </div>
@@ -109,7 +113,7 @@ export const SummarySection: React.FC<SummarySectionProps> = ({
       <div>
         <label className="label">
           Summary
-          <span className="text-sm text-secondary-500 ml-2">
+          <span className="text-sm text-secondary-500 dark:text-secondary-400 ml-2">
             (2-3 sentences highlighting your experience and goals)
           </span>
         </label>
@@ -120,7 +124,7 @@ export const SummarySection: React.FC<SummarySectionProps> = ({
           placeholder="Experienced software engineer with 5+ years building scalable web applications..."
           rows={5}
         />
-        <p className="text-sm text-secondary-500 mt-1">
+        <p className="text-sm text-secondary-500 dark:text-secondary-400 mt-1">
           {summary.length} characters
         </p>
       </div>

@@ -7,6 +7,7 @@ import os
 from typing import Dict, Optional, List
 from datetime import datetime, timezone
 import json
+import logging
 
 try:
     import google.generativeai as genai
@@ -20,16 +21,23 @@ class GeminiATSScorer:
     
     def __init__(self):
         """Initialize Gemini AI with API key from environment."""
+        from dotenv import load_dotenv
+        load_dotenv()  # Ensure .env is loaded
+        
         self.api_key = os.getenv('GEMINI_API_KEY')
         self.model_name = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
+        
+        logging.info("[GeminiATSScorer] GEMINI_AVAILABLE=%s, API_KEY exists=%s", GEMINI_AVAILABLE, bool(self.api_key))
         
         if GEMINI_AVAILABLE and self.api_key:
             genai.configure(api_key=self.api_key)
             self.model = genai.GenerativeModel(self.model_name)
             self.available = True
+            logging.info("[GeminiATSScorer] Initialized successfully with model: %s", self.model_name)
         else:
             self.model = None
             self.available = False
+            logging.info("[GeminiATSScorer] NOT available - GEMINI_AVAILABLE=%s, has_api_key=%s", GEMINI_AVAILABLE, bool(self.api_key))
     
     def is_available(self) -> bool:
         """Check if Gemini API is available."""
@@ -57,8 +65,18 @@ class GeminiATSScorer:
         prompt = self._build_scoring_prompt(parsed_data, job_description)
         
         try:
-            # Call Gemini API with token counting
-            response = self.model.generate_content(prompt)
+            logging.info("[GeminiATSScorer] Calling Gemini API...")
+            # Call Gemini API with generation config for timeout
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=2048,
+                temperature=0.3,
+            )
+            response = self.model.generate_content(
+                prompt,
+                generation_config=generation_config,
+                request_options={"timeout": 60}  # 60 second timeout
+            )
+            logging.info("[GeminiATSScorer] Got response from Gemini API")
             
             # Extract token usage
             tokens_used = None
@@ -77,18 +95,49 @@ class GeminiATSScorer:
             result['model_name'] = self.model_name
             result['tokens_used'] = tokens_used
             
+            logging.info("[GeminiATSScorer] Score: %s", result.get('total_score'))
             return result
             
         except Exception as e:
+            logging.exception("[GeminiATSScorer] Error: %s", str(e))
             raise RuntimeError(f"Gemini API error: {str(e)}")
     
     def _build_scoring_prompt(self, parsed_data: Dict, job_description: Optional[str]) -> str:
         """Build comprehensive scoring prompt for Gemini."""
         
-        resume_text = parsed_data.get('parsed_text', '')
-        sections = parsed_data.get('sections', {})
-        contact_info = parsed_data.get('contact_info', {})
-        skills = parsed_data.get('skills', [])
+        resume_text = parsed_data.get('parsed_text', '') or ''
+        sections = parsed_data.get('sections', [])
+        contact_info = parsed_data.get('contact_info', {}) or {}
+        skills_raw = parsed_data.get('skills', [])
+        
+        # Handle skills as dict or list
+        if isinstance(skills_raw, dict):
+            # skills is {category: [items]} - flatten all items
+            skills_list = []
+            for category, items in skills_raw.items():
+                if isinstance(items, list):
+                    skills_list.extend(items[:10])  # Take first 10 from each category
+            skills_str = ', '.join(skills_list[:30])
+        elif isinstance(skills_raw, list):
+            # skills is [{category, items}] or just [strings]
+            skills_list = []
+            for item in skills_raw:
+                if isinstance(item, dict) and 'items' in item:
+                    skills_list.extend(item.get('items', [])[:10])
+                elif isinstance(item, str):
+                    skills_list.append(item)
+            skills_str = ', '.join(skills_list[:30])
+        else:
+            skills_str = ''
+        
+        # Handle sections as list or dict
+        if isinstance(sections, list):
+            section_types = [s.get('type', 'unknown') for s in sections if isinstance(s, dict)]
+            sections_str = ', '.join(section_types)
+        elif isinstance(sections, dict):
+            sections_str = ', '.join(sections.keys())
+        else:
+            sections_str = ''
         
         prompt = f"""You are an expert ATS (Applicant Tracking System) analyzer. Analyze this resume and provide a comprehensive score.
 
@@ -98,10 +147,10 @@ Contact Information:
 {json.dumps(contact_info, indent=2)}
 
 Skills:
-{', '.join(skills[:30])}
+{skills_str}
 
 Sections Present:
-{', '.join(sections.keys())}
+{sections_str}
 
 Full Resume Text:
 {resume_text[:3000]}
@@ -217,12 +266,20 @@ Provide ONLY the JSON response, no additional text.
             # Map breakdown to match ScoreBreakdown schema
             breakdown = result.get('breakdown', {})
             
-            # Helper to create CategoryScore
+            # Helper to create CategoryScore with capped percentage
             def create_category_score(score, max_score=20):
+                score = float(score)
+                max_score = float(max_score)
+                # Ensure score doesn't exceed max_score
+                if score > max_score:
+                    score = max_score
+                percentage = (score / max_score) * 100 if max_score > 0 else 0
+                # Cap percentage at 100
+                percentage = min(100.0, max(0.0, percentage))
                 return {
-                    'score': float(score),
-                    'max_score': float(max_score),
-                    'percentage': (float(score) / float(max_score)) * 100
+                    'score': score,
+                    'max_score': max_score,
+                    'percentage': round(percentage, 1)
                 }
 
             # Map old/loose keys to strict schema keys with safe defaults
@@ -235,15 +292,24 @@ Provide ONLY the JSON response, no additional text.
             mapped_breakdown = {
                 'format_ats_compatibility': create_category_score(formatting_score, 20),
                 'keyword_match': create_category_score(keywords_score, 25),
-                'skills_relevance': create_category_score(keywords_score * 0.6, 15),
+                'skills_relevance': create_category_score(min(keywords_score * 0.6, 15), 15),
                 'experience_quality': create_category_score(sections_score, 20),
                 'achievements_impact': create_category_score(quantification_score, 10),
                 'grammar_clarity': create_category_score(readability_score, 10)
             }
             
+            # Process improved examples/bullets - map 'improved' to 'suggestion'
+            improved_bullets = []
+            for item in result.get('improved_examples', result.get('improved_bullets', [])):
+                if isinstance(item, dict) and 'original' in item:
+                    improved_bullets.append({
+                        'original': item.get('original', ''),
+                        'suggestion': item.get('improved', item.get('suggestion', ''))
+                    })
+            
             # Ensure all required fields are present with defaults
             final_response = {
-                'total_score': float(result.get('total_score', 70)),
+                'total_score': min(100.0, max(0.0, float(result.get('total_score', 70)))),
                 'rating': result.get('rating', 'Good'),
                 'breakdown': mapped_breakdown,
                 'strengths': result.get('strengths', ['Resume structure is clear', 'Good use of professional language']),
@@ -255,7 +321,7 @@ Provide ONLY the JSON response, no additional text.
                     'Include relevant keywords from job descriptions',
                     'Ensure all sections are ATS-friendly'
                 ])),
-                'improved_bullets': result.get('improved_examples', result.get('improved_bullets', [])),
+                'improved_bullets': improved_bullets,
                 'scoring_method': 'gemini',
                 'model_name': self.model_name,
                 'scored_at': datetime.now(timezone.utc).isoformat(),
@@ -266,15 +332,6 @@ Provide ONLY the JSON response, no additional text.
                 'keyword_matches': result.get('keyword_matches', []),
                 'ats_compatibility': result.get('ats_compatibility', 'Medium')
             }
-
-            # Map improved examples if present
-            if 'improved_examples' in result:
-                for item in result['improved_examples']:
-                    if isinstance(item, dict) and 'original' in item and 'improved' in item:
-                        final_response['improved_bullets'].append({
-                            'original': item['original'],
-                            'suggestion': item['improved']
-                        })
 
             return final_response
             
@@ -320,6 +377,96 @@ class HybridScorer:
         self.gemini_scorer = GeminiATSScorer()
         self.local_scorer = LocalATSScorer()
     
+    def _transform_local_result(self, result: Dict) -> Dict:
+        """Transform local scorer result to match ScoringResponse schema."""
+        breakdown = result.get('breakdown', {})
+        
+        # Helper to create CategoryScore with capped percentage
+        def create_category_score(score, max_score):
+            score = float(score)
+            max_score = float(max_score)
+            if score > max_score:
+                score = max_score
+            percentage = (score / max_score) * 100 if max_score > 0 else 0
+            percentage = min(100.0, max(0.0, percentage))
+            return {
+                'score': score,
+                'max_score': max_score,
+                'percentage': round(percentage, 1)
+            }
+        
+        # Extract scores from local breakdown
+        keywords_score = breakdown.get('keywords', {}).get('score', 15)
+        sections_score = breakdown.get('sections', {}).get('score', 20)
+        formatting_score = breakdown.get('formatting', {}).get('score', 10)
+        quantification_score = breakdown.get('quantification', {}).get('score', 5)
+        readability_score = breakdown.get('readability', {}).get('score', 8)
+        
+        # Map to ScoringResponse breakdown structure
+        mapped_breakdown = {
+            'format_ats_compatibility': create_category_score(formatting_score, 15),
+            'keyword_match': create_category_score(keywords_score, 30),
+            'skills_relevance': create_category_score(keywords_score * 0.5, 15),
+            'experience_quality': create_category_score(sections_score, 35),
+            'achievements_impact': create_category_score(quantification_score, 10),
+            'grammar_clarity': create_category_score(readability_score, 10)
+        }
+        
+        # Build strengths and weaknesses from analysis
+        strengths = []
+        weaknesses = []
+        
+        if keywords_score >= 20:
+            strengths.append("Good use of relevant technical keywords")
+        else:
+            weaknesses.append("Could improve keyword density for ATS optimization")
+            
+        if sections_score >= 25:
+            strengths.append("Well-structured resume with key sections")
+        else:
+            weaknesses.append("Some important sections may be missing")
+            
+        if formatting_score >= 10:
+            strengths.append("Good formatting and structure")
+        else:
+            weaknesses.append("Formatting could be improved for ATS compatibility")
+            
+        if quantification_score >= 7:
+            strengths.append("Good use of quantified achievements")
+        else:
+            weaknesses.append("Add more quantified metrics to achievements")
+            
+        if readability_score >= 8:
+            strengths.append("Clear and professional writing style")
+        else:
+            weaknesses.append("Writing clarity could be improved")
+        
+        # Ensure at least one item in each
+        if not strengths:
+            strengths = ["Resume has been successfully parsed"]
+        if not weaknesses:
+            weaknesses = ["Consider adding a job description for better matching"]
+        
+        return {
+            'total_score': min(100.0, max(0.0, float(result.get('total_score', 60)))),
+            'rating': result.get('rating', 'Fair'),
+            'breakdown': mapped_breakdown,
+            'strengths': strengths[:10],
+            'weaknesses': weaknesses[:10],
+            'missing_keywords': breakdown.get('keywords', {}).get('missing_keywords', [])[:20],
+            'section_feedback': {},
+            'recommendations': result.get('suggestions', [])[:15],
+            'improved_bullets': [],  # Local scorer doesn't generate these
+            'scoring_method': 'local',
+            'model_name': 'Local ATS Engine',
+            'scored_at': result.get('scored_at', datetime.now(timezone.utc).isoformat()),
+            'job_description_provided': False,
+            'cached': False,
+            'suggestions': result.get('suggestions', []),
+            'keyword_matches': breakdown.get('keywords', {}).get('keywords_found', [])[:30],
+            'ats_compatibility': 'Medium' if result.get('total_score', 60) >= 60 else 'Low'
+        }
+    
     def score_resume(
         self,
         parsed_data: Dict,
@@ -335,19 +482,24 @@ class HybridScorer:
             prefer_gemini: Whether to prefer Gemini over local scorer
             
         Returns:
-            Scoring report
+            Scoring report matching ScoringResponse schema
         """
+        logging.debug("[HybridScorer] prefer_gemini=%s, gemini_available=%s", prefer_gemini, self.gemini_scorer.is_available())
+        
         # Try Gemini first if preferred and available
         if prefer_gemini and self.gemini_scorer.is_available():
             try:
+                logging.debug("[HybridScorer] Using Gemini scorer")
                 result = self.gemini_scorer.score_resume(parsed_data, job_description)
                 result['fallback_used'] = False
                 return result
             except Exception as e:
-                print(f"Gemini scoring failed: {e}. Falling back to local scorer.")
+                logging.exception("Gemini scoring failed, falling back to local scorer")
         
-        # Use local scorer
-        result = self.local_scorer.score_resume(parsed_data, job_description)
+            # Use local scorer and transform result
+            logging.debug("[HybridScorer] Using Local scorer")
+        raw_result = self.local_scorer.score_resume(parsed_data, job_description)
+        result = self._transform_local_result(raw_result)
         result['fallback_used'] = not prefer_gemini or not self.gemini_scorer.is_available()
         
         return result

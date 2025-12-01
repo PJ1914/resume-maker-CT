@@ -1,16 +1,21 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import settings
-from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, admin, credits
 import sys
+import logging
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
+from app.config import settings
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("resume_maker")
+from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, admin, credits
 
 # Print startup info
-print("\n" + "="*60)
-print("🚀 Resume Maker API - Starting...")
-print("="*60)
-print(f"Environment: {settings.ENVIRONMENT}")
-print(f"CORS Origins: {settings.CORS_ORIGINS}")
-print("="*60 + "\n")
+logger.info("Resume Maker API - Starting...")
+logger.info("Environment: %s", settings.ENVIRONMENT)
+logger.info("CORS Origins: %s", settings.CORS_ORIGINS)
 
 app = FastAPI(
     title="Resume Maker API",

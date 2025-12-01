@@ -33,7 +33,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-secondary-900">Languages</h2>
+        <h2 className="text-xl font-semibold text-secondary-900 dark:text-white">Languages</h2>
         <button onClick={addLanguage} className="btn-primary text-sm">
           + Add Language
         </button>
@@ -41,10 +41,10 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 
       <div className="space-y-4">
         {languages.map((lang, index) => (
-          <div key={index} className="border border-secondary-200 rounded-lg p-4">
+          <div key={index} className="border border-secondary-200 dark:border-secondary-700 rounded-lg p-4">
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-secondary-700 mb-1">
+                <label className="label">
                   Language
                 </label>
                 <input
@@ -59,7 +59,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-secondary-700 mb-1">
+                <label className="label">
                   Proficiency Level
                 </label>
                 <select
@@ -80,7 +80,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 
               <button
                 onClick={() => removeLanguage(index)}
-                className="text-danger-600 hover:text-danger-700 text-sm font-medium"
+                className="text-danger-600 hover:text-danger-700 dark:text-danger-400 dark:hover:text-danger-300 text-sm font-medium"
               >
                 Remove
               </button>

@@ -8,9 +8,24 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import { ResumeData } from '../types/resume';
+
+/**
+ * Delete local resume data (clears cached editor state)
+ */
+export async function deleteLocalResumeData(userId: string, resumeId: string): Promise<void> {
+  try {
+    const resumeRef = doc(db, 'users', userId, 'resume_data', resumeId);
+    await deleteDoc(resumeRef);
+    console.log('🗑️ Deleted local resume data');
+  } catch (error) {
+    console.error('Error deleting local resume data:', error);
+    throw error;
+  }
+}
 
 /**
  * Get resume data for editing

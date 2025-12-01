@@ -171,12 +171,13 @@ class SectionDetector:
         return sections
     
     @staticmethod
-    def extract_contact_info(text: str) -> Dict[str, Optional[str]]:
+    def extract_contact_info(text: str, hyperlinks: List[Dict[str, str]] = None) -> Dict[str, Optional[str]]:
         """
-        Extract contact information using regex patterns.
+        Extract contact information using regex patterns and PDF hyperlinks.
         
         Args:
             text: Resume text (preferably from top section)
+            hyperlinks: List of hyperlinks extracted from PDF (each has 'uri' key)
             
         Returns:
             Dictionary with email, phone, location, linkedin, github
@@ -190,6 +191,43 @@ class SectionDetector:
             'github': None,
             'portfolio': None,
         }
+        
+        # Process hyperlinks first if available (crucial for LaTeX-generated PDFs)
+        if hyperlinks:
+            for link in hyperlinks:
+                uri = link.get('uri', '')
+                if not uri:
+                    continue
+                    
+                # Email from mailto: links
+                if uri.startswith('mailto:') and not contact_info['email']:
+                    email = uri.replace('mailto:', '').split('?')[0]  # Remove query params
+                    contact_info['email'] = email
+                    
+                # LinkedIn
+                elif 'linkedin.com/in/' in uri.lower() and not contact_info['linkedin']:
+                    # Extract just the path part
+                    match = re.search(r'linkedin\.com/in/([A-Za-z0-9_-]+)', uri, re.IGNORECASE)
+                    if match:
+                        contact_info['linkedin'] = f"linkedin.com/in/{match.group(1)}"
+                    else:
+                        # Use full URL if pattern doesn't match
+                        contact_info['linkedin'] = uri.replace('https://', '').replace('http://', '').replace('www.', '')
+                        
+                # GitHub
+                elif 'github.com/' in uri.lower() and not contact_info['github']:
+                    match = re.search(r'github\.com/([A-Za-z0-9_-]+)', uri, re.IGNORECASE)
+                    if match:
+                        contact_info['github'] = f"github.com/{match.group(1)}"
+                    else:
+                        contact_info['github'] = uri.replace('https://', '').replace('http://', '').replace('www.', '')
+                        
+                # Portfolio/Website (any other http link)
+                elif uri.startswith(('http://', 'https://')) and not contact_info['portfolio']:
+                    # Skip common non-portfolio links
+                    skip_domains = ['linkedin.com', 'github.com', 'leetcode.com', 'hackerrank.com', 'codeforces.com']
+                    if not any(domain in uri.lower() for domain in skip_domains):
+                        contact_info['portfolio'] = uri
         
         # Name - extract from first line (before any contact details)
         # The first non-empty line is usually the name
@@ -225,11 +263,12 @@ class SectionDetector:
                 contact_info['name'] = line_stripped
                 break
         
-        # Email
-        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-        email_match = re.search(email_pattern, text)
-        if email_match:
-            contact_info['email'] = email_match.group()
+        # Email - only extract from text if not already found from hyperlinks
+        if not contact_info['email']:
+            email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+            email_match = re.search(email_pattern, text)
+            if email_match:
+                contact_info['email'] = email_match.group()
         
         # Phone (various formats including with parentheses and dashes)
         # Pattern matches: 767-1016609, (132) 767-1016, +1-234-567-8900, etc.
@@ -242,43 +281,46 @@ class SectionDetector:
             phone = phone.strip('|').strip()
             contact_info['phone'] = phone
         
-        # LinkedIn - more flexible pattern
-        linkedin_patterns = [
-            r'linkedin\.com/in/([A-Za-z0-9_-]+)',
-            r'LinkedIn[:\s]+([A-Za-z0-9_-]+)',
-            r'linkedin[:\s]+([A-Za-z0-9_-]+)',
-        ]
-        for pattern in linkedin_patterns:
-            linkedin_match = re.search(pattern, text, re.IGNORECASE)
-            if linkedin_match:
-                username = linkedin_match.group(1)
-                contact_info['linkedin'] = f"linkedin.com/in/{username}"
-                break
+        # LinkedIn - only extract from text if not already found from hyperlinks
+        if not contact_info['linkedin']:
+            linkedin_patterns = [
+                r'linkedin\.com/in/([A-Za-z0-9_-]+)',
+                r'LinkedIn[:\s]+([A-Za-z0-9_-]+)',
+                r'linkedin[:\s]+([A-Za-z0-9_-]+)',
+            ]
+            for pattern in linkedin_patterns:
+                linkedin_match = re.search(pattern, text, re.IGNORECASE)
+                if linkedin_match:
+                    username = linkedin_match.group(1)
+                    contact_info['linkedin'] = f"linkedin.com/in/{username}"
+                    break
         
-        # GitHub - more flexible pattern
-        github_patterns = [
-            r'github\.com/([A-Za-z0-9_-]+)',
-            r'GitHub[:\s]+([A-Za-z0-9_-]+)',
-            r'github[:\s]+([A-Za-z0-9_-]+)',
-        ]
-        for pattern in github_patterns:
-            github_match = re.search(pattern, text, re.IGNORECASE)
-            if github_match:
-                username = github_match.group(1)
-                contact_info['github'] = f"github.com/{username}"
-                break
+        # GitHub - only extract from text if not already found from hyperlinks
+        if not contact_info['github']:
+            github_patterns = [
+                r'github\.com/([A-Za-z0-9_-]+)',
+                r'GitHub[:\s]+([A-Za-z0-9_-]+)',
+                r'github[:\s]+([A-Za-z0-9_-]+)',
+            ]
+            for pattern in github_patterns:
+                github_match = re.search(pattern, text, re.IGNORECASE)
+                if github_match:
+                    username = github_match.group(1)
+                    contact_info['github'] = f"github.com/{username}"
+                    break
         
-        # Portfolio/Website - look for explicit Portfolio label or URLs
-        portfolio_patterns = [
-            r'Portfolio[:\s]+(https?://[^\s|]+)',
-            r'Website[:\s]+(https?://[^\s|]+)',
-            r'portfolio[:\s]+(https?://[^\s|]+)',
-        ]
-        for pattern in portfolio_patterns:
-            portfolio_match = re.search(pattern, text, re.IGNORECASE)
-            if portfolio_match:
-                contact_info['portfolio'] = portfolio_match.group(1)
-                break
+        # Portfolio/Website - only extract from text if not already found from hyperlinks
+        if not contact_info['portfolio']:
+            portfolio_patterns = [
+                r'Portfolio[:\s]+(https?://[^\s|]+)',
+                r'Website[:\s]+(https?://[^\s|]+)',
+                r'portfolio[:\s]+(https?://[^\s|]+)',
+            ]
+            for pattern in portfolio_patterns:
+                portfolio_match = re.search(pattern, text, re.IGNORECASE)
+                if portfolio_match:
+                    contact_info['portfolio'] = portfolio_match.group(1)
+                    break
         
         # If no portfolio found, look for any URL that's not linkedin/github/email
         if not contact_info['portfolio']:
@@ -292,19 +334,41 @@ class SectionDetector:
                 if portfolio:
                     contact_info['portfolio'] = portfolio
         
-        # Location - improved pattern
-        # Matches: "Hyderabad, Telangana", "San Francisco, CA", "Jagital, Telangana"
-        location_patterns = [
-            r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([A-Z][a-z]+|[A-Z]{2})\b',
-            r'Location[:\s]+([A-Z][a-z]+,\s*[A-Z][a-z]+)',
-        ]
-        for pattern in location_patterns:
-            location_match = re.search(pattern, text)
-            if location_match:
-                if len(location_match.groups()) == 2:
-                    contact_info['location'] = f"{location_match.group(1)}, {location_match.group(2)}"
-                else:
-                    contact_info['location'] = location_match.group(1)
+        # Location - improved pattern for various formats
+        # Must avoid matching partial words like "Hub" from "GitHub"
+        # Matches: "Hyderabad, Telangana", "San Francisco, CA", "Jagital, Telangana", 
+        # "Hyderabad, Telangana – 500097, India"
+        
+        # First, look for location on a dedicated line (after contact info)
+        # Pattern: "City, State – Pincode, Country" or "City, State"
+        lines = text.split('\n')
+        for line in lines[:15]:  # Check first 15 lines for contact section
+            line = line.strip()
+            
+            # Skip lines with common contact info patterns
+            if '@' in line or 'linkedin' in line.lower() or 'github' in line.lower():
+                continue
+            if '|' in line:  # Contact separator line
+                continue
+            if not line or len(line) < 5:
+                continue
+            
+            # Indian address with pincode: "Hyderabad, Telangana – 500097, India"
+            loc_match = re.match(r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([A-Z][a-z]+)\s*[–-]\s*\d{5,6},?\s*India$', line)
+            if loc_match:
+                contact_info['location'] = f"{loc_match.group(1)}, {loc_match.group(2)}"
+                break
+            
+            # Indian address: "Hyderabad, Telangana, India" or "Hyderabad, India"
+            loc_match = re.match(r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([A-Z][a-z]+)(?:,\s*India)?$', line)
+            if loc_match and loc_match.group(2).lower() not in ['present', 'current', 'now']:
+                contact_info['location'] = f"{loc_match.group(1)}, {loc_match.group(2)}"
+                break
+            
+            # US address: "San Francisco, CA" (two-letter state code)
+            loc_match = re.match(r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([A-Z]{2})$', line)
+            if loc_match:
+                contact_info['location'] = f"{loc_match.group(1)}, {loc_match.group(2)}"
                 break
         
         return contact_info
@@ -358,6 +422,10 @@ class SectionDetector:
     def extract_experience_details(text: str) -> List[Dict[str, str]]:
         """
         Extract structured experience details.
+        Handles multiple formats including LaTeX resume formats:
+        1. "• Company Role Date" followed by "Location" on next line
+        2. "Position, Company Date"
+        3. "Company | Position Date"
         """
         experiences = []
         if not text:
@@ -365,11 +433,18 @@ class SectionDetector:
             
         lines = text.split('\n')
         current_exp = None
+        description_lines = []
+        
+        # Date patterns - handle various formats including "May2024" (no space)
+        date_pattern = r'((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s*\d{4})\s*[-–—]\s*((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s*\d{4}|Present|Current|Now)'
+        
+        # Year range pattern: 2022 - Present, June 2025 – Present
+        year_range_pattern = r'((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)?\s*\d{4})\s*[-–—]\s*(\d{4}|Present|Current|Now)'
+        
+        # Location pattern for next-line location
+        location_pattern = r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),?\s+(?:India|USA|UK|Canada|Australia|[A-Z][a-z]+)$'
+        
         i = 0
-        
-        # Date pattern: May2025– Present, June 2020- May 2022, etc.
-        date_pattern = r'((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4}|[A-Z][a-z]+\s*\d{4}|\d{4})\s*(?:-|–|to)\s*((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4}|Present|Current|Now|\d{4})'
-        
         while i < len(lines):
             line = lines[i].strip()
             
@@ -377,96 +452,111 @@ class SectionDetector:
                 i += 1
                 continue
             
-            # Check if line contains a job title with company pattern: "Title, Company"
-            # Or: "Job Title at/with Company"
-            if ',' in line and not line.startswith('•') and not line.startswith('-'):
-                # Check if next line has a date
-                next_line = lines[i + 1].strip() if i + 1 < len(lines) else ''
-                date_match = re.search(date_pattern, next_line, re.IGNORECASE)
-                
-                if date_match:
-                    # Save previous experience
-                    if current_exp and current_exp.get('position'):
-                        experiences.append(current_exp)
-                    
-                    # Parse position and company
-                    parts = line.split(',', 1)
-                    position = parts[0].strip()
-                    company_location = parts[1].strip() if len(parts) > 1 else ''
-                    
-                    # Extract location if present (after |)
-                    company = company_location
-                    location = ''
-                    if '|' in company_location:
-                        company_parts = company_location.split('|')
-                        company = company_parts[0].strip()
-                        location = company_parts[1].strip() if len(company_parts) > 1 else ''
-                    # Location might also be on next part after company name
-                    elif i + 2 < len(lines):
-                        potential_location = lines[i + 2].strip()
-                        # Check if it looks like a location (City, State)
-                        if re.match(r'^[A-Z][a-z]+,\s*[A-Z]', potential_location):
-                            location = potential_location
-                    
-                    current_exp = {
-                        'company': company,
-                        'position': position,
-                        'startDate': date_match.group(1).strip(),
-                        'endDate': date_match.group(2).strip(),
-                        'description': [],
-                        'location': location
-                    }
-                    
-                    i += 2  # Skip current line and date line
-                    continue
+            # Check for bullet points starting with dash - these are descriptions
+            if line.startswith('–') or (line.startswith('-') and not re.search(date_pattern, line)):
+                bullet_text = line.lstrip('–- ').strip()
+                if bullet_text and current_exp:
+                    description_lines.append(bullet_text)
+                i += 1
+                continue
             
-            # Check for date at start of line (alternative format)
-            date_match = re.search(date_pattern, line, re.IGNORECASE)
-            if date_match and not current_exp:
-                # Look ahead for position and company
+            # Check if this line contains a date range - likely a job header
+            # Format: "• Company Role May2024–Aug2024" or "Company Role May 2024 – Aug 2024"
+            is_bullet = line.startswith('•')
+            clean_line = line.lstrip('• ').strip() if is_bullet else line
+            
+            date_match = re.search(date_pattern, clean_line, re.IGNORECASE)
+            if not date_match:
+                date_match = re.search(year_range_pattern, clean_line, re.IGNORECASE)
+            
+            if date_match:
+                # Save previous experience
+                if current_exp:
+                    current_exp['description'] = '\n'.join(description_lines)
+                    experiences.append(current_exp)
+                    description_lines = []
+                
+                # Extract date range
+                start_date = date_match.group(1).strip()
+                end_date = date_match.group(2).strip()
+                
+                # Extract the job info (text before the date)
+                job_info = clean_line[:date_match.start()].strip()
+                job_info = job_info.rstrip(',|:')
+                
+                # Parse company and position
+                # LaTeX format: "Calcitex Web Developer Intern" -> Company is first word, rest is position
+                # Or: "CodeTapasya Founder– Full-Stack Developer" 
+                company = ''
+                position = ''
+                location = ''
+                
+                # Check for explicit separators first
+                if ' | ' in job_info:
+                    parts = job_info.split(' | ')
+                    company = parts[0].strip()
+                    position = parts[1].strip() if len(parts) > 1 else ''
+                elif '–' in job_info or ' - ' in job_info:
+                    # "Founder– Full-Stack Developer" or "Founder - Full-Stack Developer"
+                    sep = '–' if '–' in job_info else ' - '
+                    parts = job_info.split(sep, 1)
+                    first_part = parts[0].strip()
+                    second_part = parts[1].strip() if len(parts) > 1 else ''
+                    
+                    # First word of first_part is likely company
+                    first_words = first_part.split()
+                    if len(first_words) >= 2:
+                        company = first_words[0]
+                        position = ' '.join(first_words[1:]) + (f" / {second_part}" if second_part else '')
+                    else:
+                        company = first_part
+                        position = second_part
+                else:
+                    # Format: "Company Position Position" - first word is company
+                    words = job_info.split()
+                    if len(words) >= 2:
+                        company = words[0]
+                        position = ' '.join(words[1:])
+                    else:
+                        position = job_info
+                
+                # Check next line for location
                 if i + 1 < len(lines):
-                    position_line = lines[i + 1].strip()
-                    company_line = lines[i + 2].strip() if i + 2 < len(lines) else ''
-                    
-                    if position_line and not position_line.startswith('•'):
-                        # Save previous experience
-                        if current_exp and current_exp.get('position'):
-                            experiences.append(current_exp)
-                        
-                        current_exp = {
-                            'company': company_line,
-                            'position': position_line,
-                            'startDate': date_match.group(1).strip(),
-                            'endDate': date_match.group(2).strip(),
-                            'description': [],
-                            'location': ''
-                        }
-                        
-                        i += 3  # Skip date, position, and company lines
-                        continue
+                    next_line = lines[i + 1].strip()
+                    loc_match = re.match(location_pattern, next_line, re.IGNORECASE)
+                    if loc_match or (next_line and ',' in next_line and len(next_line) < 50 and 
+                                    not next_line.startswith('–') and not next_line.startswith('-') and
+                                    not re.search(date_pattern, next_line)):
+                        # This looks like a location line
+                        location = next_line.rstrip(',.')
+                        i += 1  # Skip the location line
                 
-            # Check for bullet points (description)
-            if (line.startswith('•') or line.startswith('-') or line.startswith('◦')) and current_exp:
-                bullet_text = line.lstrip('•-◦ ').strip()
-                if bullet_text:
-                    current_exp['description'].append(bullet_text)
-            
+                current_exp = {
+                    'company': company,
+                    'position': position,
+                    'location': location,
+                    'startDate': start_date,
+                    'endDate': end_date,
+                    'description': '',
+                }
+                
             i += 1
-
-        # Save last experience
-        if current_exp and current_exp.get('position'):
+        
+        # Don't forget the last experience
+        if current_exp:
+            current_exp['description'] = '\n'.join(description_lines)
             experiences.append(current_exp)
-            
-        # Post-process descriptions
-        for exp in experiences:
-            exp['description'] = '\n'.join(exp['description'])
-            
+        
         return experiences
 
     @staticmethod
     def extract_project_details(text: str) -> List[Dict[str, str]]:
         """
         Extract structured project details.
+        Handles LaTeX format:
+        1. "• Project Name– Description Tech" 
+        2. "  Date (on separate line or at end)"
+        3. "– Bullet point descriptions"
         """
         projects = []
         if not text:
@@ -475,118 +565,128 @@ class SectionDetector:
         lines = text.split('\n')
         current_proj = None
         
-        # Date pattern: July 2025, June 2024
-        date_pattern = r'((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4})'
+        # Date patterns - including year ranges
+        date_pattern = r'((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s*\d{4})'
+        year_range_pattern = r'(\d{4})\s*[-–—]\s*(\d{4}|Present|Current|Now)'
+        standalone_year = r'^(\d{4})(?:\s*[-–—]\s*(\d{4}|Present))?$'
         
-        for line in lines:
-            line = line.strip()
+        # Technology patterns - common tech keywords
+        tech_keywords = r'\b(React\.?js|Angular|Vue\.?js|Node\.?js|Python|Java(?:Script)?|TypeScript|Flutter|Django|Flask|FastAPI|Spring|MongoDB|PostgreSQL|MySQL|Redis|Docker|Kubernetes|AWS|Azure|GCP|Firebase|GraphQL|REST|API|HTML|CSS|Sass|Tailwind|Bootstrap|Git|CI/CD|Next\.?js|Express|Nest\.?js|Swift|Kotlin|Go|Rust|C\+\+|C#|\.NET|Ruby|Rails|PHP|Laravel|TensorFlow|PyTorch|Pandas|NumPy|Scikit-learn|OpenCV|Figma|Electron|MERN|Socket\.?io|WebSocket|Microservices|Serverless|AI|ML|Gemini|AR|VR|YOLOv8|TTS|DynamoDB|Lambda|Computer Vision|MusicGen|LMS)\b'
+        
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
             if not line:
+                i += 1
                 continue
             
-            # Check if line starts with bullet point
-            if line.startswith('•') or line.startswith('-') or line.startswith('◦'):
-                bullet_text = line.lstrip('•-◦ ').strip()
-                
-                # Check if this is a new project (not a sub-bullet)
-                # Projects usually have title with technologies or links
-                if ('|' in bullet_text or 'Live' in bullet_text or '—' in bullet_text or 
-                    (current_proj is None and not bullet_text.lower().startswith(('developed', 'built', 'designed', 'integrated', 'engineered')))):
-                    
-                    # Save previous project
-                    if current_proj:
-                        projects.append(current_proj)
-                    
-                    # Parse project line: "Project Name — Description | Tech | Date"
-                    # or: "Project Name | Role Link Date"
-                    project_name = bullet_text
-                    tech = ''
-                    date = ''
-                    role = ''
-                    link = ''
-                    
-                    # Extract date if present
-                    date_match = re.search(date_pattern, bullet_text, re.IGNORECASE)
-                    if date_match:
-                        date = date_match.group(1)
-                        project_name = bullet_text[:date_match.start()].strip()
-                    
-                    # Extract link if present (Live, Demo, GitHub, etc.)
-                    link_match = re.search(r'(Live|Demo|GitHub|Source)\s*\d*', project_name, re.IGNORECASE)
-                    if link_match:
-                        link = link_match.group(0)
-                        project_name = project_name[:link_match.start()].strip()
-                    
-                    # Split by | for role/tech
-                    if '|' in project_name:
-                        parts = project_name.split('|')
-                        project_name = parts[0].strip()
-                        if len(parts) > 1:
-                            role = parts[1].strip()
-                        if len(parts) > 2:
-                            tech = parts[2].strip()
-                    
-                    # Remove any remaining separators
-                    project_name = project_name.rstrip('—-|').strip()
-                    
-                    current_proj = {
-                        'name': project_name,
-                        'description': '',
-                        'technologies': tech,
-                        'startDate': date,
-                        'endDate': date,
-                        'link': link,
-                        'role': role,
-                        'highlights': []
-                    }
-                
-                elif current_proj:
-                    # This is a sub-bullet for the current project
-                    current_proj['highlights'].append(bullet_text)
+            is_bullet = line.startswith('•')
+            is_dash = line.startswith('–') or line.startswith('-')
+            clean_line = line.lstrip('•–- ').strip()
             
-            else:
-                # Non-bullet line - might be a project name
-                # Check if it has project indicators
-                if ('|' in line or '—' in line or re.search(date_pattern, line, re.IGNORECASE)):
-                    # Start new project
-                    if current_proj:
-                        projects.append(current_proj)
+            # Check if this is a standalone date line (belongs to previous project)
+            year_match = re.match(standalone_year, clean_line)
+            if year_match and current_proj:
+                start = year_match.group(1)
+                end = year_match.group(2) if year_match.group(2) else start
+                current_proj['startDate'] = start
+                current_proj['endDate'] = end
+                i += 1
+                continue
+            
+            # Check if this is a description line (starts with dash or action verb)
+            first_word = clean_line.lower().split()[0] if clean_line.split() else ''
+            is_description = first_word in ['developed', 'built', 'designed', 'created', 'implemented', 
+                                            'integrated', 'engineered', 'optimized', 'managed', 'led',
+                                            'collaborated', 'worked', 'utilized', 'achieved', 'increased',
+                                            'reduced', 'improved', 'spearheaded', 'architected', 'deployed',
+                                            'converted', 'analyzed', 'presented']
+            
+            if is_dash and not is_bullet:
+                # This is a bullet description
+                if current_proj:
+                    current_proj['highlights'].append(clean_line)
+                i += 1
+                continue
+            
+            # Check if this is a project header line
+            # LaTeX format: "• Pulse AI– AI-Driven Monitoring System React.js, Django, Gemini API, AR/VR"
+            if is_bullet and not is_description:
+                # Save previous project
+                if current_proj:
+                    projects.append(current_proj)
+                
+                project_name = clean_line
+                tech = ''
+                date = ''
+                description = ''
+                
+                # Check for "– Description" separator
+                if '–' in project_name:
+                    parts = project_name.split('–', 1)
+                    project_name = parts[0].strip()
+                    remainder = parts[1].strip() if len(parts) > 1 else ''
                     
-                    project_name = line
-                    tech = ''
-                    date = ''
-                    
-                    # Extract date
-                    date_match = re.search(date_pattern, line, re.IGNORECASE)
-                    if date_match:
-                        date = date_match.group(1)
-                        project_name = line[:date_match.start()].strip()
-                    
-                    # Split by | or —
-                    if '|' in project_name:
-                        parts = project_name.split('|')
-                        project_name = parts[0].strip()
-                        if len(parts) > 1:
-                            tech = ' | '.join(parts[1:]).strip()
-                    elif '—' in project_name:
-                        parts = project_name.split('—')
-                        project_name = parts[0].strip()
-                    
-                    current_proj = {
-                        'name': project_name,
-                        'description': '',
-                        'technologies': tech,
-                        'startDate': date,
-                        'endDate': date,
-                        'highlights': []
-                    }
+                    # The remainder might contain description and tech
+                    # Find tech keywords at the end
+                    tech_matches = re.findall(tech_keywords, remainder, re.IGNORECASE)
+                    if tech_matches:
+                        tech = ', '.join(tech_matches)
+                        # What's left is the description
+                        for t in tech_matches:
+                            remainder = re.sub(r'\b' + re.escape(t) + r'\b,?\s*', '', remainder, flags=re.IGNORECASE)
+                        description = remainder.strip().rstrip(',')
+                    else:
+                        description = remainder
+                
+                # Extract date from project name or end if present
+                date_match = re.search(date_pattern, project_name, re.IGNORECASE)
+                year_match_proj = re.search(year_range_pattern, project_name)
+                
+                if date_match:
+                    date = date_match.group(1)
+                    project_name = project_name[:date_match.start()].strip()
+                elif year_match_proj:
+                    date = f"{year_match_proj.group(1)} - {year_match_proj.group(2)}"
+                    project_name = project_name[:year_match_proj.start()].strip()
+                
+                # Clean up project name
+                project_name = project_name.rstrip('–—-|,').strip()
+                
+                current_proj = {
+                    'name': project_name,
+                    'description': description,
+                    'technologies': tech,
+                    'startDate': date,
+                    'endDate': date,
+                    'link': '',
+                    'role': '',
+                    'highlights': []
+                }
+            
+            elif current_proj and is_description:
+                # Action verb line - add as highlight
+                current_proj['highlights'].append(clean_line)
+            
+            i += 1
         
         if current_proj:
             projects.append(current_proj)
             
-        # Post-process: combine description and highlights
+        # Post-process: combine description and highlights, extract tech from highlights
         for proj in projects:
             if proj['highlights']:
                 proj['description'] = '\n'.join(proj['highlights'])
+                
+                # If no technologies found, scan all highlights
+                if not proj['technologies']:
+                    all_tech = []
+                    for h in proj['highlights']:
+                        matches = re.findall(tech_keywords, h, re.IGNORECASE)
+                        all_tech.extend(matches)
+                    if all_tech:
+                        proj['technologies'] = ', '.join(set(all_tech))
+            
             del proj['highlights']
             
         return projects
@@ -595,17 +695,26 @@ class SectionDetector:
     def extract_education_details(text: str) -> List[Dict[str, str]]:
         """
         Extract structured education details.
+        Handles LaTeX format:
+        • TKRCollege of Engineering and Technology B.Tech in Computer Science, GPA: 7.08/10 Nov2022– May2026
+        Hyderabad, India
+        • Sri Chaitanya Junior College Intermediate Education (MPC) Completed May 2022
+        Jagtial, India
         """
         education = []
         if not text:
             return education
             
         lines = text.split('\n')
+        
+        # Date patterns
+        date_range_pattern = r'((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4})\s*[-–]\s*((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4}|Present|Current)'
+        completed_pattern = r'Completed\s*((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4}|\d{4})'
+        
+        # GPA patterns  
+        gpa_pattern = r'(?:GPA|CGPA)[:\s]*(\d+\.?\d*)\s*/?\s*(\d+)?'
+        
         i = 0
-        
-        # Date pattern: June 2020- May 2022, September 2022- Present
-        date_pattern = r'((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4})\s*(?:-|–)\s*((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4}|Present|Current)'
-        
         while i < len(lines):
             line = lines[i].strip()
             
@@ -613,84 +722,105 @@ class SectionDetector:
                 i += 1
                 continue
             
-            # Check if line contains school/institution name followed by location
-            # Pattern: "Institution Name Location"
-            # Next line usually has degree and dates
-            if i + 1 < len(lines):
-                next_line = lines[i + 1].strip()
+            is_bullet = line.startswith('•')
+            clean_line = line.lstrip('• ').strip() if is_bullet else line
+            
+            # Check if this looks like an education entry (has school name + degree info)
+            has_degree = any(deg in clean_line for deg in ['B.Tech', 'B.E.', 'M.Tech', 'MBA', 'BSc', 'MSc', 'BA', 'MA', 'PhD', 
+                                                           'Bachelor', 'Master', 'Intermediate', 'High School', 'Diploma',
+                                                           'B.S.', 'M.S.', 'Computer Science', 'Engineering'])
+            has_date = bool(re.search(date_range_pattern, clean_line, re.IGNORECASE) or 
+                          re.search(completed_pattern, clean_line, re.IGNORECASE))
+            
+            if (is_bullet and (has_degree or has_date)) or (has_degree and has_date):
+                # This is an education entry
+                school = ''
+                degree = ''
+                field = ''
+                gpa = None
+                start_date = ''
+                end_date = ''
+                location = ''
                 
-                # Check if next line has degree and date info
-                if '|' in next_line or re.search(date_pattern, next_line, re.IGNORECASE):
-                    school_line = line
-                    degree_line = next_line
-                    
-                    # Extract location from school line (usually at the end)
-                    location = ''
-                    if re.search(r',\s*[A-Z][a-z]+$', school_line):
-                        # Location at end: "School Name City, State"
-                        parts = school_line.rsplit(',', 1)
-                        if len(parts) == 2:
-                            school_name = parts[0].strip()
-                            location = parts[1].strip()
-                        else:
-                            school_name = school_line
-                    else:
-                        school_name = school_line
-                    
-                    # Parse degree line: "Degree | Details | CGPA/GPA | Date"
-                    degree = ''
-                    field = ''
-                    gpa = None
+                # Extract date range
+                date_match = re.search(date_range_pattern, clean_line, re.IGNORECASE)
+                completed_match = re.search(completed_pattern, clean_line, re.IGNORECASE)
+                
+                if date_match:
+                    start_date = date_match.group(1).strip()
+                    end_date = date_match.group(2).strip()
+                    clean_line = clean_line[:date_match.start()].strip()
+                elif completed_match:
+                    end_date = completed_match.group(1).strip()
                     start_date = ''
-                    end_date = ''
+                    clean_line = clean_line[:completed_match.start()].strip()
+                
+                # Extract GPA
+                gpa_match = re.search(gpa_pattern, clean_line, re.IGNORECASE)
+                if gpa_match:
+                    gpa_value = gpa_match.group(1)
+                    gpa_max = gpa_match.group(2) if gpa_match.group(2) else '10'
+                    gpa = f"{gpa_value}/{gpa_max}"
+                    clean_line = clean_line[:gpa_match.start()].strip().rstrip(',')
+                
+                # Parse school and degree
+                # Common patterns:
+                # "TKR College B.Tech in Computer Science"
+                # "School Name Degree Field"
+                
+                degree_keywords = ['B.Tech', 'B.E.', 'M.Tech', 'MBA', 'BSc', 'MSc', 'BA', 'MA', 'PhD', 
+                                   'Bachelor', 'Master', 'Intermediate Education', 'High School', 'Diploma',
+                                   'B.S.', 'M.S.']
+                
+                degree_found = None
+                degree_pos = len(clean_line)
+                
+                for dk in degree_keywords:
+                    pos = clean_line.find(dk)
+                    if pos != -1 and pos < degree_pos:
+                        degree_pos = pos
+                        degree_found = dk
+                
+                if degree_found:
+                    school = clean_line[:degree_pos].strip()
+                    degree_part = clean_line[degree_pos:].strip()
                     
-                    # Extract dates
-                    date_match = re.search(date_pattern, degree_line, re.IGNORECASE)
-                    if date_match:
-                        start_date = date_match.group(1)
-                        end_date = date_match.group(2)
-                        # Remove date from degree_line for further parsing
-                        degree_line = degree_line[:date_match.start()].strip()
-                    
-                    # Extract GPA/CGPA
-                    gpa_match = re.search(r'(?:CGPA|GPA)[:\s]*([0-9.]+)', degree_line)
-                    if gpa_match:
-                        gpa = gpa_match.group(1)
-                        # Remove GPA from degree_line
-                        degree_line = degree_line[:gpa_match.start()].strip()
-                    
-                    # Extract location if in degree line
-                    if not location:
-                        loc_match = re.search(r'\|\s*([A-Z][a-z]+,\s*[A-Z][a-z]+)\s*$', degree_line)
-                        if loc_match:
-                            location = loc_match.group(1)
-                            degree_line = degree_line[:loc_match.start()].strip()
-                    
-                    # Parse degree and field
-                    if '|' in degree_line:
-                        parts = degree_line.split('|')
-                        degree = parts[0].strip()
-                        if len(parts) > 1:
-                            field = parts[1].strip()
+                    # Check for "in Field" pattern
+                    in_match = re.search(r'\s+in\s+(.+)$', degree_part, re.IGNORECASE)
+                    if in_match:
+                        field = in_match.group(1).strip()
+                        degree = degree_part[:in_match.start()].strip()
                     else:
-                        degree = degree_line
-                    
-                    # Clean up degree name
-                    degree = degree.rstrip('|,').strip()
-                    
-                    edu = {
-                        'school': school_name,
-                        'degree': degree,
-                        'field': field,
-                        'startDate': start_date,
-                        'endDate': end_date,
-                        'gpa': gpa,
-                        'location': location
-                    }
-                    
-                    education.append(edu)
-                    i += 2  # Skip school and degree lines
-                    continue
+                        # Check for parenthetical field like "(MPC)"
+                        paren_match = re.search(r'\(([^)]+)\)', degree_part)
+                        if paren_match:
+                            field = paren_match.group(1)
+                            degree = degree_part.replace(f"({field})", '').strip()
+                        else:
+                            degree = degree_part
+                else:
+                    school = clean_line
+                
+                # Check next line for location
+                if i + 1 < len(lines):
+                    next_line = lines[i + 1].strip()
+                    # Location pattern: "City, Country" or "City, State"
+                    if next_line and ',' in next_line and len(next_line) < 50:
+                        if not next_line.startswith('•') and not any(deg in next_line for deg in degree_keywords):
+                            location = next_line.rstrip(',.')
+                            i += 1
+                
+                edu = {
+                    'school': school.rstrip(',').strip(),
+                    'degree': degree.rstrip(',').strip(),
+                    'field': field.rstrip(',').strip(),
+                    'startDate': start_date,
+                    'endDate': end_date,
+                    'gpa': gpa,
+                    'location': location
+                }
+                
+                education.append(edu)
             
             i += 1
         
@@ -879,7 +1009,9 @@ class ResumeParser:
     def parse(
         self,
         text: str,
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
+        structured_data: Optional[Dict] = None,
+        hyperlinks: Optional[List[Dict[str, str]]] = None
     ) -> Dict:
         """
         Parse resume text and extract structured information.
@@ -887,10 +1019,19 @@ class ResumeParser:
         Args:
             text: Raw resume text
             metadata: Optional metadata (filename, content_type, etc.)
+            structured_data: Pre-parsed structured data (from LaTeX extraction)
+            hyperlinks: List of hyperlinks extracted from PDF (for LaTeX-generated PDFs)
             
         Returns:
             Structured resume data
         """
+        # Store hyperlinks for use in extraction
+        self._hyperlinks = hyperlinks or []
+        
+        # If we have structured LaTeX data, use it directly
+        if structured_data and self._is_valid_structured_data(structured_data):
+            return self._build_from_structured_data(text, structured_data, metadata)
+        
         # 1. Normalize text
         text = self.normalizer.remove_icons_symbols(text)
         text = self.normalizer.normalize(text)
@@ -906,8 +1047,9 @@ class ResumeParser:
         sections = self.section_detector.detect_sections(text)
         
         # 5. Extract contact info (from header or contact section)
+        # Pass hyperlinks for LaTeX-generated PDFs
         contact_text = sections.get('header', '') + '\n' + sections.get('contact', '')
-        contact_info = self.section_detector.extract_contact_info(contact_text)
+        contact_info = self.section_detector.extract_contact_info(contact_text, self._hyperlinks)
         
         # 6. Extract skills
         skills_text = sections.get('skills', '')
@@ -937,6 +1079,59 @@ class ResumeParser:
             'achievements': achievements,
             'parsed_at': datetime.utcnow().isoformat(),
             'metadata': metadata or {},
+        }
+        
+        return result
+    
+    def _is_valid_structured_data(self, data: Dict) -> bool:
+        """Check if structured data has useful content."""
+        if not data:
+            return False
+        
+        # Check if we have meaningful data
+        has_contact = bool(data.get('contact_info', {}).get('name') or 
+                         data.get('contact_info', {}).get('email'))
+        has_experience = bool(data.get('experience'))
+        has_education = bool(data.get('education'))
+        has_projects = bool(data.get('projects'))
+        has_skills = bool(data.get('skills'))
+        
+        # Consider valid if we have contact + at least one other section
+        return has_contact and (has_experience or has_education or has_projects or has_skills)
+    
+    def _build_from_structured_data(
+        self,
+        text: str,
+        structured_data: Dict,
+        metadata: Optional[Dict]
+    ) -> Dict:
+        """Build parser result from pre-parsed structured data (LaTeX)."""
+        
+        # Convert skills dict to flat list if needed
+        skills = structured_data.get('skills', {})
+        if isinstance(skills, dict):
+            skills_flat = []
+            for category, skill_list in skills.items():
+                if isinstance(skill_list, list):
+                    skills_flat.extend(skill_list)
+                else:
+                    skills_flat.append(str(skill_list))
+            skills = skills_flat
+        
+        result = {
+            'parsed_text': text,
+            'layout_type': 'latex',
+            'sections': structured_data.get('sections', {}),
+            'contact_info': structured_data.get('contact_info', {}),
+            'skills': skills,
+            'experience': structured_data.get('experience', []),
+            'projects': structured_data.get('projects', []),
+            'education': structured_data.get('education', []),
+            'certifications': [],
+            'achievements': [],
+            'parsed_at': datetime.utcnow().isoformat(),
+            'metadata': metadata or {},
+            'source': 'latex_structured'
         }
         
         return result

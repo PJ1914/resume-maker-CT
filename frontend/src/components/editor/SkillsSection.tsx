@@ -35,17 +35,17 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-secondary-900">Skills</h2>
-        <button onClick={addSkillCategory} className="btn-primary text-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <h2 className="text-xl font-semibold text-secondary-900 dark:text-white">Skills</h2>
+        <button onClick={addSkillCategory} className="btn-primary text-sm w-full sm:w-auto">
           + Add Category
         </button>
       </div>
 
       <div className="space-y-4">
         {skills.map((skill, index) => (
-          <div key={index} className="flex gap-4">
-            <div className="w-1/3">
+          <div key={index} className="flex flex-col sm:flex-row gap-2 sm:gap-4 p-3 sm:p-0 bg-secondary-50 dark:bg-secondary-800 sm:bg-transparent sm:dark:bg-transparent rounded-lg sm:rounded-none border border-secondary-100 dark:border-secondary-700 sm:border-none">
+            <div className="w-full sm:w-1/3">
               <input
                 type="text"
                 className="input"
@@ -53,36 +53,37 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                 onChange={(e) =>
                   updateCategory(index, { category: e.target.value })
                 }
-                placeholder="e.g., Languages"
+                placeholder="Category (e.g., Languages)"
               />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex gap-2">
               <input
                 type="text"
-                className="input"
+                className="input flex-1"
                 value={skill.items.join(', ')}
                 onChange={(e) => updateItems(index, e.target.value)}
                 placeholder="Python, JavaScript, TypeScript"
               />
-            </div>
-            <button
-              onClick={() => removeCategory(index)}
-              className="text-danger-600 hover:text-danger-700 p-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <button
+                onClick={() => removeCategory(index)}
+                className="text-danger-600 hover:text-danger-700 dark:text-danger-400 dark:hover:text-danger-300 p-2 shrink-0"
+                title="Remove category"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         ))}
       </div>
