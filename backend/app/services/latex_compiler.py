@@ -166,16 +166,10 @@ class LaTeXCompiler:
             
             for compiler in compilers:
                 try:
-                    # Check if compiler exists
-                    check_cmd = ['which', compiler] if os.name != 'nt' else ['where', compiler]
-                    result = subprocess.run(
-                        check_cmd,
-                        capture_output=True,
-                        text=True
-                    )
-                    
-                    if result.returncode != 0:
-                        continue  # Compiler not found, try next
+                    # Check if compiler exists using shutil.which (more robust)
+                    if not shutil.which(compiler):
+                        logger.warning(f"Compiler {compiler} not found in PATH")
+                        continue
                     
                     logger.info(f"Compiling with {compiler}...")
                     

@@ -320,8 +320,6 @@ async def download_original_resume(
         )
 
 
-
-
 @router.get("/templates")
 async def list_templates():
     """
@@ -448,3 +446,70 @@ async def preview_template(template_name: str):
             status_code=500, 
             detail=f"Preview generation failed: {str(e)}\nTraceback: {error_trace}"
         )
+
+@router.get("/debug/latex")
+async def debug_latex_environment(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Diagnostic endpoint to check LaTeX environment.
+    """
+    import shutil
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    results = {
+        "compilers": {},
+        "test_compilation": {},
+        "env": {}
+    }
+
+    # Check compilers
+    for compiler in ['tectonic', 'xelatex', 'pdflatex']:
+        path = shutil.which(compiler)
+        results["compilers"][compiler] = {
+            "found": bool(path),
+            "path": path
+        }
+        if path:
+            try:
+                version = subprocess.check_output([compiler, '--version'], stderr=subprocess.STDOUT).decode()
+                results["compilers"][compiler]["version"] = version.split('\n')[0]
+            except Exception as e:
+                results["compilers"][compiler]["version_error"] = str(e)
+
+    # Test compilation
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        tex_file = temp_path / "test.tex"
+        tex_file.write_text(r"\documentclass{article}\begin{document}Hello World\end{document}")
+        
+        for compiler in ['tectonic', 'xelatex', 'pdflatex']:
+            if not results["compilers"][compiler]["found"]:
+                continue
+                
+            try:
+                cmd = [compiler, "test.tex"]
+                if compiler != 'tectonic':
+                    cmd.insert(1, '-interaction=nonstopmode')
+                
+                proc = subprocess.run(
+                    cmd,
+                    cwd=temp_dir,
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                results["test_compilation"][compiler] = {
+                    "success": proc.returncode == 0,
+                    "stdout": proc.stdout[:200],
+                    "stderr": proc.stderr[:200]
+                }
+            except Exception as e:
+                results["test_compilation"][compiler] = {
+                    "success": False,
+                    "error": str(e)
+                }
+
+    return results

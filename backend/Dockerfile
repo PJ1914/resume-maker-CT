@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     texlive-fonts-recommended \
     texlive-fonts-extra \
     texlive-latex-extra \
+    texlive-xetex \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
