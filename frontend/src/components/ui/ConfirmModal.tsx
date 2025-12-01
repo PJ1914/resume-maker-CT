@@ -5,6 +5,7 @@ interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  onCancel?: () => void;
   title: string;
   message: string;
   confirmText?: string;
@@ -17,6 +18,7 @@ export function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
+  onCancel,
   title,
   message,
   confirmText = 'Confirm',
@@ -101,7 +103,10 @@ export function ConfirmModal({
           {/* Buttons */}
           <div className="flex gap-3">
             <button
-              onClick={onClose}
+              onClick={() => {
+                onCancel?.();
+                onClose();
+              }}
               disabled={loading}
               className="flex-1 px-4 py-2.5 border border-secondary-300 dark:border-secondary-600 text-secondary-700 dark:text-secondary-300 rounded-lg font-medium hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors disabled:opacity-50"
             >

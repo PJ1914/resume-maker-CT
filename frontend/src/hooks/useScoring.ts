@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { resumeService } from '../services/resume.service';
+import { creditKeys } from './useCredits';
 import toast from 'react-hot-toast';
 
 // Query keys
@@ -31,10 +32,27 @@ export function useScoreResume() {
       // This ensures we show the correct score immediately without refetching
       console.log('[useScoreResume] Score received:', data.scoring_method, 'Total:', data.total_score);
       queryClient.setQueryData(scoringKeys.score(variables.resumeId), data);
+      
+      // Update credits balance immediately if credits were deducted
+      if (data.credits_used && data.credits_used > 0) {
+        // Immediate UI update
+        queryClient.setQueryData(creditKeys.balance(), (oldData: any) => {
+          if (oldData) {
+            return {
+              ...oldData,
+              balance: data.credits_remaining,
+              total_spent: oldData.total_spent + data.credits_used,
+            };
+          }
+          return oldData;
+        });
+        
+        // Refetch fresh data from server in background (no await)
+        queryClient.invalidateQueries({ queryKey: creditKeys.balance() }).catch(() => {});
+      }
+      
       toast.success('ATS score calculated successfully!');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to calculate ATS score');
-    },
+    // Don't handle error here - let the component handle it for custom modal support
   });
 }

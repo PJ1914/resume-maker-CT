@@ -19,7 +19,8 @@ export function useCreditBalance() {
   return useQuery({
     queryKey: creditKeys.balance(),
     queryFn: () => creditService.getBalance(),
-    staleTime: 30 * 1000, // 30 seconds - balance changes frequently
+    staleTime: 0, // Always consider stale - instant updates
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     enabled: !!user, // Only run when user is authenticated
   });
 }
@@ -68,7 +69,19 @@ export function useDeductCredits() {
     mutationFn: ({ feature, amount }: { feature: FeatureType; amount?: number }) =>
       creditService.deductCredits(feature, amount),
     onSuccess: (data) => {
-      // Invalidate balance and history
+      // Update balance cache immediately with new balance
+      queryClient.setQueryData(creditKeys.balance(), (oldData: any) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            balance: data.new_balance,
+            total_spent: (oldData.total_spent || 0) + (data.new_balance > 0 ? 1 : 0),
+          };
+        }
+        return oldData;
+      });
+      
+      // Invalidate to fetch fresh data from server
       queryClient.invalidateQueries({ queryKey: creditKeys.balance() });
       queryClient.invalidateQueries({ queryKey: creditKeys.history() });
       
@@ -87,7 +100,7 @@ export function usePurchaseCredits() {
   return useMutation({
     mutationFn: (packageId: string) => creditService.purchasePackage(packageId),
     onSuccess: () => {
-      // Invalidate balance and history
+      // Invalidate balance and history immediately
       queryClient.invalidateQueries({ queryKey: creditKeys.balance() });
       queryClient.invalidateQueries({ queryKey: creditKeys.history() });
       
