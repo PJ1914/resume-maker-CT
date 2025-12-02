@@ -62,16 +62,16 @@
 
 % --- HEADER ---
 \begin{center}
-    {\Huge\textbf{\VAR{full_name}}} \\
+    {\Huge\textbf{\VAR{full_name|escape_tex}}} \\
     \vspace{2pt}
     \BLOCK{ set has_contact = phone or email or linkedin or github }
     \BLOCK{ if has_contact }
     \small{
         \BLOCK{ if phone }
-        \faPhone\ \VAR{phone}\BLOCK{ if email or linkedin or github } \textbar{}\BLOCK{ endif }
+        \faPhone\ \VAR{phone|escape_tex}\BLOCK{ if email or linkedin or github } \textbar{}\BLOCK{ endif }
         \BLOCK{ endif }
         \BLOCK{ if email }
-        \faEnvelope\ \href{mailto:\VAR{email}}{\VAR{email}}\BLOCK{ if linkedin or github } \textbar{}\BLOCK{ endif }
+        \faEnvelope\ \href{mailto:\VAR{email}}{\VAR{email|escape_tex}}\BLOCK{ if linkedin or github } \textbar{}\BLOCK{ endif }
         \BLOCK{ endif }
         \BLOCK{ if linkedin }
         \faLinkedin\ \href{\VAR{linkedin}}{LinkedIn}\BLOCK{ if github } \textbar{}\BLOCK{ endif }
@@ -82,14 +82,14 @@
     } \\
     \BLOCK{ endif }
     \BLOCK{ if location }
-    \small{\VAR{location}}
+    \small{\VAR{location|escape_tex}}
     \BLOCK{ endif }
 \end{center}
 
 % --- SUMMARY ---
 \BLOCK{ if summary }
 \section*{Professional Summary}
-\noindent \VAR{summary}
+\noindent \VAR{summary|escape_tex}
 \BLOCK{ endif }
 
 % --- EXPERIENCE ---
@@ -99,14 +99,14 @@
 
 \BLOCK{ for exp in experience }
   \resumeSubheading
-    {\VAR{exp.company}}{\VAR{exp.location}}
-    {\VAR{exp.position}}{\VAR{exp.start_date} -- \VAR{exp.end_date}}
+    {\VAR{exp.company|escape_tex}}{\VAR{exp.location|escape_tex}}
+    {\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex} -- \VAR{exp.end_date|escape_tex}}
     \resumeItemListStart
         \BLOCK{ if exp.description }
-        \item \VAR{exp.description}
+        \item \VAR{exp.description|escape_tex}
         \BLOCK{ endif }
         \BLOCK{ for highlight in exp.highlights }
-        \item \VAR{highlight}
+        \item \VAR{highlight|escape_tex}
         \BLOCK{ endfor }
     \resumeItemListEnd
 \BLOCK{ endfor }
@@ -121,12 +121,12 @@
 
 \BLOCK{ for proj in projects }
     \resumeProject
-        {\VAR{proj.name}}
-        {\VAR{proj.technologies|join(', ')}}
-        {\VAR{proj.start_date} \BLOCK{ if proj.end_date } -- \VAR{proj.end_date} \BLOCK{ endif }}
+        {\VAR{proj.name|escape_tex}}
+        {\VAR{proj.technologies|join(', ')|escape_tex}}
+        {\VAR{proj.start_date|escape_tex} \BLOCK{ if proj.end_date } -- \VAR{proj.end_date|escape_tex} \BLOCK{ endif }}
         \resumeItemListStart
             \BLOCK{ if proj.description }
-            \item \VAR{proj.description}
+            \item \VAR{proj.description|escape_tex}
             \BLOCK{ endif }
             \BLOCK{ if proj.link }
             \item \href{\VAR{proj.link}}{Project Link}
@@ -142,7 +142,7 @@
 \section{Technical Skills}
 \resumeSubHeadingListStart
     \BLOCK{ for skill in skills }
-    \item \textbf{\VAR{skill.category}:} \VAR{skill.items|join(', ')}
+    \item \textbf{\VAR{skill.category|escape_tex}:} \VAR{skill.items|join(', ')|escape_tex}
     \BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }
@@ -152,7 +152,7 @@
 \section{Certifications}
 \resumeSubHeadingListStart
     \BLOCK{ for cert in certifications }
-    \item \textbf{\VAR{cert.name}} -- \VAR{cert.issuer} \hfill {\color{secondaryColor}\small \VAR{cert.date}}
+    \item \textbf{\VAR{cert.name|escape_tex}} -- \VAR{cert.issuer|escape_tex} \hfill {\color{secondaryColor}\small \VAR{cert.date|escape_tex}}
     \BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }
@@ -162,7 +162,7 @@
 \section{Languages}
 \resumeSubHeadingListStart
     \BLOCK{ for lang in languages }
-    \item \textbf{\VAR{lang.language}:} \VAR{lang.proficiency}
+    \item \textbf{\VAR{lang.language|escape_tex}:} \VAR{lang.proficiency|escape_tex}
     \BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }
@@ -172,8 +172,8 @@
 \section{Achievements}
 \resumeSubHeadingListStart
     \BLOCK{ for ach in achievements }
-    \item \textbf{\VAR{ach.title}} \hfill {\color{secondaryColor}\small \VAR{ach.date}} \\
-    \textit{\small \VAR{ach.description}}
+    \item \textbf{\VAR{ach.title|escape_tex}} \hfill {\color{secondaryColor}\small \VAR{ach.date|escape_tex}} \\
+    \textit{\small \VAR{ach.description|escape_tex}}
     \BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }
@@ -184,8 +184,8 @@
 \resumeSubHeadingListStart
 \BLOCK{ for edu in education }
     \resumeSubheading
-        {\VAR{edu.institution}}{\VAR{edu.location}}
-        {\VAR{edu.degree} in \VAR{edu.field} \BLOCK{ if edu.gpa }, GPA: \VAR{edu.gpa}\BLOCK{ endif }}{\VAR{edu.start_date} -- \VAR{edu.end_date}}
+        {\VAR{edu.institution|escape_tex}}{\VAR{edu.location|escape_tex}}
+        {\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex} \BLOCK{ if edu.gpa }, GPA: \VAR{edu.gpa|escape_tex}\BLOCK{ endif }}{\VAR{edu.start_date|escape_tex} -- \VAR{edu.end_date|escape_tex}}
 \BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }
