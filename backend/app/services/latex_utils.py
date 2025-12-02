@@ -146,6 +146,8 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
                 'technologies': [t for t in proj.get('technologies', []) if t],
                 'link': proj.get('link', ''),
                 'highlights': [h for h in proj.get('highlights', []) if h],
+                'start_date': format_date(proj.get('startDate', '')),
+                'end_date': format_date(proj.get('endDate', '')),
             })
     
     # Structure skills
