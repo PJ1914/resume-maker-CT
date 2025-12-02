@@ -209,6 +209,31 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
                 'date': format_date(ach.get('date', '')),
             })
     
+    # Structure theme (with defaults)
+    theme_data = data.get('theme', {})
+    
+    # Handle both dict and SimpleNamespace objects
+    from types import SimpleNamespace
+    if isinstance(theme_data, SimpleNamespace):
+        # Already a SimpleNamespace, keep it
+        theme = theme_data
+    elif isinstance(theme_data, dict):
+        # Convert dict to SimpleNamespace
+        theme = SimpleNamespace(
+            primary_color=theme_data.get('primary_color', '00008B'),
+            secondary_color=theme_data.get('secondary_color', '4B4B4B'),
+            font_size=theme_data.get('font_size', '11pt'),
+            font_family=theme_data.get('font_family', 'default')
+        )
+    else:
+        # Create default theme
+        theme = SimpleNamespace(
+            primary_color='00008B',
+            secondary_color='4B4B4B',
+            font_size='11pt',
+            font_family='default'
+        )
+    
     return {
         **sanitized_contact,
         'summary': summary,
@@ -219,4 +244,5 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         'certifications': certifications,
         'languages': languages,
         'achievements': achievements,
+        'theme': theme,
     }

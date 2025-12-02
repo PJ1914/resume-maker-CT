@@ -28,6 +28,7 @@ class LaTeXCompiler:
     def __init__(self):
         """Initialize Jinja2 environment for LaTeX templates"""
         # Configure Jinja2 with LaTeX-friendly delimiters
+        # IMPORTANT: NO line-based prefixes to avoid conflicts with LaTeX % comments
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(TEMPLATES_DIR)),
             block_start_string='\\BLOCK{',
@@ -36,8 +37,8 @@ class LaTeXCompiler:
             variable_end_string='}',
             comment_start_string='\\#{',
             comment_end_string='}',
-            line_statement_prefix='%%',
-            # NO line_comment_prefix - disabled to avoid conflicts with LaTeX % comments
+            line_statement_prefix=None,  # Explicitly disable line statements
+            line_comment_prefix=None,    # Explicitly disable line comments (prevents % issues)
             trim_blocks=True,
             autoescape=False,
             cache_size=0, # Disable cache
