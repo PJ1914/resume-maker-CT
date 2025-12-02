@@ -416,13 +416,15 @@ async def preview_template(template_name: str):
             raise HTTPException(status_code=404, detail=f"Template '{template_name}' not found")
         
         # Create sample data for preview
+        from types import SimpleNamespace
+        
         sample_data = {
             "full_name": "John Doe",
             "email": "john.doe@example.com",
             "phone": "+1 (555) 123-4567",
             "location": "San Francisco, CA",
             "summary": "Experienced software engineer with expertise in full-stack development and cloud technologies.",
-            "education": [{
+            "education": [SimpleNamespace(**{
                 "institution": "University of California, Berkeley",
                 "degree": "Bachelor of Science",
                 "field": "Computer Science",
@@ -430,8 +432,8 @@ async def preview_template(template_name: str):
                 "end_date": "2019",
                 "gpa": "3.8",
                 "location": "Berkeley, CA"
-            }],
-            "experience": [{
+            })],
+            "experience": [SimpleNamespace(**{
                 "position": "Senior Software Engineer",
                 "company": "Tech Corp",
                 "location": "San Francisco, CA",
@@ -442,36 +444,33 @@ async def preview_template(template_name: str):
                     "Improved system performance by 40%",
                     "Led a team of 5 engineers"
                 ]
-            }],
-            "projects": [{
+            })],
+            "projects": [SimpleNamespace(**{
                 "name": "Open Source Project",
                 "start_date": "2021",
                 "end_date": "2023",
                 "description": "Contributed to major open source initiative",
                 "technologies": ["Python", "Docker", "Kubernetes"],
                 "link": "https://github.com/example/project"
-            }],
-            "skills": [{
-                "category": "Programming Languages",
-                "items": ["Python", "JavaScript", "Java"]
-            }, {
-                "category": "Technologies",
-                "items": ["Docker", "Kubernetes", "AWS"]
-            }],
-            "certifications": [{
+            })],
+            "skills": [
+                SimpleNamespace(category="Programming Languages", items=["Python", "JavaScript", "Java"]),
+                SimpleNamespace(category="Technologies", items=["Docker", "Kubernetes", "AWS"])
+            ],
+            "certifications": [SimpleNamespace(**{
                 "name": "AWS Certified Solutions Architect",
                 "issuer": "Amazon Web Services",
                 "date": "2022"
-            }],
-            "languages": [{
+            })],
+            "languages": [SimpleNamespace(**{
                 "language": "English",
                 "proficiency": "Native"
-            }],
-            "achievements": [{
+            })],
+            "achievements": [SimpleNamespace(**{
                 "title": "Best Innovation Award",
                 "date": "2022",
                 "description": "Recognized for outstanding contribution to product development"
-            }]
+            })]
         }
         
         # Render the template with Jinja2

@@ -37,7 +37,7 @@ class LaTeXCompiler:
             comment_start_string='\\#{',
             comment_end_string='}',
             line_statement_prefix='%%',
-            line_comment_prefix='%#',
+            line_comment_prefix='%%#',  # Changed from '%#' to avoid conflict with LaTeX % comments
             trim_blocks=True,
             autoescape=False,
             cache_size=0, # Disable cache
