@@ -71,7 +71,7 @@
 
 \begin{tabular}{ @{} >{\bfseries}l @{\hspace{6ex}} l }
 \BLOCK{ for skill in skills }
-\VAR{skill.category} & \VAR{skill.items|join(', ')} \\
+\VAR{skill.category|escape_tex} & \VAR{skill.items|join(', ')|escape_tex} \\
 \BLOCK{ endfor }
 \end{tabular}
 

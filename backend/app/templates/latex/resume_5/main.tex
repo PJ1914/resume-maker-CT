@@ -72,7 +72,7 @@
 \BLOCK{ if skills }
 \cvsection{Skills}
 \BLOCK{ for skill in skills }
-\cvtag{\VAR{skill.category}: \VAR{skill.items|join(', ')}}
+\cvtag{\VAR{skill.category|escape_tex}: \VAR{skill.items|join(', ')|escape_tex}}
 \BLOCK{ endfor }
 \divider
 \BLOCK{ endif }

@@ -103,7 +103,7 @@
 \BLOCK{ if skills }
 \section{SKILLS}
 \BLOCK{ for skill in skills }
-\textbf{\VAR{skill.category}}: \VAR{skill.items|join(', ')}
+\textbf{\VAR{skill.category|escape_tex}}: \VAR{skill.items|join(', ')|escape_tex}
 \\
 \BLOCK{ endfor }
 \BLOCK{ endif }
