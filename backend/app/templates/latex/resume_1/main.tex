@@ -64,21 +64,26 @@
 \begin{center}
     {\Huge\textbf{\VAR{full_name}}} \\
     \vspace{2pt}
+    \BLOCK{ set has_contact = phone or email or linkedin or github }
+    \BLOCK{ if has_contact }
     \small{
         \BLOCK{ if phone }
-        \faPhone\ \VAR{phone} \textbar{}
+        \faPhone\ \VAR{phone}\BLOCK{ if email or linkedin or github } \textbar{}\BLOCK{ endif }
         \BLOCK{ endif }
         \BLOCK{ if email }
-        \faEnvelope\ \href{mailto:\VAR{email}}{\VAR{email}} \textbar{}
+        \faEnvelope\ \href{mailto:\VAR{email}}{\VAR{email}}\BLOCK{ if linkedin or github } \textbar{}\BLOCK{ endif }
         \BLOCK{ endif }
         \BLOCK{ if linkedin }
-        \faLinkedin\ \href{\VAR{linkedin}}{LinkedIn} \textbar{}
+        \faLinkedin\ \href{\VAR{linkedin}}{LinkedIn}\BLOCK{ if github } \textbar{}\BLOCK{ endif }
         \BLOCK{ endif }
         \BLOCK{ if github }
         \faGithub\ \href{\VAR{github}}{GitHub}
         \BLOCK{ endif }
     } \\
+    \BLOCK{ endif }
+    \BLOCK{ if location }
     \small{\VAR{location}}
+    \BLOCK{ endif }
 \end{center}
 
 % --- SUMMARY ---
