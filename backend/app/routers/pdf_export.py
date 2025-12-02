@@ -423,7 +423,11 @@ async def preview_template(template_name: str):
             "email": "john.doe@example.com",
             "phone": "+1 (555) 123-4567",
             "location": "San Francisco, CA",
+            "linkedin": "https://linkedin.com/in/johndoe",
+            "github": "https://github.com/johndoe",
+            "website": "https://johndoe.com",
             "summary": "Experienced software engineer with expertise in full-stack development and cloud technologies.",
+            "theme": SimpleNamespace(primary_color="00008B", secondary_color="4B4B4B"),
             "education": [SimpleNamespace(**{
                 "institution": "University of California, Berkeley",
                 "degree": "Bachelor of Science",
