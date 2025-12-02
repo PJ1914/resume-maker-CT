@@ -106,12 +106,25 @@ class LaTeXCompiler:
         template_data = prepare_template_data(resume_data)
         
         # Render template
-        rendered = template.render(**template_data)
-        
-        # Debug: Check if tags remain
-        if "\\VAR{" in rendered or "\\BLOCK{" in rendered:
-            logger.warning(f"Template {template_name} might not have been rendered correctly. Found unreplaced tags.")
-            logger.debug(f"Rendered snippet: {rendered[:500]}")
+        try:
+            rendered = template.render(**template_data)
+            logger.info(f"Successfully rendered template {template_name}")
+            logger.info(f"Rendered content preview (first 500 chars):\n{rendered[:500]}")
+            
+            # Check for unreplaced tags
+            if "\\VAR{" in rendered or "\\BLOCK{" in rendered:
+                logger.error(f"CRITICAL: Template {template_name} contains unreplaced Jinja tags!")
+                # Find where they are
+                idx = rendered.find("\\VAR{")
+                if idx != -1:
+                    logger.error(f"First \\VAR{{ found at index {idx}: {rendered[idx:idx+50]}")
+                idx = rendered.find("\\BLOCK{")
+                if idx != -1:
+                    logger.error(f"First \\BLOCK{{ found at index {idx}: {rendered[idx:idx+50]}")
+                    
+        except Exception as e:
+            logger.error(f"Jinja rendering failed for {template_name}: {e}")
+            raise
         
         return rendered
     
