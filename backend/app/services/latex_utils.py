@@ -69,14 +69,19 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     Formats dates and structures data, but DOES NOT escape LaTeX characters.
     Escaping should be done in the Jinja template using the | escape_tex filter.
     
+    All nested data structures (experience, education, projects, etc.) are converted
+    to SimpleNamespace objects to enable dot notation access in templates (e.g., skill.items)
+    instead of dict access which conflicts with dict.items() method.
+    
     Args:
         resume_data: Raw resume data from Firestore
         
     Returns:
-        Template-ready data (raw strings, formatted dates)
+        Template-ready data with SimpleNamespace objects for nested structures
     """
     # Deep copy to avoid modifying original
     import copy
+    from types import SimpleNamespace
     logger = logging.getLogger(__name__)
 
     data = copy.deepcopy(resume_data)
@@ -99,58 +104,58 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     # Structure summary
     summary = data.get('summary', '') or data.get('professional_summary', '')
     
-    # Structure experience
+    # Structure experience (convert to SimpleNamespace for dot notation)
     experience = []
     exp_data = data.get('experience', [])
     
     if isinstance(exp_data, list):
         for exp in exp_data:
             if not isinstance(exp, dict): continue
-            experience.append({
-                'position': exp.get('position', exp.get('title', '')),
-                'company': exp.get('company', ''),
-                'location': exp.get('location', ''),
-                'start_date': format_date(exp.get('startDate', '')),
-                'end_date': format_date(exp.get('endDate', '')),
-                'current': exp.get('current', False),
-                'description': exp.get('description', ''),
-                'highlights': [h for h in exp.get('highlights', []) if h],
-            })
+            experience.append(SimpleNamespace(
+                position=exp.get('position', exp.get('title', '')),
+                company=exp.get('company', ''),
+                location=exp.get('location', ''),
+                start_date=format_date(exp.get('startDate', '')),
+                end_date=format_date(exp.get('endDate', '')),
+                current=exp.get('current', False),
+                description=exp.get('description', ''),
+                highlights=[h for h in exp.get('highlights', []) if h],
+            ))
     
-    # Structure education
+    # Structure education (convert to SimpleNamespace for dot notation)
     education = []
     edu_data = data.get('education', [])
     if isinstance(edu_data, list):
         for edu in edu_data:
             if not isinstance(edu, dict): continue
-            education.append({
-                'degree': edu.get('degree', ''),
-                'field': edu.get('field', ''),
-                'institution': edu.get('institution', ''),
-                'location': edu.get('location', ''),
-                'start_date': format_date(edu.get('startDate', '')),
-                'end_date': format_date(edu.get('endDate', '')),
-                'gpa': edu.get('gpa', ''),
-                'honors': edu.get('honors', ''),
-            })
+            education.append(SimpleNamespace(
+                degree=edu.get('degree', ''),
+                field=edu.get('field', ''),
+                institution=edu.get('institution', ''),
+                location=edu.get('location', ''),
+                start_date=format_date(edu.get('startDate', '')),
+                end_date=format_date(edu.get('endDate', '')),
+                gpa=edu.get('gpa', ''),
+                honors=edu.get('honors', ''),
+            ))
     
-    # Structure projects
+    # Structure projects (convert to SimpleNamespace for dot notation)
     projects = []
     proj_data = data.get('projects', [])
     if isinstance(proj_data, list):
         for proj in proj_data:
             if not isinstance(proj, dict): continue
-            projects.append({
-                'name': proj.get('name', ''),
-                'description': proj.get('description', ''),
-                'technologies': [t for t in proj.get('technologies', []) if t],
-                'link': proj.get('link', ''),
-                'highlights': [h for h in proj.get('highlights', []) if h],
-                'start_date': format_date(proj.get('startDate', '')),
-                'end_date': format_date(proj.get('endDate', '')),
-            })
+            projects.append(SimpleNamespace(
+                name=proj.get('name', ''),
+                description=proj.get('description', ''),
+                technologies=[t for t in proj.get('technologies', []) if t],
+                link=proj.get('link', ''),
+                highlights=[h for h in proj.get('highlights', []) if h],
+                start_date=format_date(proj.get('startDate', '')),
+                end_date=format_date(proj.get('endDate', '')),
+            ))
     
-    # Structure skills
+    # Structure skills (convert to SimpleNamespace for dot notation to avoid dict.items() conflict)
     skills = []
     skills_data = data.get('skills', [])
     
@@ -158,10 +163,10 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         # Format: {technical: [...], soft: [...]}
         for category, items in skills_data.items():
             if isinstance(items, list):
-                skills.append({
-                    'category': category.title(),
-                    'items': [str(item) for item in items if item],
-                })
+                skills.append(SimpleNamespace(
+                    category=category.title(),
+                    items=[str(item) for item in items if item],
+                ))
     elif isinstance(skills_data, list):
         # Format: [{category: "...", items: [...]}, ...]
         for skill in skills_data:
@@ -169,47 +174,47 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
             skill_items = skill.get('items', [])
             if not isinstance(skill_items, list): continue
             
-            skills.append({
-                'category': skill.get('category', ''),
-                'items': [str(item) for item in skill_items if item],
-            })
+            skills.append(SimpleNamespace(
+                category=skill.get('category', ''),
+                items=[str(item) for item in skill_items if item],
+            ))
     
-    # Structure certifications
+    # Structure certifications (convert to SimpleNamespace for dot notation)
     certifications = []
     cert_data = data.get('certifications', [])
     if isinstance(cert_data, list):
         for cert in cert_data:
             if not isinstance(cert, dict): continue
-            certifications.append({
-                'name': cert.get('name', ''),
-                'issuer': cert.get('issuer', ''),
-                'date': format_date(cert.get('date', '')),
-                'credential_id': cert.get('credentialId', ''),
-                'url': cert.get('url', ''),
-            })
+            certifications.append(SimpleNamespace(
+                name=cert.get('name', ''),
+                issuer=cert.get('issuer', ''),
+                date=format_date(cert.get('date', '')),
+                credential_id=cert.get('credentialId', ''),
+                url=cert.get('url', ''),
+            ))
 
-    # Structure languages
+    # Structure languages (convert to SimpleNamespace for dot notation)
     languages = []
     lang_data = data.get('languages', [])
     if isinstance(lang_data, list):
         for lang in lang_data:
             if not isinstance(lang, dict): continue
-            languages.append({
-                'language': lang.get('language', ''),
-                'proficiency': lang.get('proficiency', ''),
-            })
+            languages.append(SimpleNamespace(
+                language=lang.get('language', ''),
+                proficiency=lang.get('proficiency', ''),
+            ))
 
-    # Structure achievements
+    # Structure achievements (convert to SimpleNamespace for dot notation)
     achievements = []
     ach_data = data.get('achievements', [])
     if isinstance(ach_data, list):
         for ach in ach_data:
             if not isinstance(ach, dict): continue
-            achievements.append({
-                'title': ach.get('title', ''),
-                'description': ach.get('description', ''),
-                'date': format_date(ach.get('date', '')),
-            })
+            achievements.append(SimpleNamespace(
+                title=ach.get('title', ''),
+                description=ach.get('description', ''),
+                date=format_date(ach.get('date', '')),
+            ))
     
     # Structure theme (with defaults)
     theme_data = data.get('theme', {})
