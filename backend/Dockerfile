@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     texlive-fonts-extra \
     texlive-latex-extra \
     texlive-xetex \
+    texlive-bibtex-extra \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
