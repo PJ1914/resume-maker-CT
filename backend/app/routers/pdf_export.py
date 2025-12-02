@@ -408,15 +408,75 @@ async def preview_template(template_name: str):
                 }
             )
 
-        # Path to the template's main.tex
+        # Check if template exists
         template_dir = Path(__file__).parent.parent / "templates" / "latex" / template_name
         main_tex_path = template_dir / "main.tex"
         
         if not main_tex_path.exists():
             raise HTTPException(status_code=404, detail=f"Template '{template_name}' not found")
-            
-        # Read the raw LaTeX content
-        latex_source = main_tex_path.read_text(encoding="utf-8")
+        
+        # Create sample data for preview
+        sample_data = {
+            "full_name": "John Doe",
+            "email": "john.doe@example.com",
+            "phone": "+1 (555) 123-4567",
+            "location": "San Francisco, CA",
+            "summary": "Experienced software engineer with expertise in full-stack development and cloud technologies.",
+            "education": [{
+                "institution": "University of California, Berkeley",
+                "degree": "Bachelor of Science",
+                "field": "Computer Science",
+                "start_date": "2015",
+                "end_date": "2019",
+                "gpa": "3.8",
+                "location": "Berkeley, CA"
+            }],
+            "experience": [{
+                "position": "Senior Software Engineer",
+                "company": "Tech Corp",
+                "location": "San Francisco, CA",
+                "start_date": "2020",
+                "end_date": "Present",
+                "description": "Lead developer for cloud infrastructure projects",
+                "highlights": [
+                    "Improved system performance by 40%",
+                    "Led a team of 5 engineers"
+                ]
+            }],
+            "projects": [{
+                "name": "Open Source Project",
+                "start_date": "2021",
+                "end_date": "2023",
+                "description": "Contributed to major open source initiative",
+                "technologies": ["Python", "Docker", "Kubernetes"],
+                "link": "https://github.com/example/project"
+            }],
+            "skills": [{
+                "category": "Programming Languages",
+                "items": ["Python", "JavaScript", "Java"]
+            }, {
+                "category": "Technologies",
+                "items": ["Docker", "Kubernetes", "AWS"]
+            }],
+            "certifications": [{
+                "name": "AWS Certified Solutions Architect",
+                "issuer": "Amazon Web Services",
+                "date": "2022"
+            }],
+            "languages": [{
+                "language": "English",
+                "proficiency": "Native"
+            }],
+            "achievements": [{
+                "title": "Best Innovation Award",
+                "date": "2022",
+                "description": "Recognized for outstanding contribution to product development"
+            }]
+        }
+        
+        # Render the template with Jinja2
+        logger.info(f"Rendering preview for {template_name}")
+        latex_source = latex_compiler.render_template(template_name, sample_data)
         
         # Compile to PDF
         logger.info(f"Compiling preview for {template_name}")
