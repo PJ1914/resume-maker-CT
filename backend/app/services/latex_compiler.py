@@ -40,6 +40,7 @@ class LaTeXCompiler:
             line_comment_prefix='%#',
             trim_blocks=True,
             autoescape=False,
+            cache_size=0, # Disable cache
         )
         
         # Register filters
@@ -106,6 +107,11 @@ class LaTeXCompiler:
         
         # Render template
         rendered = template.render(**template_data)
+        
+        # Debug: Check if tags remain
+        if "\\VAR{" in rendered or "\\BLOCK{" in rendered:
+            logger.warning(f"Template {template_name} might not have been rendered correctly. Found unreplaced tags.")
+            logger.debug(f"Rendered snippet: {rendered[:500]}")
         
         return rendered
     
