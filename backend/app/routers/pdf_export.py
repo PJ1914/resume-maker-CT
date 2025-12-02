@@ -391,13 +391,15 @@ async def preview_template(template_name: str):
     """
     try:
         # Define cache directory and file path
+        # Version the cache to invalidate when template logic changes
+        PREVIEW_VERSION = "v2"  # Increment this when template data structure changes
         cache_dir = Path(__file__).parent.parent / "static" / "previews"
         cache_dir.mkdir(parents=True, exist_ok=True)
-        cached_pdf_path = cache_dir / f"{template_name}.pdf"
+        cached_pdf_path = cache_dir / f"{template_name}_{PREVIEW_VERSION}.pdf"
         
         # Check if cached PDF exists
         if cached_pdf_path.exists():
-            logger.info(f"Serving cached preview for {template_name}")
+            logger.info(f"Serving cached preview for {template_name} ({PREVIEW_VERSION})")
             pdf_content = cached_pdf_path.read_bytes()
             return Response(
                 content=pdf_content,
@@ -415,67 +417,108 @@ async def preview_template(template_name: str):
         if not main_tex_path.exists():
             raise HTTPException(status_code=404, detail=f"Template '{template_name}' not found")
         
-        # Create sample data for preview
-        from types import SimpleNamespace
-        
-        sample_data = {
-            "full_name": "John Doe",
-            "email": "john.doe@example.com",
-            "phone": "+1 (555) 123-4567",
-            "location": "San Francisco, CA",
-            "linkedin": "https://linkedin.com/in/johndoe",
-            "github": "https://github.com/johndoe",
-            "website": "https://johndoe.com",
-            "summary": "Experienced software engineer with expertise in full-stack development and cloud technologies.",
-            "theme": SimpleNamespace(primary_color="00008B", secondary_color="4B4B4B"),
-            "education": [SimpleNamespace(**{
+        # Create sample data for preview in Firestore format
+        sample_resume_data = {
+            "contact": {
+                "fullName": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": "+1 (555) 123-4567",
+                "location": "San Francisco, CA",
+                "linkedin": "https://linkedin.com/in/johndoe",
+                "github": "https://github.com/johndoe",
+                "portfolio": "https://johndoe.com"
+            },
+            "summary": "Experienced software engineer with expertise in full-stack development and cloud technologies. Passionate about building scalable systems and mentoring junior developers.",
+            "education": [{
                 "institution": "University of California, Berkeley",
                 "degree": "Bachelor of Science",
                 "field": "Computer Science",
-                "start_date": "2015",
-                "end_date": "2019",
+                "startDate": "2015",
+                "endDate": "2019",
                 "gpa": "3.8",
                 "location": "Berkeley, CA"
-            })],
-            "experience": [SimpleNamespace(**{
-                "position": "Senior Software Engineer",
-                "company": "Tech Corp",
-                "location": "San Francisco, CA",
-                "start_date": "2020",
-                "end_date": "Present",
-                "description": "Lead developer for cloud infrastructure projects",
-                "highlights": [
-                    "Improved system performance by 40%",
-                    "Led a team of 5 engineers"
-                ]
-            })],
-            "projects": [SimpleNamespace(**{
-                "name": "Open Source Project",
-                "start_date": "2021",
-                "end_date": "2023",
-                "description": "Contributed to major open source initiative",
-                "technologies": ["Python", "Docker", "Kubernetes"],
-                "link": "https://github.com/example/project"
-            })],
-            "skills": [
-                SimpleNamespace(category="Programming Languages", items=["Python", "JavaScript", "Java"]),
-                SimpleNamespace(category="Technologies", items=["Docker", "Kubernetes", "AWS"])
+            }],
+            "experience": [
+                {
+                    "position": "Senior Software Engineer",
+                    "company": "Tech Corp",
+                    "location": "San Francisco, CA",
+                    "startDate": "2020",
+                    "endDate": "Present",
+                    "description": "Lead developer for cloud infrastructure projects",
+                    "highlights": [
+                        "Improved system performance by 40% through optimization",
+                        "Led a team of 5 engineers in developing microservices architecture",
+                        "Implemented CI/CD pipelines reducing deployment time by 60%"
+                    ]
+                },
+                {
+                    "position": "Software Engineer",
+                    "company": "StartupXYZ",
+                    "location": "San Francisco, CA",
+                    "startDate": "2019",
+                    "endDate": "2020",
+                    "description": "Full-stack developer building web applications",
+                    "highlights": [
+                        "Developed RESTful APIs serving 100K+ daily requests",
+                        "Built responsive frontend using React and TypeScript"
+                    ]
+                }
             ],
-            "certifications": [SimpleNamespace(**{
-                "name": "AWS Certified Solutions Architect",
-                "issuer": "Amazon Web Services",
-                "date": "2022"
-            })],
-            "languages": [SimpleNamespace(**{
-                "language": "English",
-                "proficiency": "Native"
-            })],
-            "achievements": [SimpleNamespace(**{
-                "title": "Best Innovation Award",
-                "date": "2022",
-                "description": "Recognized for outstanding contribution to product development"
-            })]
+            "projects": [
+                {
+                    "name": "Open Source Project",
+                    "startDate": "2021",
+                    "endDate": "2023",
+                    "description": "Contributed to major open source initiative for cloud-native applications",
+                    "technologies": ["Python", "Docker", "Kubernetes", "Terraform"],
+                    "link": "https://github.com/example/project"
+                },
+                {
+                    "name": "Personal Portfolio Website",
+                    "startDate": "2022",
+                    "endDate": "",
+                    "description": "Built modern portfolio site with blog functionality",
+                    "technologies": ["Next.js", "TypeScript", "Tailwind CSS"],
+                    "link": "https://johndoe.com"
+                }
+            ],
+            "skills": [
+                {"category": "Programming Languages", "items": ["Python", "JavaScript", "Java", "TypeScript", "Go"]},
+                {"category": "Frameworks & Libraries", "items": ["React", "Node.js", "FastAPI", "Django", "Next.js"]},
+                {"category": "Cloud & DevOps", "items": ["AWS", "Docker", "Kubernetes", "Terraform", "Jenkins"]},
+                {"category": "Databases", "items": ["PostgreSQL", "MongoDB", "Redis", "DynamoDB"]}
+            ],
+            "certifications": [
+                {
+                    "name": "AWS Certified Solutions Architect",
+                    "issuer": "Amazon Web Services",
+                    "date": "2022",
+                    "credentialId": "AWS-123456",
+                    "url": "https://aws.amazon.com/certification/"
+                },
+                {
+                    "name": "Certified Kubernetes Administrator",
+                    "issuer": "Cloud Native Computing Foundation",
+                    "date": "2021"
+                }
+            ],
+            "languages": [
+                {"language": "English", "proficiency": "Native"},
+                {"language": "Spanish", "proficiency": "Intermediate"}
+            ],
+            "achievements": [
+                {
+                    "title": "Best Innovation Award",
+                    "date": "2022",
+                    "description": "Recognized for outstanding contribution to product development and innovation"
+                }
+            ]
         }
+        
+        # Prepare data using the same function used for actual resumes
+        from app.services.latex_utils import prepare_template_data
+        sample_data = prepare_template_data(sample_resume_data)
         
         # Render the template with Jinja2
         logger.info(f"Rendering preview for {template_name}")
