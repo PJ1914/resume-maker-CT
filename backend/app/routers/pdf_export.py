@@ -516,13 +516,10 @@ async def preview_template(template_name: str):
             ]
         }
         
-        # Prepare data using the same function used for actual resumes
-        from app.services.latex_utils import prepare_template_data
-        sample_data = prepare_template_data(sample_resume_data)
-        
         # Render the template with Jinja2
+        # Note: render_template will call prepare_template_data internally
         logger.info(f"Rendering preview for {template_name}")
-        latex_source = latex_compiler.render_template(template_name, sample_data)
+        latex_source = latex_compiler.render_template(template_name, sample_resume_data)
         
         # Compile to PDF
         logger.info(f"Compiling preview for {template_name}")
