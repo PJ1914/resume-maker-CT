@@ -76,7 +76,7 @@ coverage/
 *.fls
 *.synctex.gz
 *.pdf
-!templates/**/*.pdf
+
 
 # Secrets
 secrets/

@@ -5,6 +5,8 @@ import AppRoutes from './routes'
 import { LoaderProvider } from './context/LoaderContext'
 import { TourProvider } from './context/TourContext'
 import AppTour from './components/AppTour'
+import { SEO, HomeSchema } from './components/SEO'
+import { Analytics } from './components/Analytics'
 
 import { useState } from 'react'
 import Preloader from '@/components/ui/preloader'
@@ -24,8 +26,15 @@ function App() {
         <AuthProvider>
           <LoaderProvider>
             <TourProvider>
+              {/* Global SEO defaults and homepage JSON-LD */}
+              <SEO />
+              <HomeSchema />
+              <Analytics />
+
+              {/* App routes and tour */}
               <AppRoutes />
               <AppTour />
+
               <Toaster
                 position="top-right"
                 toastOptions={{

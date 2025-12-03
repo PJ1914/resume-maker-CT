@@ -1,0 +1,25 @@
+{
+  "name": "Prativeda",
+  "description": "India’s smartest ATS-friendly resume maker by CodeTapasya. Generate modern resumes with AI, compile to LaTeX-quality PDF, and get ATS scores.",
+  "url": "https://prativeda.codetapasya.com",
+  "capabilities": [
+    "AI resume generation",
+    "ATS scoring",
+    "Template rendering (LaTeX)",
+    "PDF export",
+    "Job description matching"
+  ],
+  "features": [
+    { "title": "AI Resume Builder", "summary": "Turn your details into an ATS-ready resume instantly." },
+    { "title": "ATS Score", "summary": "Get a score and improvement tips vs job description." },
+    { "title": "LaTeX Templates", "summary": "Modern, minimalist, and classic designs that compile cleanly." }
+  ],
+  "contact": {
+    "email": "support@codetapasya.com"
+  },
+  "pricing": {
+    "model": "freemium",
+    "currency": "INR",
+    "free": true
+  }
+}
