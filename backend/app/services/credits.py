@@ -125,20 +125,41 @@ def give_december_bonus(user_id: str) -> bool:
         from firebase_admin import firestore
         db = firestore.client(app=resume_maker_app)
         
-        # Get current balance
-        credits = get_user_credits(user_id)
-        new_balance = credits["balance"] + DECEMBER_2025_BONUS
-        new_earned = credits["total_earned"] + DECEMBER_2025_BONUS
+        # Get current balance directly without calling get_user_credits to avoid recursion
+        balance_doc = db.collection('users').document(user_id)\
+                        .collection('credits').document('balance').get()
+        
+        if balance_doc.exists:
+            current_data = balance_doc.to_dict()
+            current_balance = current_data.get("balance", 0)
+            current_earned = current_data.get("total_earned", 0)
+        else:
+            # User doesn't exist yet, use initial values
+            current_balance = FREE_MONTHLY_CREDITS
+            current_earned = FREE_MONTHLY_CREDITS
+        
+        new_balance = current_balance + DECEMBER_2025_BONUS
+        new_earned = current_earned + DECEMBER_2025_BONUS
         
         # Update balance
         balance_ref = db.collection('users').document(user_id)\
                        .collection('credits').document('balance')
         
-        balance_ref.update({
-            "balance": new_balance,
-            "total_earned": new_earned,
-            "updated_at": datetime.now(timezone.utc),
-        })
+        if balance_doc.exists:
+            balance_ref.update({
+                "balance": new_balance,
+                "total_earned": new_earned,
+                "updated_at": datetime.now(timezone.utc),
+            })
+        else:
+            balance_ref.set({
+                "balance": new_balance,
+                "total_earned": new_earned,
+                "total_spent": 0,
+                "subscription_tier": "free",
+                "updated_at": datetime.now(timezone.utc),
+                "created_at": datetime.now(timezone.utc),
+            })
         
         # Mark bonus as given
         db.collection('users').document(user_id)\
@@ -163,10 +184,10 @@ def give_december_bonus(user_id: str) -> bool:
         return True
         
     except Exception as e:
-        logging.exception("Error giving December bonus")
+        logging.warning("Error giving December bonus: %s", str(e))
         return False
 
-def get_user_credits(user_id: str, user_email: str = None) -> Dict:
+def get_user_credits(user_id: str, user_email: str = None, _skip_bonus_check: bool = False) -> Dict:
     """
     Get user's current credit balance and info.
     Automatically handles monthly reset and December bonus.
@@ -175,6 +196,7 @@ def get_user_credits(user_id: str, user_email: str = None) -> Dict:
     Args:
         user_id: User's Firebase UID
         user_email: Optional email for admin check
+        _skip_bonus_check: Internal flag to prevent circular recursion
     
     Returns:
         Dict with balance, tier, last_reset, etc.
@@ -262,13 +284,17 @@ def get_user_credits(user_id: str, user_email: str = None) -> Dict:
                 data["total_earned"] = data.get("total_earned", 0) + FREE_MONTHLY_CREDITS
                 data["last_reset"] = now
             
-            # Check and apply December 2025 bonus
-            if should_give_december_bonus(user_id):
-                give_december_bonus(user_id)
-                # Refetch updated balance
-                doc = db.collection('users').document(user_id)\
-                        .collection('credits').document('balance').get()
-                data = doc.to_dict()
+            # Check and apply December 2025 bonus (only if not already skipping to prevent recursion)
+            if not _skip_bonus_check and should_give_december_bonus(user_id):
+                try:
+                    give_december_bonus(user_id)
+                    # Refetch updated balance
+                    doc = db.collection('users').document(user_id)\
+                            .collection('credits').document('balance').get()
+                    data = doc.to_dict()
+                except Exception as e:
+                    logging.warning("Failed to give December bonus: %s", str(e))
+                    # Continue without bonus, don't crash
             
             return {
                 "balance": data.get("balance", 0),
