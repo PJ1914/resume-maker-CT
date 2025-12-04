@@ -173,6 +173,7 @@ export interface DynamicSection {
 export interface ResumeData {
   id?: string;
   userId?: string;
+  template?: string;  // Template ID (resume_1 through resume_7)
   contact: ContactInfo;
   summary: string;
   experience: Experience[];
@@ -189,22 +190,6 @@ export interface ResumeData {
   // Dynamic sections from Gemini parsing
   sections?: DynamicSection[];
   customSections?: { [key: string]: any[] };
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface ResumeData {
-  id?: string;
-  userId?: string;
-  contact: ContactInfo;
-  summary: string;
-  experience: Experience[];
-  education: Education[];
-  skills: Skill[];
-  projects: Project[];
-  certifications?: Certification[];
-  achievements?: Achievement[];
-  languages?: Language[];
   createdAt?: Date;
   updatedAt?: Date;
 }

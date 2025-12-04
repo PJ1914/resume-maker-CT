@@ -1,11 +1,10 @@
 /**
  * PDF Export Modal Component
- * Modal dialog for selecting template and exporting resume as PDF
+ * Modal dialog for exporting resume as PDF
  */
 
 import { useState, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import TemplateSelector, { TemplateType } from './TemplateSelector';
 import { exportAndDownloadPDF } from '../services/pdf-export.service';
 
 interface PdfExportModalProps {
@@ -13,6 +12,7 @@ interface PdfExportModalProps {
   onClose: () => void;
   resumeId: string;
   resumeName?: string;
+  template: string; // The template ID selected during resume creation (e.g., 'resume_1', 'resume_2', etc.)
 }
 
 export default function PdfExportModal({
@@ -20,8 +20,8 @@ export default function PdfExportModal({
   onClose,
   resumeId,
   resumeName,
+  template,
 }: PdfExportModalProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('modern');
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -32,7 +32,7 @@ export default function PdfExportModal({
     setSuccess(false);
 
     try {
-      await exportAndDownloadPDF(resumeId, selectedTemplate);
+      await exportAndDownloadPDF(resumeId, template);
       setSuccess(true);
 
       // Auto-close after success
@@ -118,17 +118,6 @@ export default function PdfExportModal({
                       />
                     </svg>
                   </button>
-                </div>
-
-                {/* Template Selection */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-3">
-                    Choose a template
-                  </h4>
-                  <TemplateSelector
-                    selectedTemplate={selectedTemplate}
-                    onSelect={setSelectedTemplate}
-                  />
                 </div>
 
                 {/* Error Message */}

@@ -1228,6 +1228,7 @@ export const ResumeEditorPage: React.FC = () => {
           onClose={() => setShowExportModal(false)}
           resumeId={resumeId}
           resumeName={resumeData.contact.fullName || 'Resume'}
+          template={resumeData.template || 'resume_1'}
         />
       )}
     </div>

@@ -8,14 +8,16 @@ import { API_URL } from '@/config/firebase';
 
 const API_BASE_URL = API_URL;
 
-export interface Template {
-  name: string;
-  description: string;
+export interface TemplateInfo {
+  name: string; // backend template folder name e.g., 'resume_1'
+  display_name?: string;
+  description?: string;
   preview?: string;
 }
 
 export interface ExportRequest {
-  template: 'modern' | 'classic' | 'minimalist';
+  // Pass through backend template name, e.g., 'resume_1', 'resume_5'
+  template: string;
   save_to_storage?: boolean;
 }
 
@@ -29,7 +31,7 @@ export interface ExportResponse {
 /**
  * Get list of available LaTeX templates
  */
-export async function getTemplates(): Promise<Template[]> {
+export async function getTemplates(): Promise<{ templates: TemplateInfo[] }> {
   try {
     const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/resumes/templates`, {
@@ -87,7 +89,7 @@ export async function exportResumePDF(
  */
 export async function downloadResumePDF(
   resumeId: string,
-  template: 'modern' | 'classic' | 'minimalist',
+  template: string,
   filename?: string
 ): Promise<void> {
   try {
@@ -133,7 +135,7 @@ export async function downloadResumePDF(
  */
 export async function exportAndDownloadPDF(
   resumeId: string,
-  template: 'modern' | 'classic' | 'minimalist'
+  template: string
 ): Promise<ExportResponse> {
   try {
     // Export with storage save

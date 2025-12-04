@@ -899,6 +899,7 @@ export default function ResumeDetailPage() {
         onClose={() => setShowExportModal(false)}
         resumeId={resume.resume_id}
         resumeName={resume.original_filename}
+        template={resume.template || 'resume_1'}
       />
 
       {/* Delete Confirmation Modal */}
