@@ -341,3 +341,161 @@ Extract ONLY the JSON response. No markdown code blocks, no explanations."""
             status_code=500,
             detail=f"Resume extraction failed: {str(e)}"
         )
+
+
+class GenerateSummaryRequest(BaseModel):
+    """Request for generating professional summary from resume data"""
+    contact: dict
+    experience: list
+    education: list
+    skills: dict
+    projects: list = []
+    certifications: list = []
+    achievements: list = []
+
+
+class GenerateSummaryResponse(BaseModel):
+    """Response with generated professional summary"""
+    summary: str
+
+
+@router.post("/generate-summary", response_model=GenerateSummaryResponse)
+async def generate_professional_summary(
+    request: GenerateSummaryRequest,
+    current_user: dict = Depends(get_current_user)
+) -> GenerateSummaryResponse:
+    """
+    Generate a professional summary using AI based on resume data.
+    
+    Creates a 2-3 sentence ATS-friendly summary in third-person voice.
+    """
+    try:
+        user_id = current_user['uid']
+        
+        # Check credits
+        if not has_sufficient_credits(user_id, FeatureType.AI_SUGGESTION):
+            user_credits = get_user_credits(user_id)
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "message": "Insufficient credits for AI summary generation",
+                    "current_balance": user_credits["balance"],
+                    "required": FEATURE_COSTS[FeatureType.AI_SUGGESTION]
+                }
+            )
+        
+        # Build context from resume data
+        context_parts = []
+        
+        # Experience
+        if request.experience:
+            exp_count = len(request.experience)
+            latest_exp = request.experience[0] if request.experience else {}
+            position = latest_exp.get('position', 'Professional')
+            company = latest_exp.get('company', '')
+            context_parts.append(f"Current/Latest role: {position}")
+            if exp_count > 0:
+                context_parts.append(f"Total experience entries: {exp_count}")
+        
+        # Education
+        if request.education:
+            latest_edu = request.education[0] if request.education else {}
+            degree = latest_edu.get('degree', '')
+            field = latest_edu.get('field', '')
+            institution = latest_edu.get('institution', '')
+            if degree and field:
+                context_parts.append(f"Education: {degree} in {field}")
+        
+        # Skills
+        if request.skills:
+            technical_skills = request.skills.get('technical', [])
+            if technical_skills:
+                top_skills = technical_skills[:5]  # Get top 5 skills
+                context_parts.append(f"Key technical skills: {', '.join(top_skills)}")
+        
+        # Projects
+        if request.projects:
+            context_parts.append(f"Projects completed: {len(request.projects)}")
+        
+        # Certifications
+        if request.certifications:
+            cert_names = [c.get('name', '') for c in request.certifications[:3]]
+            if cert_names:
+                context_parts.append(f"Certifications: {', '.join(cert_names)}")
+        
+        # Achievements
+        if request.achievements:
+            context_parts.append(f"Notable achievements: {len(request.achievements)}")
+        
+        resume_context = "\n".join(context_parts)
+        
+        # Create prompt for Gemini with strict structure
+        prompt = f"""PROFESSIONAL SUMMARY GENERATION
+
+You are generating a Professional Resume Summary. Use ONLY the data provided below. Do NOT invent, guess, or add information.
+
+DATA SOURCES (what you can use):
+{resume_context}
+
+MENTAL MODEL (how to think):
+1️⃣ Who is the candidate? → Infer role from Experience/Skills
+2️⃣ What is their foundation? → Education + core technical skills
+3️⃣ What experience do they have? → Work/Projects (type, not quantity)
+4️⃣ Which domains? → Specialization areas
+5️⃣ Seniority? → Fresher vs experienced (based on wording, NO years)
+
+FIXED FORMAT (DO NOT DEVIATE):
+Sentence 1: [ROLE] + [FOUNDATION] + [TYPE OF EXPERIENCE]
+Sentence 2: [SKILLS] applied to [PRACTICAL CONTEXT]
+Sentence 3: [DOMAIN KNOWLEDGE / SPECIALIZATION]
+
+TEMPLATE:
+[Role] with a [foundation] and [type of experience]. [Core skills] applied to [practical context]. Demonstrates domain knowledge in [specialization areas].
+
+STRICT RULES:
+❌ NO years, numbers, or counts
+❌ NO "expert", "highly skilled", buzzwords
+❌ NO certification names listed
+❌ NO invented information
+✅ Facts only from provided data
+✅ Neutral, professional tone
+✅ Third-person (no "I", "my", "we")
+✅ 2-3 sentences MAX
+✅ Plain text only
+
+REFERENCE EXAMPLE:
+Machine Learning Engineer with a strong foundation in computer science and hands-on experience developing machine learning models. Proficient in Python with practical exposure to data analysis and software development workflows. Demonstrates domain knowledge in data science, natural language processing, and computer vision.
+
+Generate the professional summary now (text only, no formatting):"""
+
+        logger.info("Generating professional summary with Gemini")
+        model = genai.GenerativeModel(settings.GEMINI_MODEL)
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.7,
+                max_output_tokens=300
+            )
+        )
+        
+        summary = response.text.strip()
+        
+        # Remove quotes if Gemini added them
+        if summary.startswith('"') and summary.endswith('"'):
+            summary = summary[1:-1]
+        if summary.startswith("'") and summary.endswith("'"):
+            summary = summary[1:-1]
+        
+        logger.info(f"Generated summary: {summary[:100]}...")
+        
+        # Deduct credits
+        deduct_credits(user_id, FeatureType.AI_SUGGESTION, "AI Professional Summary Generation")
+        
+        return GenerateSummaryResponse(summary=summary)
+        
+    except Exception as e:
+        logger.error(f"Summary generation failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate summary: {str(e)}"
+        )

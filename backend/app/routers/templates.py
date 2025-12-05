@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from typing import List
 from datetime import datetime
 from app.dependencies import get_current_user
-from app.dependencies_admin import get_current_admin
 from app.services.user_roles import is_user_admin
 from app.services.templates import (
     Template,
@@ -301,10 +300,17 @@ async def check_admin_status(
 @router.post("/templates/upload")
 async def upload_template(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_admin)
+    current_user: dict = Depends(get_current_user)
 ):
     """Upload a template file (Admin only)"""
     user_id = current_user["uid"]
+    
+    # Check if user is admin
+    if not is_user_admin(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can upload templates"
+        )
     
     logging.info("[API] Uploading template file for user %s: %s", user_id, file.filename)
     

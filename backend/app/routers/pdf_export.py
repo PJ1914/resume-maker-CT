@@ -521,9 +521,22 @@ async def preview_template(template_name: str):
         logger.info(f"Rendering preview for {template_name}")
         latex_source = latex_compiler.render_template(template_name, sample_resume_data)
         
-        # Compile to PDF
+        # Compile to PDF with error handling
         logger.info(f"Compiling preview for {template_name}")
-        pdf_content = latex_compiler.compile_pdf(latex_source, template_name)
+        try:
+            pdf_content = latex_compiler.compile_pdf(latex_source, template_name)
+        except RuntimeError as e:
+            logger.error(f"Failed to compile template {template_name}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to compile template {template_name}. Please try another template."
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error compiling template {template_name}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error compiling template {template_name}"
+            )
         
         # Save to cache
         try:

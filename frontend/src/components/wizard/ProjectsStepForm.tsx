@@ -1,4 +1,5 @@
 import { Plus, Trash2, Folder } from 'lucide-react'
+import { MonthYearPicker } from '../ui/month-year-picker'
 import { AIEnhancedTextarea } from '../ui/ai-enhanced-textarea'
 
 interface ProjectEntry {
@@ -106,27 +107,19 @@ export default function ProjectsStepForm({ data, onChange }: ProjectsStepFormPro
 
                 {/* Start Date */}
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Start Date
-                  </label>
-                  <input
-                    type="month"
+                  <MonthYearPicker
+                    label="Start Date"
                     value={project.startDate}
-                    onChange={(e) => updateProject(project.id, 'startDate', e.target.value)}
-                    className="w-full px-4 py-2.5 border border-secondary-300 dark:border-secondary-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-secondary-950 text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-600"
+                    onChange={(val) => updateProject(project.id, 'startDate', val)}
                   />
                 </div>
 
                 {/* End Date */}
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    End Date (or leave blank if ongoing)
-                  </label>
-                  <input
-                    type="month"
+                  <MonthYearPicker
+                    label="End Date (or leave blank if ongoing)"
                     value={project.endDate}
-                    onChange={(e) => updateProject(project.id, 'endDate', e.target.value)}
-                    className="w-full px-4 py-2.5 border border-secondary-300 dark:border-secondary-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-secondary-950 text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-600"
+                    onChange={(val) => updateProject(project.id, 'endDate', val)}
                   />
                 </div>
 

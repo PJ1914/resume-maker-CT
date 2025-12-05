@@ -25,15 +25,16 @@ export default function SummaryStepForm({ data, onChange }: SummaryStepFormProps
         </div>
         <div className="relative">
           <AIEnhancedTextarea
+            label="Professional Summary"
             value={data}
             onChange={(e) => onChange(e.target.value)}
             context="summary"
             placeholder="Example: Results-driven software engineer with 5+ years of experience building scalable web applications..."
             rows={6}
-            className="pl-10"
+            className="w-full rounded-lg border border-secondary-300 dark:border-secondary-700 bg-white dark:bg-secondary-800 text-secondary-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm resize-none pl-10"
             required
           />
-          <FileText className="absolute left-3 top-3 h-5 w-5 text-secondary-400 pointer-events-none" />
+          <FileText className="absolute left-3 top-4 h-5 w-5 text-secondary-400 pointer-events-none" />
         </div>
         <div className="flex items-center justify-between mt-2">
           <p className="text-xs sm:text-sm text-secondary-500 dark:text-secondary-400">

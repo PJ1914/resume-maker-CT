@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from pydantic import BaseModel
 from app.dependencies import get_current_user
-from app.dependencies_admin import get_current_admin
 from app.services.credits import (
     get_user_credits,
     has_sufficient_credits,
@@ -214,10 +213,18 @@ async def get_history(
 @router.post("/admin/grant")
 async def grant_credits(
     request: GrantCreditsRequest,
-    current_user: dict = Depends(get_current_admin)
+    current_user: dict = Depends(get_current_user)
 ):
     """Grant credits to a user (Admin only)"""
     admin_id = current_user["uid"]
+    
+    # Check if user is admin
+    from app.services.user_roles import is_user_admin
+    if not is_user_admin(admin_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can grant credits"
+        )
     
     description = request.description or f"Credits granted by admin ({admin_id})"
     

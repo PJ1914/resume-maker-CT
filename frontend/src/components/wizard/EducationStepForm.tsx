@@ -1,4 +1,5 @@
 import { Plus, Trash2, GraduationCap } from 'lucide-react'
+import { MonthYearPicker } from '../ui/month-year-picker'
 
 interface EducationEntry {
   id: string
@@ -137,27 +138,19 @@ export default function EducationStepForm({ data, onChange }: EducationStepFormP
 
                 {/* Start Date */}
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Start Date
-                  </label>
-                  <input
-                    type="month"
+                  <MonthYearPicker
+                    label="Start Date"
                     value={education.startDate}
-                    onChange={(e) => updateEducation(education.id, 'startDate', e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    onChange={(val) => updateEducation(education.id, 'startDate', val)}
                   />
                 </div>
 
                 {/* End Date */}
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    End Date (or Expected)
-                  </label>
-                  <input
-                    type="month"
+                  <MonthYearPicker
+                    label="End Date (or Expected)"
                     value={education.endDate}
-                    onChange={(e) => updateEducation(education.id, 'endDate', e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    onChange={(val) => updateEducation(education.id, 'endDate', val)}
                   />
                 </div>
 

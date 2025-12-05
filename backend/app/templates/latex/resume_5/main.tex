@@ -80,7 +80,7 @@
 \BLOCK{ if certifications }
 \cvsection{Certifications}
 \BLOCK{ for cert in certifications }
-\cvevent{\VAR{cert.name}}{\VAR{cert.issuer}}{\VAR{cert.date}}{}
+\cvevent{\VAR{cert.name|escape_tex}}{\VAR{cert.issuer|escape_tex}}{\VAR{cert.date|escape_tex}}{}
 \divider
 \BLOCK{ endfor }
 \BLOCK{ endif }
@@ -88,7 +88,7 @@
 \BLOCK{ if languages }
 \cvsection{Languages}
 \BLOCK{ for lang in languages }
-\cvtag{\VAR{lang.language} (\VAR{lang.proficiency})}
+\cvtag{\VAR{lang.language|escape_tex} (\VAR{lang.proficiency|escape_tex})}
 \BLOCK{ endfor }
 \divider
 \BLOCK{ endif }
@@ -97,7 +97,7 @@
 \cvsection{Achievements}
 \begin{itemize}
 \BLOCK{ for ach in achievements }
-\item \textbf{\VAR{ach.title}} (\VAR{ach.date})
+\item \textbf{\VAR{ach.title|escape_tex}} (\VAR{ach.date|escape_tex})
 \BLOCK{ endfor }
 \end{itemize}
 \BLOCK{ endif }
@@ -106,16 +106,16 @@
 
 \begin{document}
 
-\name{\VAR{full_name}}
+\name{\VAR{full_name|escape_tex}}
 \tagline{\VAR{summary|truncate(50)}}
 \personalinfo{%
   % Not all of these are required!
   % You can add your own with \printinfo{symbol}{detail}
-  \email{\VAR{email}}
-  \phone{\VAR{phone}}
+  \email{\VAR{email|escape_tex}}
+  \phone{\VAR{phone|escape_tex}}
 %  \homepage{www.homepage.com}
 %  \twitter{@twitterhandle}
-  \linkedin{\VAR{linkedin}}
+  \linkedin{\VAR{linkedin|escape_tex}}
   %% You MUST add the academicons option to \documentclass, then compile with LuaLaTeX or XeLaTeX, if you want to use \orcid or other academicons commands.
 %   \orcid{orcid.org/0000-0000-0000-0000}
 }
@@ -136,13 +136,13 @@
 \cvsection[page1sidebar]{Experience}
 
 \BLOCK{ for exp in experience }
-\cvevent{\VAR{exp.position}}{\VAR{exp.company}}{\VAR{exp.start_date} -- \VAR{exp.end_date}}{\VAR{exp.location}}
+\cvevent{\VAR{exp.position|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.start_date|escape_tex} -- \VAR{exp.end_date|escape_tex}}{\VAR{exp.location|escape_tex}}
 \begin{itemize}
 \BLOCK{ if exp.description }
-\item \VAR{exp.description}
+\item \VAR{exp.description|escape_tex}
 \BLOCK{ endif }
 \BLOCK{ for highlight in exp.highlights }
-\item \VAR{highlight}
+\item \VAR{highlight|escape_tex}
 \BLOCK{ endfor }
 \end{itemize}
 \divider
@@ -151,9 +151,9 @@
 \cvsection{Education}
 
 \BLOCK{ for edu in education }
-\cvevent{\VAR{edu.degree} in \VAR{edu.field}}{\VAR{edu.institution}}{\VAR{edu.start_date} -- \VAR{edu.end_date}}{\VAR{edu.location}}
+\cvevent{\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex}}{\VAR{edu.institution|escape_tex}}{\VAR{edu.start_date|escape_tex} -- \VAR{edu.end_date|escape_tex}}{\VAR{edu.location|escape_tex}}
 \BLOCK{ if edu.gpa }
-GPA: \VAR{edu.gpa}
+GPA: \VAR{edu.gpa|escape_tex}
 \BLOCK{ endif }
 \divider
 \BLOCK{ endfor }
@@ -161,15 +161,13 @@ GPA: \VAR{edu.gpa}
 \BLOCK{ if projects }
 \cvsection{Projects}
 \BLOCK{ for proj in projects }
-\cvevent{\VAR{proj.name}}{Technologies: \VAR{proj.technologies|join(', ')}}{}{}
-\begin{itemize}
+\cvevent{\VAR{proj.name|escape_tex}}{Technologies: \VAR{proj.technologies|join(', ')|escape_tex}}{}{}
 \BLOCK{ if proj.description }
-\item \VAR{proj.description}
+\VAR{proj.description|escape_tex}
 \BLOCK{ endif }
 \BLOCK{ if proj.link }
-\item \VAR{proj.link}
+\VAR{proj.link|escape_tex}
 \BLOCK{ endif }
-\end{itemize}
 \divider
 \BLOCK{ endfor }
 \BLOCK{ endif }

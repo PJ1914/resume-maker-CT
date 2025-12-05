@@ -3,8 +3,8 @@
 \usepackage[left=0.75in,top=0.6in,right=0.75in,bottom=0.6in]{geometry} % Document margins
 \newcommand{\tab}[1]{\hspace{.2667\textwidth}\rlap{#1}}
 \newcommand{\itab}[1]{\hspace{0em}\rlap{#1}}
-\name{\VAR{full_name}} % Your name
-\address{\VAR{location} \\ \VAR{phone} \\ \VAR{email}} 
+\name{\VAR{full_name|escape_tex}} % Your name
+\address{\VAR{location|escape_tex} \\ \VAR{phone|escape_tex} \\ \VAR{email|escape_tex}} 
 
 \begin{document}
 
@@ -16,10 +16,10 @@
 \begin{rSection}{Education}
 
 \BLOCK{ for edu in education }
-{\bf \VAR{edu.institution}} \hfill {\em \VAR{edu.end_date}} 
-\\ \VAR{edu.degree} in \VAR{edu.field}
+{\bf \VAR{edu.institution|escape_tex}} \hfill {\em \VAR{edu.end_date|escape_tex}} 
+\\ \VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex}
 \BLOCK{ if edu.gpa }
-\\ GPA: \VAR{edu.gpa}
+\\ GPA: \VAR{edu.gpa|escape_tex}
 \BLOCK{ endif }
 \smallskip \\
 \BLOCK{ endfor }
@@ -35,14 +35,14 @@
 \begin{rSection}{Work Experience}
 
 \BLOCK{ for exp in experience }
-{\bf \VAR{exp.position}, \VAR{exp.company}} \hfill {\em \VAR{exp.start_date} - \VAR{exp.end_date}} 
+{\bf \VAR{exp.position|escape_tex}, \VAR{exp.company|escape_tex}} \hfill {\em \VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}} 
 
 \begin{itemize} 
     \BLOCK{ if exp.description }
-    \item \VAR{exp.description}
+    \item \VAR{exp.description|escape_tex}
     \BLOCK{ endif }
     \BLOCK{ for highlight in exp.highlights }
-    \item \VAR{highlight}
+    \item \VAR{highlight|escape_tex}
     \BLOCK{ endfor }
 \end{itemize}
 \BLOCK{ endfor }
@@ -57,18 +57,18 @@
 \begin{rSection}{Projects}
 
 \BLOCK{ for proj in projects }
-{\bf \VAR{proj.name}}
-    \begin{itemize}
-        \BLOCK{ if proj.description }
-        \item \VAR{proj.description}
-        \BLOCK{ endif }
-        \BLOCK{ if proj.technologies }
-        \item Technologies: \VAR{proj.technologies|join(', ')}
-        \BLOCK{ endif }
-        \BLOCK{ if proj.link }
-        \item \VAR{proj.link}
-        \BLOCK{ endif }
-    \end{itemize}
+{\bf \VAR{proj.name|escape_tex}}
+\BLOCK{ if proj.description }
+\VAR{proj.description|escape_tex}
+\BLOCK{ endif }
+\begin{itemize}
+    \BLOCK{ if proj.technologies }
+    \item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
+    \BLOCK{ endif }
+    \BLOCK{ if proj.link }
+    \item \VAR{proj.link|escape_tex}
+    \BLOCK{ endif }
+\end{itemize}
 \BLOCK{ endfor }
 
 \end{rSection}
@@ -81,7 +81,7 @@
 \BLOCK{ if skills }
 \begin{rSection}{Technical Skills}
 
-\begin{tabular}{ @{} >{\bfseries}l @{\hspace{6ex}} l }
+\begin{tabular}{ @{} >{\bfseries}l @{\hspace{2ex}} p{11cm} }
 \BLOCK{ for skill in skills }
 \VAR{skill.category|escape_tex} & \VAR{skill.items|join(', ')|escape_tex} \\
 \BLOCK{ endfor }
@@ -98,7 +98,7 @@
 \begin{rSection}{Certifications}
 \begin{itemize}
     \BLOCK{ for cert in certifications }
-    \item {\bf \VAR{cert.name}} - \VAR{cert.issuer} \hfill {\em \VAR{cert.date}}
+    \item {\bf \VAR{cert.name|escape_tex}} - \VAR{cert.issuer|escape_tex} \hfill {\em \VAR{cert.date|escape_tex}}
     \BLOCK{ endfor }
 \end{itemize}
 \end{rSection}
@@ -112,7 +112,7 @@
 \begin{rSection}{Languages}
 \begin{itemize}
     \BLOCK{ for lang in languages }
-    \item {\bf \VAR{lang.language}}: \VAR{lang.proficiency}
+    \item {\bf \VAR{lang.language|escape_tex}}: \VAR{lang.proficiency|escape_tex}
     \BLOCK{ endfor }
 \end{itemize}
 \end{rSection}
@@ -126,9 +126,9 @@
 \begin{rSection}{Achievements} 
 \begin{itemize}
     \BLOCK{ for ach in achievements }
-    \item {\bf \VAR{ach.title}} \hfill {\em \VAR{ach.date}}
+    \item {\bf \VAR{ach.title|escape_tex}} \hfill {\em \VAR{ach.date|escape_tex}}
     \BLOCK{ if ach.description }
-    \\ \VAR{ach.description}
+    \\ \VAR{ach.description|escape_tex}
     \BLOCK{ endif }
     \BLOCK{ endfor }
 \end{itemize}

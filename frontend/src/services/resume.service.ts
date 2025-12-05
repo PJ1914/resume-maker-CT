@@ -1,5 +1,4 @@
 import { apiClient } from './api'
-import { API_URL } from '@/config/firebase'
 
 export interface UploadUrlResponse {
   upload_url: string
@@ -93,8 +92,8 @@ export const resumeService = {
 
     // Use apiClient but override for multipart/form-data
     const token = await import('./auth.service').then(m => m.getAuthToken())
-
-    const response = await fetch(`${API_URL}/api/upload-direct`, {
+    
+    const response = await fetch('/api/upload-direct', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -115,28 +114,6 @@ export const resumeService = {
    */
   async listResumes(limit = 50): Promise<{ resumes: ResumeListItem[]; total: number }> {
     return apiClient.get(`/api/resumes?limit=${limit}`)
-  },
-
-  /**
-   * Get all resumes (alias for listResumes)
-   */
-  async getAllResumes(limit = 50): Promise<ResumeListItem[]> {
-    const result = await this.listResumes(limit)
-    return result.resumes
-  },
-
-  /**
-   * Create a new resume
-   */
-  async createResume(data: any): Promise<ResumeDetail> {
-    return apiClient.post<ResumeDetail>('/api/resumes', data)
-  },
-
-  /**
-   * Update an existing resume
-   */
-  async updateResume(id: string, data: any): Promise<ResumeDetail> {
-    return apiClient.put<ResumeDetail>(`/api/resumes/${id}`, data)
   },
 
   /**
@@ -163,11 +140,10 @@ export const resumeService = {
   /**
    * Trigger ATS scoring for a resume
    */
-  async scoreResume(resumeId: string, preferGemini: boolean = true, useCache: boolean = true): Promise<any> {
-    console.log(`[resume.service] Scoring resume ${resumeId} with preferGemini=${preferGemini}, useCache=${useCache}`)
-    return apiClient.post(`/api/scoring/${resumeId}`, {
+  async scoreResume(resumeId: string, preferGemini: boolean = true): Promise<any> {
+    return apiClient.post(`/api/scoring/${resumeId}`, { 
       prefer_gemini: preferGemini,
-      use_cache: useCache
+      use_cache: true 
     })
   },
 

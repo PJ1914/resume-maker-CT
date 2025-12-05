@@ -90,7 +90,8 @@ export function AIEnhancedTextarea({
                             type="button"
                             onClick={handleEnhance}
                             disabled={isEnhancing || !value}
-                            className="text-xs flex items-center gap-1.5 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-secondary-100 dark:bg-secondary-800 text-secondary-900 dark:text-white text-xs font-medium rounded-full hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group relative"
+                            title="Enhance with AI - 1 credit"
                         >
                             {isEnhancing ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -98,6 +99,11 @@ export function AIEnhancedTextarea({
                                 <Sparkles className="w-3.5 h-3.5" />
                             )}
                             {isEnhancing ? 'Enhancing...' : 'Enhance with AI'}
+
+                            {/* Credit Cost Tooltip */}
+                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-secondary-900 dark:bg-secondary-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg border border-secondary-700">
+                                1 credit
+                            </span>
                         </button>
                     )}
                 </div>
@@ -110,10 +116,10 @@ export function AIEnhancedTextarea({
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute inset-0 z-10 bg-white dark:bg-secondary-800 rounded-lg border-2 border-purple-500 dark:border-purple-400 shadow-lg flex flex-col overflow-hidden"
+                            className="absolute inset-0 z-10 bg-white dark:bg-secondary-800 rounded-lg border-2 border-secondary-900 dark:border-white shadow-lg flex flex-col overflow-hidden"
                         >
-                            <div className="flex items-center justify-between px-3 py-2 bg-purple-50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-800/50">
-                                <span className="text-xs font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                            <div className="flex items-center justify-between px-3 py-2 bg-secondary-50 dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800">
+                                <span className="text-xs font-semibold text-secondary-900 dark:text-white flex items-center gap-1.5">
                                     <Sparkles className="w-3.5 h-3.5" />
                                     AI Suggestion
                                 </span>
@@ -156,14 +162,20 @@ export function AIEnhancedTextarea({
                         type="button"
                         onClick={handleEnhance}
                         disabled={isEnhancing || !value}
-                        className="absolute bottom-3 right-3 p-1.5 bg-white dark:bg-secondary-700 text-purple-600 dark:text-purple-400 rounded-md shadow-sm border border-secondary-200 dark:border-secondary-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Enhance with AI"
+                        className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 text-xs font-medium rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-10"
+                        title="Enhance with AI - 1 credit"
                     >
                         {isEnhancing ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
-                            <Sparkles className="w-4 h-4" />
+                            <Sparkles className="w-3.5 h-3.5" />
                         )}
+                        <span>Enhance</span>
+
+                        {/* Credit Cost Tooltip */}
+                        <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-secondary-900 dark:bg-secondary-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg border border-secondary-700">
+                            1 credit
+                        </span>
                     </button>
                 )}
             </div>

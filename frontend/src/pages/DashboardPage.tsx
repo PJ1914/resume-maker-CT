@@ -23,14 +23,14 @@ export default function DashboardPage() {
   const resumes = resumesData || []
 
   const stats = useMemo(() => {
-    const scoredResumes = resumes.filter(r => r.latest_score && r.latest_score > 0)
+    const scoredResumes = resumes.filter((r) => r.latest_score && r.latest_score > 0)
 
     return {
       totalResumes: resumes.length,
       averageScore: scoredResumes.length > 0
         ? Math.round(scoredResumes.reduce((sum, r) => sum + (r.latest_score || 0), 0) / scoredResumes.length)
         : 0,
-      recentUploads: resumes.filter(r => {
+      recentUploads: resumes.filter((r) => {
         if (!r.created_at) return false
         const uploadDate = new Date(r.created_at)
         const weekAgo = new Date()

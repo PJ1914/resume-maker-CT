@@ -16,7 +16,7 @@ from app.services.latex_utils import prepare_template_data
 logger = logging.getLogger(__name__)
 
 # Template types
-TemplateType = Literal["modern", "classic", "minimalist", "awesomecv", "moderncv", "engineering", "simple", "onepage"]
+TemplateType = Literal["modern", "classic", "minimalist", "awesomecv", "moderncv", "engineering", "simple", "onepage", "resume_1", "resume_2", "resume_3", "resume_4", "resume_5", "resume_6", "resume_7"]
 
 # Get templates directory
 TEMPLATES_DIR = Path(__file__).parent.parent / "templates" / "latex"
@@ -180,8 +180,8 @@ class LaTeXCompiler:
             tex_file.write_text(latex_source, encoding='utf-8')
             
             # 3. Compile
-            # Try Tectonic first, then xelatex/pdflatex
-            compilers = ['tectonic', 'xelatex', 'pdflatex']
+            # Use pdflatex from MiKTeX (skip tectonic due to fontconfig issues)
+            compilers = ['pdflatex', 'xelatex']
             pdf_path = None
             
             for compiler in compilers:
@@ -208,10 +208,16 @@ class LaTeXCompiler:
                         )
                     else:
                         # Standard LaTeX compilation (run twice for refs)
+                        # Enable automatic package installation for MiKTeX
+                        env = os.environ.copy()
+                        env['MIKTEX_TEMP'] = str(temp_path)
+                        env['MIKTEX_ENABLE_INSTALLER'] = '1'  # Auto-install missing packages
+                        
                         for _ in range(2):
                             cmd = [
                                 compiler,
                                 '-interaction=nonstopmode',
+                                '--enable-installer',  # Allow MiKTeX to install packages
                                 "main.tex"
                             ]
                             result = subprocess.run(
@@ -219,13 +225,16 @@ class LaTeXCompiler:
                                 cwd=temp_path,
                                 capture_output=True,
                                 text=True,
-                                timeout=120
+                                timeout=180,  # Increase timeout to allow package installation
+                                env=env
                             )
                     
                     if result.returncode != 0:
-                        logger.warning(f"{compiler} compilation failed: {result.stderr or result.stdout}")
-                        # If tectonic fails, we might want to try others, or just fail hard.
-                        # For now, let's try others if this one failed.
+                        # Filter out MiKTeX warning messages
+                        error_msg = result.stderr or result.stdout
+                        if error_msg and "major issue" not in error_msg.lower():
+                            logger.warning(f"{compiler} compilation failed: {error_msg}")
+                        # If pdflatex fails, try xelatex. For now, let's try others if this one failed.
                         continue
 
                     # Check if PDF was created

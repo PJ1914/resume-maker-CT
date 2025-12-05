@@ -7,6 +7,22 @@ import re
 from typing import Any, Dict
 import logging
 
+def escape_latex(s: Any) -> str:
+    """
+    NO-OP function - escaping is now handled by templates using |escape_tex filter.
+    This function is kept for backward compatibility but does NOT escape.
+    Templates control escaping via the |escape_tex Jinja filter in latex_compiler.py.
+    
+    Args:
+        s: String to pass through
+        
+    Returns:
+        Original string converted to str
+    """
+    if not s:
+        return ""
+    return str(s)
+
 # Keep these for backward compatibility or direct usage if needed
 def latex_escape(text: str) -> str:
     """
@@ -92,17 +108,17 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         contact = {}
     
     sanitized_contact = {
-        'full_name': contact.get('fullName', '') or contact.get('name', ''),
-        'email': contact.get('email', ''),
-        'phone': contact.get('phone', ''),
-        'location': contact.get('location', ''),
-        'linkedin': contact.get('linkedin', ''),
-        'github': contact.get('github', ''),
-        'portfolio': contact.get('portfolio', ''),
+        'full_name': escape_latex(contact.get('fullName', '') or contact.get('name', '')),
+        'email': escape_latex(contact.get('email', '')),
+        'phone': escape_latex(contact.get('phone', '')),
+        'location': escape_latex(contact.get('location', '')),
+        'linkedin': escape_latex(contact.get('linkedin', '')),
+        'github': escape_latex(contact.get('github', '')),
+        'portfolio': escape_latex(contact.get('portfolio', '')),
     }
     
     # Structure summary
-    summary = data.get('summary', '') or data.get('professional_summary', '')
+    summary = escape_latex(data.get('summary', '') or data.get('professional_summary', ''))
     
     # Structure experience (convert to SimpleNamespace for dot notation)
     experience = []
@@ -112,14 +128,14 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for exp in exp_data:
             if not isinstance(exp, dict): continue
             experience.append(SimpleNamespace(
-                position=exp.get('position', exp.get('title', '')),
-                company=exp.get('company', ''),
-                location=exp.get('location', ''),
-                start_date=format_date(exp.get('startDate', '')),
-                end_date=format_date(exp.get('endDate', '')),
+                position=escape_latex(exp.get('position', exp.get('title', ''))),
+                company=escape_latex(exp.get('company', '')),
+                location=escape_latex(exp.get('location', '')),
+                start_date=escape_latex(format_date(exp.get('startDate', ''))),
+                end_date=escape_latex(format_date(exp.get('endDate', ''))),
                 current=exp.get('current', False),
-                description=exp.get('description', ''),
-                highlights=[h for h in exp.get('highlights', []) if h],
+                description=escape_latex(exp.get('description', '')),
+                highlights=[escape_latex(h) for h in exp.get('highlights', []) if h],
             ))
     
     # Structure education (convert to SimpleNamespace for dot notation)
@@ -129,14 +145,14 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for edu in edu_data:
             if not isinstance(edu, dict): continue
             education.append(SimpleNamespace(
-                degree=edu.get('degree', ''),
-                field=edu.get('field', ''),
-                institution=edu.get('institution', ''),
-                location=edu.get('location', ''),
-                start_date=format_date(edu.get('startDate', '')),
-                end_date=format_date(edu.get('endDate', '')),
-                gpa=edu.get('gpa', ''),
-                honors=edu.get('honors', ''),
+                degree=escape_latex(edu.get('degree', '')),
+                field=escape_latex(edu.get('field', '')),
+                institution=escape_latex(edu.get('institution', '')),
+                location=escape_latex(edu.get('location', '')),
+                start_date=escape_latex(format_date(edu.get('startDate', ''))),
+                end_date=escape_latex(format_date(edu.get('endDate', ''))),
+                gpa=escape_latex(edu.get('gpa', '')),
+                honors=escape_latex(edu.get('honors', '')),
             ))
     
     # Structure projects (convert to SimpleNamespace for dot notation)
@@ -145,13 +161,24 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(proj_data, list):
         for proj in proj_data:
             if not isinstance(proj, dict): continue
+            
+            # Handle technologies as either string or list
+            tech = proj.get('technologies', [])
+            if isinstance(tech, str):
+                # Split comma-separated string into list
+                technologies = [escape_latex(t.strip()) for t in tech.split(',') if t.strip()]
+            elif isinstance(tech, list):
+                technologies = [escape_latex(str(t)) for t in tech if t]
+            else:
+                technologies = []
+            
             projects.append(SimpleNamespace(
-                name=proj.get('name', ''),
-                description=proj.get('description', ''),
-                technologies=[t for t in proj.get('technologies', []) if t],
-                link=proj.get('link', ''),
-                highlights=[h for h in proj.get('highlights', []) if h],
-                start_date=format_date(proj.get('startDate', '')),
+                name=escape_latex(proj.get('name', '')),
+                description=escape_latex(proj.get('description', '')),
+                technologies=technologies,
+                link=escape_latex(proj.get('link', '')),
+                highlights=[escape_latex(h) for h in proj.get('highlights', []) if h],
+                start_date=escape_latex(format_date(proj.get('startDate', ''))),
                 end_date=format_date(proj.get('endDate', '')),
             ))
     
@@ -164,8 +191,8 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for category, items in skills_data.items():
             if isinstance(items, list):
                 skills.append(SimpleNamespace(
-                    category=category.title(),
-                    items=[str(item) for item in items if item],
+                    category=escape_latex(category.title()),
+                    items=[escape_latex(str(item)) for item in items if item],
                 ))
     elif isinstance(skills_data, list):
         # Format: [{category: "...", items: [...]}, ...]
@@ -175,8 +202,8 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
             if not isinstance(skill_items, list): continue
             
             skills.append(SimpleNamespace(
-                category=skill.get('category', ''),
-                items=[str(item) for item in skill_items if item],
+                category=escape_latex(skill.get('category', '')),
+                items=[escape_latex(str(item)) for item in skill_items if item],
             ))
     
     # Structure certifications (convert to SimpleNamespace for dot notation)
@@ -186,11 +213,11 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for cert in cert_data:
             if not isinstance(cert, dict): continue
             certifications.append(SimpleNamespace(
-                name=cert.get('name', ''),
-                issuer=cert.get('issuer', ''),
+                name=escape_latex(cert.get('name', '')),
+                issuer=escape_latex(cert.get('issuer', '')),
                 date=format_date(cert.get('date', '')),
-                credential_id=cert.get('credentialId', ''),
-                url=cert.get('url', ''),
+                credential_id=escape_latex(cert.get('credentialId', '')),
+                url=escape_latex(cert.get('url', '')),
             ))
 
     # Structure languages (convert to SimpleNamespace for dot notation)
@@ -200,8 +227,8 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for lang in lang_data:
             if not isinstance(lang, dict): continue
             languages.append(SimpleNamespace(
-                language=lang.get('language', ''),
-                proficiency=lang.get('proficiency', ''),
+                language=escape_latex(lang.get('language', '')),
+                proficiency=escape_latex(lang.get('proficiency', '')),
             ))
 
     # Structure achievements (convert to SimpleNamespace for dot notation)
@@ -211,8 +238,8 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for ach in ach_data:
             if not isinstance(ach, dict): continue
             achievements.append(SimpleNamespace(
-                title=ach.get('title', ''),
-                description=ach.get('description', ''),
+                title=escape_latex(ach.get('title', '')),
+                description=escape_latex(ach.get('description', '')),
                 date=format_date(ach.get('date', '')),
             ))
     

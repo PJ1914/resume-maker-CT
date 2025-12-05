@@ -1,5 +1,6 @@
 import { Plus, X, Award } from 'lucide-react'
 import { useState } from 'react'
+import { DatePicker } from '../ui/date-picker'
 
 interface Certification {
   name: string
@@ -84,12 +85,10 @@ export default function CertificationsStepForm({ data, onChange }: Certification
             <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
               Date Issued
             </label>
-            <input
-              type="text"
+            <DatePicker
               value={form.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
-              placeholder="e.g., Jan 2024 or 2024"
-              className="w-full px-4 py-2.5 border border-secondary-300 dark:border-secondary-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-secondary-950 text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-600"
+              onChange={(val) => handleInputChange('date', val)}
+              placeholder="Select a date"
             />
           </div>
 

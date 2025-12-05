@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import sys
 import logging
+from datetime import datetime
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -10,7 +11,7 @@ load_dotenv()
 from app.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("resume_maker")
-from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, admin, credits
+from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, credits
 
 # Print startup info
 logger.info("Resume Maker API - Starting...")
@@ -59,6 +60,7 @@ async def add_security_headers(request: Request, call_next):
     
     return response
 
+
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(users.router, tags=["Users"])
@@ -67,7 +69,6 @@ app.include_router(resumes.router, prefix="/api", tags=["Resumes"])
 app.include_router(templates.router, prefix="/api", tags=["Templates"])
 app.include_router(scoring.router, prefix="/api/scoring", tags=["Scoring"])
 app.include_router(ai.router, tags=["AI"])
-app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(credits.router, prefix="/api/credits", tags=["Credits"])
 
 @app.get("/")

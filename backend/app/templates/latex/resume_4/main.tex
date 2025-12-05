@@ -56,7 +56,7 @@
 %-------------------------------------------------------------------------------
 %	NAME AND ADDRESS SECTION
 %-------------------------------------------------------------------------------
-\name{\VAR{full_name}}
+\name{\VAR{full_name|escape_tex}}
 
 % Note that addresses can be used for other contact information:
 % -phone numbers
@@ -64,7 +64,7 @@
 % -linked-in profile
 
 \address{}%intentionally left blank 
-\address{\VAR{email}\\\VAR{phone}\\\VAR{location}}
+\address{\VAR{email|escape_tex}\\\VAR{phone|escape_tex}\\\VAR{location|escape_tex}}
 
 % Uncomment to add a third address
 %\address{Address 3 line 1\\Address 3 line 2\\Address 3 line 3}
@@ -78,8 +78,8 @@
 \BLOCK{ if education }
 \section{EDUCATION}
 \BLOCK{ for edu in education }
-\textbf{\VAR{edu.institution}}, \VAR{edu.location}\\
-{\sl \VAR{edu.degree}}, \VAR{edu.field}, \VAR{edu.end_date}\hfill \BLOCK{ if edu.gpa }CGPA: \VAR{edu.gpa}\BLOCK{ endif }
+\textbf{\VAR{edu.institution|escape_tex}}\BLOCK{ if edu.location }, \VAR{edu.location|escape_tex}\BLOCK{ endif }\\
+{\sl \VAR{edu.degree|escape_tex}}, \VAR{edu.field|escape_tex}, \VAR{edu.end_date|escape_tex}\hfill \BLOCK{ if edu.gpa }CGPA: \VAR{edu.gpa|escape_tex}\BLOCK{ endif }
 \smallskip\\
 \BLOCK{ endfor }
 \BLOCK{ endif }
@@ -90,9 +90,9 @@
 \BLOCK{ if achievements }
 \section{ACHIEVEMENTS}
 \BLOCK{ for ach in achievements }
-\VAR{ach.title} \hfill \VAR{ach.date}\\
+\VAR{ach.title|escape_tex} \hfill \VAR{ach.date|escape_tex}\\
 \BLOCK{ if ach.description }
-\VAR{ach.description}\\
+\VAR{ach.description|escape_tex}\\
 \BLOCK{ endif }
 \BLOCK{ endfor }
 \BLOCK{ endif }
@@ -122,17 +122,17 @@
 \BLOCK{ if experience }
 \section{EXPERIENCE}
 \BLOCK{ for exp in experience }
-\employer{\VAR{exp.company}}
-\location{\VAR{exp.location}}
-\dates{\VAR{exp.start_date}-\VAR{exp.end_date}}
-\title{\textbf{\VAR{exp.position}}}
+\employer{\VAR{exp.company|escape_tex}}
+\location{\VAR{exp.location|escape_tex}}
+\dates{\VAR{exp.start_date|escape_tex}-\VAR{exp.end_date|escape_tex}}
+\title{\textbf{\VAR{exp.position|escape_tex}}}
 \begin{position}
 \BLOCK{ if exp.description }
-\VAR{exp.description}
+\VAR{exp.description|escape_tex}
 \BLOCK{ endif }
 \begin{itemize}
 \BLOCK{ for highlight in exp.highlights }
-\item \VAR{highlight}
+\item \VAR{highlight|escape_tex}
 \BLOCK{ endfor }
 \end{itemize}
 \end{position}
@@ -146,15 +146,15 @@
 \section{PROJECTS}
 \BLOCK{ for proj in projects }
 \par
-\textbf{\VAR{proj.name}}: 
+\textbf{\VAR{proj.name|escape_tex}}: 
 \BLOCK{ if proj.description }
-\VAR{proj.description}
+\VAR{proj.description|escape_tex}
 \BLOCK{ endif }
 \BLOCK{ if proj.technologies }
-\\ Technologies: \VAR{proj.technologies|join(', ')}
+\\ Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
 \BLOCK{ endif }
 \BLOCK{ if proj.link }
-\\ \VAR{proj.link}
+\\ \VAR{proj.link|escape_tex}
 \BLOCK{ endif }
 \BLOCK{ endfor }
 \BLOCK{ endif }
@@ -165,7 +165,7 @@
 \BLOCK{ if certifications }
 \section{CERTIFICATIONS}
 \BLOCK{ for cert in certifications }
-\textbf{\VAR{cert.name}} - \VAR{cert.issuer} \hfill \VAR{cert.date}\\
+\textbf{\VAR{cert.name|escape_tex}} - \VAR{cert.issuer|escape_tex} \hfill \VAR{cert.date|escape_tex}\\
 \BLOCK{ endfor }
 \BLOCK{ endif }
 
@@ -175,7 +175,7 @@
 \BLOCK{ if languages }
 \section{LANGUAGES}
 \BLOCK{ for lang in languages }
-\textbf{\VAR{lang.language}}: \VAR{lang.proficiency}\\
+\textbf{\VAR{lang.language|escape_tex}}: \VAR{lang.proficiency|escape_tex}\\
 \BLOCK{ endfor }
 \BLOCK{ endif }
 

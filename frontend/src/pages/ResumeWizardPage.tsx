@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import WizardProgress, { type WizardStep } from '../components/wizard/WizardProgress'
 import ResumeDumpStep from '../components/wizard/ResumeDumpStep'
 import ContactStepForm from '../components/wizard/ContactStepForm'
-import SummaryStepForm from '../components/wizard/SummaryStepForm'
+import AISummaryStepForm from '../components/wizard/AISummaryStepForm'
 import ExperienceStepForm from '../components/wizard/ExperienceStepForm'
 import EducationStepForm from '../components/wizard/EducationStepForm'
 import SkillsStepForm from '../components/wizard/SkillsStepForm'
@@ -22,14 +22,14 @@ import ResumeStrengthMeter from '../components/wizard/ResumeStrengthMeter'
 const WIZARD_STEPS: WizardStep[] = [
   { id: 0, title: 'Quick Start', description: 'Paste your resume (optional)' },
   { id: 1, title: 'Contact', description: 'Your details' },
-  { id: 2, title: 'Summary', description: 'Professional bio' },
-  { id: 3, title: 'Experience', description: 'Work history' },
-  { id: 4, title: 'Education', description: 'Academic background' },
-  { id: 5, title: 'Skills', description: 'Technologies' },
-  { id: 6, title: 'Projects', description: 'Portfolio items' },
-  { id: 7, title: 'Certifications', description: 'Credentials' },
-  { id: 8, title: 'Languages', description: 'Languages spoken' },
-  { id: 9, title: 'Achievements', description: 'Awards & honors' },
+  { id: 2, title: 'Experience', description: 'Work history' },
+  { id: 3, title: 'Education', description: 'Academic background' },
+  { id: 4, title: 'Skills', description: 'Technologies' },
+  { id: 5, title: 'Projects', description: 'Portfolio items' },
+  { id: 6, title: 'Certifications', description: 'Credentials' },
+  { id: 7, title: 'Languages', description: 'Languages spoken' },
+  { id: 8, title: 'Achievements', description: 'Awards & honors' },
+  { id: 9, title: 'Summary', description: 'AI-generated summary' },
   { id: 10, title: 'Review', description: 'Finalize resume' },
 ]
 
@@ -189,58 +189,59 @@ export default function ResumeWizardPage() {
         )
       case 2:
         return (
-          <SummaryStepForm
-            data={resumeData.summary}
-            onChange={(data: string) => updateResumeData('summary', data)}
-          />
-        )
-      case 3:
-        return (
           <ExperienceStepForm
             data={resumeData.experience}
             onChange={(data: any[]) => updateResumeData('experience', data)}
           />
         )
-      case 4:
+      case 3:
         return (
           <EducationStepForm
             data={resumeData.education}
             onChange={(data: any[]) => updateResumeData('education', data)}
           />
         )
-      case 5:
+      case 4:
         return (
           <SkillsStepForm
             data={resumeData.skills}
             onChange={(data: any) => updateResumeData('skills', data)}
           />
         )
-      case 6:
+      case 5:
         return (
           <ProjectsStepForm
             data={resumeData.projects}
             onChange={(data: any[]) => updateResumeData('projects', data)}
           />
         )
-      case 7:
+      case 6:
         return (
           <CertificationsStepForm
             data={resumeData.certifications}
             onChange={(data: any[]) => updateResumeData('certifications', data)}
           />
         )
-      case 8:
+      case 7:
         return (
           <LanguagesStepForm
             data={resumeData.languages}
             onChange={(data: any[]) => updateResumeData('languages', data)}
           />
         )
-      case 9:
+      case 8:
         return (
           <AchievementsStepForm
             data={resumeData.achievements}
             onChange={(data: any[]) => updateResumeData('achievements', data)}
+          />
+        )
+      case 9:
+        return (
+          <AISummaryStepForm
+            data={resumeData.summary}
+            onChange={(data: string) => updateResumeData('summary', data)}
+            resumeData={resumeData}
           />
         )
       case 10:

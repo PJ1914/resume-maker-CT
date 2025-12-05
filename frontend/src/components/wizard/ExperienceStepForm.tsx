@@ -1,4 +1,5 @@
-import { Plus, Trash2, Briefcase } from 'lucide-react'
+import { Plus, Trash2, Briefcase, Check } from 'lucide-react'
+import { MonthYearPicker } from '../ui/month-year-picker'
 import { AIEnhancedTextarea } from '../ui/ai-enhanced-textarea'
 import { InfoTooltip } from '../ui/info-tooltip'
 
@@ -128,50 +129,45 @@ export default function ExperienceStepForm({ data, onChange }: ExperienceStepFor
 
                 {/* Start Date */}
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Start Date <span className="text-danger-600 dark:text-danger-400">*</span>
-                  </label>
-                  <input
-                    type="month"
+                  <MonthYearPicker
+                    label="Start Date"
                     value={experience.startDate}
-                    onChange={(e) => updateExperience(experience.id, 'startDate', e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base"
+                    onChange={(val) => updateExperience(experience.id, 'startDate', val)}
                     required
                   />
                 </div>
 
                 {/* End Date */}
                 <div className="md:col-span-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={experience.current}
-                        onChange={(e) =>
-                          updateExperience(experience.id, 'current', e.target.checked)
-                        }
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 bg-white dark:bg-secondary-800 border-secondary-300 dark:border-secondary-600 rounded"
-                      />
-                      <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300">
-                        I currently work here
-                      </span>
-                    </label>
-
-                    {!experience.current && (
-                      <div className="flex-1 w-full sm:w-auto">
-                        <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2 sm:hidden">
-                          End Date
-                        </label>
-                        <input
-                          type="month"
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                    <div className="flex-1 w-full sm:w-auto">
+                      {!experience.current && (
+                        <MonthYearPicker
+                          label="End Date"
                           value={experience.endDate}
-                          onChange={(e) =>
-                            updateExperience(experience.id, 'endDate', e.target.value)
-                          }
-                          className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base"
+                          onChange={(val) => updateExperience(experience.id, 'endDate', val)}
                         />
-                      </div>
-                    )}
+                      )}
+                    </div>
+
+                    <div className="pt-8">
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={experience.current}
+                            onChange={(e) =>
+                              updateExperience(experience.id, 'current', e.target.checked)
+                            }
+                            className="peer h-5 w-5 text-primary-600 focus:ring-primary-500 bg-white dark:bg-secondary-800 border-secondary-300 dark:border-secondary-600 rounded transition-all cursor-pointer"
+                          />
+                          <Check className="absolute left-0.5 top-0.5 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
+                        </div>
+                        <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300 group-hover:text-secondary-900 dark:group-hover:text-white transition-colors">
+                          I currently work here
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
