@@ -66,43 +66,6 @@
 %\addbibresource{sample.bib}
 
 \usepackage[colorlinks]{hyperref}
-\usepackage{filecontents}
-
-\begin{filecontents*}{page1sidebar.tex}
-\BLOCK{ if skills }
-\cvsection{Skills}
-\BLOCK{ for skill in skills }
-\cvtag{\VAR{skill.category|escape_tex}: \VAR{skill.items|join(', ')|escape_tex}}
-\BLOCK{ endfor }
-\divider
-\BLOCK{ endif }
-
-\BLOCK{ if certifications }
-\cvsection{Certifications}
-\BLOCK{ for cert in certifications }
-\cvevent{\VAR{cert.name|escape_tex}}{\VAR{cert.issuer|escape_tex}}{\VAR{cert.date|escape_tex}}{}
-\divider
-\BLOCK{ endfor }
-\BLOCK{ endif }
-
-\BLOCK{ if languages }
-\cvsection{Languages}
-\BLOCK{ for lang in languages }
-\cvtag{\VAR{lang.language|escape_tex} (\VAR{lang.proficiency|escape_tex})}
-\BLOCK{ endfor }
-\divider
-\BLOCK{ endif }
-
-\BLOCK{ if achievements }
-\cvsection{Achievements}
-\begin{itemize}
-\BLOCK{ for ach in achievements }
-\item \textbf{\VAR{ach.title|escape_tex}} (\VAR{ach.date|escape_tex})
-\BLOCK{ endfor }
-\end{itemize}
-\BLOCK{ endif }
-
-\end{filecontents*}
 
 \begin{document}
 
@@ -133,7 +96,51 @@
 %% You can always just use \marginpar{...} if you do
 %% not need to align the top of the contents to any
 %% \cvsection title in the "main" bar.
-\cvsection[page1sidebar]{Experience}
+
+%%% SIDEBAR CONTENT - Embedded directly for dynamic rendering
+\BLOCK{ if skills }
+\marginpar{
+  \vspace{0.1cm}
+  \cvsection{Skills}
+  \BLOCK{ if skills.technical }
+  \BLOCK{ for skill in skills.technical }
+  \cvtag{\VAR{skill|escape_tex}}
+  \BLOCK{ endfor }
+  \BLOCK{ endif }
+  \BLOCK{ if skills.soft }
+  \BLOCK{ for skill in skills.soft }
+  \cvtag{\VAR{skill|escape_tex}}
+  \BLOCK{ endfor }
+  \BLOCK{ endif }
+  \divider
+  \BLOCK{ endif }
+  
+  \BLOCK{ if certifications }
+  \cvsection{Certifications}
+  \BLOCK{ for cert in certifications }
+  \cvevent{\VAR{cert.name|escape_tex}}{\VAR{cert.issuer|escape_tex}}{\VAR{cert.date|escape_tex}}{}
+  \divider
+  \BLOCK{ endfor }
+  \BLOCK{ endif }
+  
+  \BLOCK{ if languages }
+  \cvsection{Languages}
+  \BLOCK{ for lang in languages }
+  \cvtag{\VAR{lang.name|escape_tex}} (\VAR{lang.proficiency|escape_tex})
+  \BLOCK{ endfor }
+  \divider
+  \BLOCK{ endif }
+  
+  \BLOCK{ if achievements }
+  \cvsection{Achievements}
+  \BLOCK{ for ach in achievements }
+  \textbf{\VAR{ach.title|escape_tex}} (\VAR{ach.date|escape_tex})
+  \divider
+  \BLOCK{ endfor }
+  \BLOCK{ endif }
+}
+
+\cvsection{Experience}
 
 \BLOCK{ for exp in experience }
 \cvevent{\VAR{exp.position|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.start_date|escape_tex} -- \VAR{exp.end_date|escape_tex}}{\VAR{exp.location|escape_tex}}

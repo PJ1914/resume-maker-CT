@@ -74,7 +74,7 @@ class LaTeXCompiler:
         self,
         template_name: str,
         resume_data: Dict[str, Any]
-    ) -> str:
+    ) -> Dict[str, str]:
         """
         Render LaTeX template with resume data.
         
@@ -83,7 +83,7 @@ class LaTeXCompiler:
             resume_data: Resume data from Firestore
             
         Returns:
-            Rendered LaTeX source code
+            Dictionary of {filename: rendered_content} for all template files
             
         Raises:
             ValueError: If template not found
@@ -107,6 +107,7 @@ class LaTeXCompiler:
         template_data = prepare_template_data(resume_data)
         
         # Render template
+        rendered_files = {}
         try:
             rendered = template.render(**template_data)
             logger.info(f"Successfully rendered template {template_name}")
@@ -122,24 +123,30 @@ class LaTeXCompiler:
                 idx = rendered.find("\\BLOCK{")
                 if idx != -1:
                     logger.error(f"First \\BLOCK{{ found at index {idx}: {rendered[idx:idx+50]}")
+            
+            rendered_files['main.tex'] = rendered
+            
+            # Note: page1sidebar.tex is now embedded inline in main.tex for proper Jinja2 rendering
                     
         except Exception as e:
             logger.error(f"Jinja rendering failed for {template_name}: {e}")
             raise
         
-        return rendered
+        return rendered_files
     
     def compile_pdf(
         self,
         latex_source: str,
-        template_name: str = "modern"
+        template_name: str = "modern",
+        additional_files: Optional[Dict[str, str]] = None
     ) -> bytes:
         """
         Compile LaTeX source to PDF.
         
         Args:
-            latex_source: LaTeX source code
+            latex_source: LaTeX source code (main.tex content)
             template_name: Name of the template (to find assets)
+            additional_files: Dictionary of {filename: content} for additional template files
             
         Returns:
             PDF file contents as bytes
@@ -147,12 +154,13 @@ class LaTeXCompiler:
         Raises:
             RuntimeError: If compilation fails
         """
-        return self._compile_pdf_local(latex_source, template_name)
+        return self._compile_pdf_local(latex_source, template_name, additional_files)
     
     def _compile_pdf_local(
         self,
         latex_source: str,
-        template_name: str
+        template_name: str,
+        additional_files: Optional[Dict[str, str]] = None
     ) -> bytes:
         """
         Compile LaTeX source to PDF using local LaTeX installation (Tectonic preferred).
@@ -179,7 +187,12 @@ class LaTeXCompiler:
             tex_file = temp_path / "main.tex"
             tex_file.write_text(latex_source, encoding='utf-8')
             
-            # 3. Compile
+            # 3. Write any additional template files (like page1sidebar.tex)
+            if additional_files:
+                for filename, content in additional_files.items():
+                    file_path = temp_path / filename
+                    file_path.write_text(content, encoding='utf-8')
+                    logger.info(f"Wrote additional template file: {filename}")
             # Use pdflatex from MiKTeX (skip tectonic due to fontconfig issues)
             compilers = ['pdflatex', 'xelatex']
             pdf_path = None
@@ -281,11 +294,15 @@ class LaTeXCompiler:
         Returns:
             PDF file contents as bytes
         """
-        # Render LaTeX template
-        latex_source = self.render_template(template_name, resume_data)
+        # Render LaTeX template (returns dict of {filename: content})
+        rendered_files = self.render_template(template_name, resume_data)
+        
+        # Extract main.tex content and any additional files
+        latex_source = rendered_files.get('main.tex', '')
+        additional_files = {k: v for k, v in rendered_files.items() if k != 'main.tex'}
         
         # Compile to PDF
-        pdf_content = self.compile_pdf(latex_source, template_name)
+        pdf_content = self.compile_pdf(latex_source, template_name, additional_files)
         
         return pdf_content
 
