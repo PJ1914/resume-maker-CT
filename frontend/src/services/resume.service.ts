@@ -138,6 +138,13 @@ export const resumeService = {
   },
 
   /**
+   * Create a new resume from form data
+   */
+  async createResume(data: any): Promise<{ resume_id: string; message: string }> {
+    return apiClient.post('/api/create', data)
+  },
+
+  /**
    * Re-parse an existing resume with updated extraction logic
    */
   async reparseResume(resumeId: string): Promise<any> {
@@ -147,10 +154,10 @@ export const resumeService = {
   /**
    * Trigger ATS scoring for a resume
    */
-  async scoreResume(resumeId: string, preferGemini: boolean = true): Promise<any> {
+  async scoreResume(resumeId: string, preferGemini: boolean = true, useCache: boolean = true): Promise<any> {
     return apiClient.post(`/api/scoring/${resumeId}`, { 
       prefer_gemini: preferGemini,
-      use_cache: true 
+      use_cache: useCache 
     })
   },
 
