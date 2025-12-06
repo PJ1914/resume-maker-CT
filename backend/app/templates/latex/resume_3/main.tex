@@ -110,6 +110,7 @@
 \BLOCK{ if proj.description }
 \VAR{proj.description|escape_tex}
 \BLOCK{ endif }
+\BLOCK{ if (proj.technologies and proj.technologies|length > 0) or proj.link }
 \begin{itemize}
 \BLOCK{ if proj.technologies }
 \item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
@@ -118,6 +119,7 @@
 \item \VAR{proj.link|escape_tex}
 \BLOCK{ endif }
 \end{itemize}
+\BLOCK{ endif }
 \end{rSubsection}
 \BLOCK{ endfor }
 
