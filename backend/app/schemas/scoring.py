@@ -14,6 +14,7 @@ class ScoreRating(str, Enum):
     EXCELLENT = "Excellent"
     VERY_GOOD = "Very Good"
     GOOD = "Good"
+    AVERAGE = "Average"  # Added to support Gemini AI responses
     FAIR = "Fair"
     NEEDS_IMPROVEMENT = "Needs Improvement"
     POOR = "Poor"
