@@ -112,7 +112,7 @@
 %	CERTIFICATIONS SECTION
 %----------------------------------------------------------------------------------------
 
-\BLOCK{ if certifications }
+\BLOCK{ if certifications and certifications|length > 0 }
 \begin{rSection}{Certifications}
 \begin{itemize}
     \BLOCK{ for cert in certifications }
@@ -126,7 +126,7 @@
 %	LANGUAGES SECTION
 %----------------------------------------------------------------------------------------
 
-\BLOCK{ if languages }
+\BLOCK{ if languages and languages|length > 0 }
 \begin{rSection}{Languages}
 \begin{itemize}
     \BLOCK{ for lang in languages }
@@ -140,7 +140,7 @@
 %	ACHIEVEMENTS SECTION
 %----------------------------------------------------------------------------------------
 
-\BLOCK{ if achievements }
+\BLOCK{ if achievements and achievements|length > 0 }
 \begin{rSection}{Achievements} 
 \begin{itemize}
     \BLOCK{ for ach in achievements }
