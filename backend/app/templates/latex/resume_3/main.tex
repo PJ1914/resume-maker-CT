@@ -85,6 +85,7 @@
 \begin{rSection}{Work Experience}
 
 \BLOCK{ for exp in experience }
+\BLOCK{ if exp.description or (exp.highlights and exp.highlights|length > 0) }
 \begin{rSubsection}{\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.location|escape_tex}}
 \BLOCK{ if exp.description }
 \item \VAR{exp.description|escape_tex}
@@ -93,6 +94,12 @@
 \item \VAR{highlight|escape_tex}
 \BLOCK{ endfor }
 \end{rSubsection}
+\BLOCK{ else }
+{\bf \VAR{exp.position|escape_tex}} \hfill {\VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}}
+\\
+{\em \VAR{exp.company|escape_tex}} \hfill {\em \VAR{exp.location|escape_tex}}
+\smallskip
+\BLOCK{ endif }
 \BLOCK{ endfor }
 
 \end{rSection} 
