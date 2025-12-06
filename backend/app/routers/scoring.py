@@ -43,7 +43,15 @@ async def score_resume(
         # Verify resume exists and belongs to user
         # Use get_merged_resume_data to include any manual edits from the editor
         from app.services.firestore import get_merged_resume_data
-        resume_data = get_merged_resume_data(resume_id, uid)
+        
+        try:
+            resume_data = get_merged_resume_data(resume_id, uid)
+        except Exception as e:
+            logger.error(f"Error retrieving resume {resume_id} for user {uid}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Resume not found or cannot be accessed"
+            )
         
         if not resume_data:
             raise HTTPException(
@@ -56,6 +64,10 @@ async def score_resume(
         contact_info = resume_data.get('contact_info', {})
         sections = resume_data.get('sections', {})
         resume_status = resume_data.get('status', 'UNKNOWN')
+        
+        # Handle sections - it can be either a dict or a list depending on source
+        if isinstance(sections, list):
+            sections = {}  # Convert to empty dict if it's a list
         
         if not parsed_text:
             # For wizard-created resumes, check if we have contact info or sections as fallback
@@ -222,16 +234,19 @@ async def score_resume(
         traceback.print_exc()
         logger.error(f"Scoring error for resume {resume_id}: {e}")
         
-        # Log error
-        await log_scoring_request(
-            resume_id=resume_id,
-            user_id=uid,
-            scoring_method='unknown',
-            job_description_provided=request.job_description is not None,
-            cache_hit=False,
-            success=False,
-            error_message=str(e)
-        )
+        # Try to log error, but don't fail if logging fails
+        try:
+            await log_scoring_request(
+                resume_id=resume_id,
+                user_id=uid,
+                scoring_method='unknown',
+                job_description_provided=request.job_description is not None,
+                cache_hit=False,
+                success=False,
+                error_message=str(e)
+            )
+        except Exception as log_err:
+            logger.warning(f"Failed to log scoring error: {log_err}")
         
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

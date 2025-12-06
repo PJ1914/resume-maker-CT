@@ -17,6 +17,7 @@ export function useResumeScore(resumeId: string | undefined) {
     enabled: !!resumeId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
+    throwOnError: false, // Don't throw on 404, just return error in data
   });
 }
 

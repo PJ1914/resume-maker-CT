@@ -197,17 +197,21 @@ export default function ResumeDetailPage() {
         onError: (error: any) => {
           console.error('Scoring failed:', error)
           
-          // Check for 402 Payment Required (credits exhausted)
-          // axios error structure: error.response.status
-          // or error.status for fetch errors
+          // Check for specific error codes
           const statusCode = error?.response?.status || error?.status
+          const errorDetail = error?.response?.data?.detail || error?.message
           
           if (statusCode === 402) {
             setShowCreditsExhaustedModal(true)
+          } else if (statusCode === 404) {
+            toast.error('Resume not found. Please reload the page or select a different resume.')
+          } else if (statusCode === 400) {
+            toast.error(errorDetail || 'Resume is not ready for scoring yet. Please wait or upload the resume.')
+          } else if (statusCode === 500) {
+            toast.error(errorDetail || 'Server error occurred while scoring. Please try again later.')
           } else {
             // For other errors, show generic error toast
-            const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to calculate ATS score'
-            toast.error(errorMessage)
+            toast.error(errorDetail || 'Failed to calculate ATS score')
           }
         }
       }
