@@ -130,11 +130,13 @@
 \BLOCK{ if exp.description }
 \VAR{exp.description|escape_tex}
 \BLOCK{ endif }
+\BLOCK{ if exp.highlights and exp.highlights|length > 0 }
 \begin{itemize}
 \BLOCK{ for highlight in exp.highlights }
 \item \VAR{highlight|escape_tex}
 \BLOCK{ endfor }
 \end{itemize}
+\BLOCK{ endif }
 \end{position}
 \BLOCK{ endfor }
 \BLOCK{ endif }

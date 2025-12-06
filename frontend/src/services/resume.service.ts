@@ -131,6 +131,13 @@ export const resumeService = {
   },
 
   /**
+   * Update resume data
+   */
+  async updateResume(resumeId: string, data: any): Promise<ResumeDetail> {
+    return apiClient.put<ResumeDetail>(`/api/resumes/${resumeId}`, data)
+  },
+
+  /**
    * Re-parse an existing resume with updated extraction logic
    */
   async reparseResume(resumeId: string): Promise<any> {

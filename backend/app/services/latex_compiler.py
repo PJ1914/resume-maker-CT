@@ -181,7 +181,11 @@ class LaTeXCompiler:
             
             # 3. Compile
             # Use pdflatex from MiKTeX (skip tectonic due to fontconfig issues)
-            compilers = ['pdflatex', 'xelatex']
+            # For resume_4, use only pdflatex as it uses res.cls which works better with pdf latex
+            if template_name == 'resume_4':
+                compilers = ['pdflatex']
+            else:
+                compilers = ['pdflatex', 'xelatex']
             pdf_path = None
             
             for compiler in compilers:
@@ -211,30 +215,39 @@ class LaTeXCompiler:
                         # Enable automatic package installation for MiKTeX
                         env = os.environ.copy()
                         env['MIKTEX_TEMP'] = str(temp_path)
-                        env['MIKTEX_ENABLE_INSTALLER'] = '1'  # Auto-install missing packages
+                        env['MIKTEX_ENABLE_INSTALLER'] = 't'  # Auto-install missing packages
                         
-                        for _ in range(2):
+                        for run_num in range(2):
                             cmd = [
                                 compiler,
                                 '-interaction=nonstopmode',
-                                '--enable-installer',  # Allow MiKTeX to install packages
+                                '-halt-on-error',
+                                '-file-line-error',
                                 "main.tex"
                             ]
+                            logger.info(f"{compiler} run {run_num + 1}/2...")
                             result = subprocess.run(
                                 cmd,
                                 cwd=temp_path,
                                 capture_output=True,
                                 text=True,
-                                timeout=180,  # Increase timeout to allow package installation
+                                timeout=240,  # Increase timeout to allow package installation
                                 env=env
                             )
+                            
+                            # Log output for debugging
+                            if result.stdout:
+                                logger.debug(f"{compiler} stdout: {result.stdout[-500:]}")
+                            if result.stderr:
+                                logger.debug(f"{compiler} stderr: {result.stderr[-500:]}")
                     
                     if result.returncode != 0:
-                        # Filter out MiKTeX warning messages
+                        # Log full error for debugging
                         error_msg = result.stderr or result.stdout
-                        if error_msg and "major issue" not in error_msg.lower():
-                            logger.warning(f"{compiler} compilation failed: {error_msg}")
-                        # If pdflatex fails, try xelatex. For now, let's try others if this one failed.
+                        logger.warning(f"{compiler} compilation failed with code {result.returncode}")
+                        if error_msg:
+                            logger.warning(f"Error output (last 1000 chars): {error_msg[-1000:]}")
+                        # Try next compiler
                         continue
 
                     # Check if PDF was created
@@ -255,10 +268,27 @@ class LaTeXCompiler:
                 log_file = temp_path / "main.log"
                 log_content = "No log file generated."
                 if log_file.exists():
-                    log_content = log_file.read_text(encoding='utf-8', errors='ignore')
+                    try:
+                        log_content = log_file.read_text(encoding='utf-8', errors='ignore')
+                        # Extract key error lines
+                        error_lines = [line for line in log_content.split('\n') if '!' in line or 'Error' in line or 'error' in line]
+                        if error_lines:
+                            logger.error(f"LaTeX errors found: {error_lines[:10]}")
+                    except Exception as e:
+                        logger.error(f"Could not read log file: {e}")
+                
+                # Also save the generated .tex file for debugging
+                tex_content = "Could not read .tex file"
+                tex_file_path = temp_path / "main.tex"
+                if tex_file_path.exists():
+                    try:
+                        tex_content = tex_file_path.read_text(encoding='utf-8', errors='ignore')
+                        logger.error(f"Generated LaTeX (first 1000 chars):\n{tex_content[:1000]}")
+                    except Exception as e:
+                        logger.error(f"Could not read tex file: {e}")
                 
                 raise RuntimeError(
-                    f"LaTeX compilation failed. Log output:\n{log_content[:1000]}..."
+                    f"LaTeX compilation failed. Check logs for details. Log preview:\n{log_content[:2000]}..."
                 )
             
             # Read PDF file

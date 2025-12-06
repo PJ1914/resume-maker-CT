@@ -15,7 +15,7 @@ export const resumeKeys = {
 export function useResumes() {
   return useQuery({
     queryKey: resumeKeys.list(),
-    queryFn: () => resumeService.getAllResumes(),
+    queryFn: () => resumeService.listResumes(),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }

@@ -8,7 +8,7 @@ export default function ResumesPage() {
   const { data: resumesData, isLoading: loading } = useResumes()
   const { mutate: deleteResume } = useDeleteResume()
 
-  const resumes = resumesData || []
+  const resumes = resumesData?.resumes || []
 
   const handleDelete = async (resumeId: string, filename: string) => {
     if (!confirm(`Delete "${filename}"?`)) return
