@@ -86,6 +86,7 @@
 \begin{rSection}{Work Experience}
 
 \BLOCK{ for exp in experience }
+\BLOCK{ if exp.description or (exp.highlights and exp.highlights|length > 0) }
 \begin{rSubsection}{\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.location|escape_tex}}
 \BLOCK{ if exp.description }
 \item \VAR{exp.description|escape_tex}
@@ -94,6 +95,12 @@
 \item \VAR{highlight|escape_tex}
 \BLOCK{ endfor }
 \end{rSubsection}
+\BLOCK{ else }
+{\bf \VAR{exp.position|escape_tex}} \hfill {\VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}}
+\\
+{\em \VAR{exp.company|escape_tex}} \hfill {\em \VAR{exp.location|escape_tex}}
+\smallskip
+\BLOCK{ endif }
 \BLOCK{ endfor }
 
 \end{rSection} 
@@ -109,16 +116,17 @@
 \BLOCK{ for proj in projects }
 \begin{rSubsection}{\VAR{proj.name|escape_tex}}{}{}{}
 \BLOCK{ if proj.description }
-\VAR{proj.description|escape_tex}
+\item \VAR{proj.description|escape_tex}
 \BLOCK{ endif }
-\begin{itemize}
-    \BLOCK{ if proj.technologies }
-    \item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
-    \BLOCK{ endif }
-    \BLOCK{ if proj.link }
-    \item \VAR{proj.link|escape_tex}
-    \BLOCK{ endif }
-\end{itemize}
+\BLOCK{ if proj.technologies and proj.technologies|length > 0 }
+\item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
+\BLOCK{ endif }
+\BLOCK{ if proj.link }
+\item \VAR{proj.link|escape_tex}
+\BLOCK{ endif }
+\BLOCK{ if not proj.description and not (proj.technologies and proj.technologies|length > 0) and not proj.link }
+\item 
+\BLOCK{ endif }
 \end{rSubsection} 
 \BLOCK{ endfor }
 
@@ -129,7 +137,7 @@
 %	CERTIFICATIONS SECTION
 %----------------------------------------------------------------------------------------
 
-\BLOCK{ if certifications }
+\BLOCK{ if certifications and certifications|length > 0 }
 \begin{rSection}{Certifications}
 \begin{itemize}
     \BLOCK{ for cert in certifications }
@@ -143,7 +151,7 @@
 %	LANGUAGES SECTION
 %----------------------------------------------------------------------------------------
 
-\BLOCK{ if languages }
+\BLOCK{ if languages and languages|length > 0 }
 \begin{rSection}{Languages}
 \begin{itemize}
     \BLOCK{ for lang in languages }
@@ -157,7 +165,7 @@
 %	ACHIEVEMENTS SECTION
 %----------------------------------------------------------------------------------------
 
-\BLOCK{ if achievements }
+\BLOCK{ if achievements and achievements|length > 0 }
 \begin{rSection}{Achievements} 
 \begin{itemize}
     \BLOCK{ for ach in achievements }

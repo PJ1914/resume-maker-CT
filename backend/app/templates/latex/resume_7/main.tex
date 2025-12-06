@@ -69,17 +69,16 @@
 \BLOCK{ for proj in projects }
 \begin{rSubsection}{\VAR{proj.name|escape_tex}}{\VAR{proj.start_date|escape_tex} - \VAR{proj.end_date|escape_tex}}{}{}
 \BLOCK{ if proj.description }
-\VAR{proj.description|escape_tex}
+\item \VAR{proj.description|escape_tex}
 \BLOCK{ endif }
-\BLOCK{ if (proj.technologies and proj.technologies|length > 0) or proj.link }
-\begin{itemize}
-    \BLOCK{ if proj.technologies }
-    \item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
-    \BLOCK{ endif }
-    \BLOCK{ if proj.link }
-    \item \VAR{proj.link|escape_tex}
-    \BLOCK{ endif }
-\end{itemize}
+\BLOCK{ if proj.technologies and proj.technologies|length > 0 }
+\item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
+\BLOCK{ endif }
+\BLOCK{ if proj.link }
+\item \VAR{proj.link|escape_tex}
+\BLOCK{ endif }
+\BLOCK{ if not proj.description and not (proj.technologies and proj.technologies|length > 0) and not proj.link }
+\item 
 \BLOCK{ endif }
 \end{rSubsection}  
 \BLOCK{ endfor }
