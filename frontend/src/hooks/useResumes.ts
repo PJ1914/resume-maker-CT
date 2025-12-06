@@ -33,40 +33,6 @@ export function useResume(id: string | undefined) {
   });
 }
 
-// Hook to create resume
-export function useCreateResume() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: any) => resumeService.createResume(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: resumeKeys.lists() });
-      toast.success('Resume created successfully!');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create resume');
-    },
-  });
-}
-
-// Hook to update resume
-export function useUpdateResume() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      resumeService.updateResume(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: resumeKeys.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: resumeKeys.lists() });
-      toast.success('Resume updated successfully!');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update resume');
-    },
-  });
-}
-
 // Hook to delete resume
 export function useDeleteResume() {
   const queryClient = useQueryClient();

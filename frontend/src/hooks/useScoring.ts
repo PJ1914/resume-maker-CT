@@ -26,8 +26,8 @@ export function useScoreResume() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ resumeId, preferGemini = true, useCache = true }: { resumeId: string; preferGemini?: boolean; useCache?: boolean }) =>
-      resumeService.scoreResume(resumeId, preferGemini, useCache),
+    mutationFn: ({ resumeId, preferGemini = true }: { resumeId: string; preferGemini?: boolean }) =>
+      resumeService.scoreResume(resumeId, preferGemini),
     onSuccess: (data, variables) => {
       // Directly update the cache with the new score from POST response
       // This ensures we show the correct score immediately without refetching
