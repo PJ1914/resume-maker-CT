@@ -67,19 +67,21 @@
 \begin{rSection}{Projects}
 
 \BLOCK{ for proj in projects }
+\BLOCK{ for proj in projects }
+\BLOCK{ if proj.description or proj.technologies or proj.link }
 \begin{rSubsection}{\VAR{proj.name|escape_tex}}{\VAR{proj.start_date|escape_tex} - \VAR{proj.end_date|escape_tex}}{}{}
 \BLOCK{ if proj.description }
-\VAR{proj.description|escape_tex}
+\item \VAR{proj.description|escape_tex}
 \BLOCK{ endif }
-\begin{itemize}
-    \BLOCK{ if proj.technologies }
-    \item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
-    \BLOCK{ endif }
-    \BLOCK{ if proj.link }
-    \item \VAR{proj.link|escape_tex}
-    \BLOCK{ endif }
-\end{itemize}
-\end{rSubsection}  
+\BLOCK{ if proj.technologies }
+\item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
+\BLOCK{ endif }
+\BLOCK{ if proj.link }
+\item \VAR{proj.link|escape_tex}
+\BLOCK{ endif }
+\end{rSubsection}
+\BLOCK{ endif }
+\BLOCK{ endfor }
 \BLOCK{ endfor }
 
 \end{rSection} 
@@ -93,7 +95,8 @@
 \begin{rSection}{Work Experience}
 
 \BLOCK{ for exp in experience }
-\begin{rSubsection}{\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.location|escape_tex}}
+\BLOCK{ if exp.description or exp.highlights }
+\begin{rSubsection}{\VAR{exp.company|escape_tex}}{\VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}}{\VAR{exp.position|escape_tex}}{\VAR{exp.location|escape_tex}}
 \BLOCK{ if exp.description }
 \item \VAR{exp.description|escape_tex}
 \BLOCK{ endif }
@@ -101,6 +104,7 @@
 \item \VAR{highlight|escape_tex}
 \BLOCK{ endfor }
 \end{rSubsection}
+\BLOCK{ endif }
 \BLOCK{ endfor }
 
 \end{rSection} 

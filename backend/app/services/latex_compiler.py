@@ -46,6 +46,7 @@ class LaTeXCompiler:
         
         # Register filters
         self.jinja_env.filters['escape_tex'] = self.escape_latex
+        self.jinja_env.filters['escape_tex_def'] = self.escape_latex_for_def
     
     def escape_latex(self, s: Any) -> str:
         """
@@ -64,6 +65,30 @@ class LaTeXCompiler:
                      .replace('%', '\\%') \
                      .replace('$', '\\$') \
                      .replace('#', '\\#') \
+                     .replace('_', '\\_') \
+                     .replace('{', '\\{') \
+                     .replace('}', '\\}') \
+                     .replace('~', '\\textasciitilde') \
+                     .replace('^', '\\textasciicircum')
+    
+    def escape_latex_for_def(self, s: Any) -> str:
+        """
+        Escape special LaTeX characters for use in macro definitions (\\def, \\gdef).
+        In macro definitions, # must be doubled to ##.
+        
+        Args:
+            s: String to escape
+            
+        Returns:
+            Escaped string safe for use in LaTeX macro definitions
+        """
+        if not s:
+            return ""
+            
+        return str(s).replace('#', '\\#\\#') \
+                     .replace('&', '\\&') \
+                     .replace('%', '\\%') \
+                     .replace('$', '\\$') \
                      .replace('_', '\\_') \
                      .replace('{', '\\{') \
                      .replace('}', '\\}') \
