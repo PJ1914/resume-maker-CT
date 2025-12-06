@@ -755,10 +755,8 @@ export default function ResumeDetailPage() {
                 </button>
               </div>
 
-              {/* Professional Resume Template (for wizard-created resumes) */}
-              <div className="bg-white border border-secondary-200 rounded-lg max-h-[900px] overflow-y-auto">
-                <TemplateRenderer resume={resume} />
-              </div>
+              {/* PDF Preview for all templates */}
+              <TemplateRenderer resume={resume} />
             </div>
           ) : resume.status === 'PARSING' || resume.status === 'UPLOADED' ? (
             <div className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-6">

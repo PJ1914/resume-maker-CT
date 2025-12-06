@@ -386,6 +386,7 @@ async def preview_resume_with_template(
     """
     Generate a preview PDF for a resume with a specific template.
     Uses the user's actual resume data (not sample data).
+    Generates PDF on-demand and returns it (no caching needed since frontend embeds it).
     
     Args:
         resume_id: Resume ID to preview
@@ -397,6 +398,67 @@ async def preview_resume_with_template(
     """
     try:
         user_id = current_user["uid"]
+        
+        # Get user's resume data from Firestore
+        resume_data = get_merged_resume_data(resume_id, user_id)
+        
+        if not resume_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Resume {resume_id} not found or has not been edited yet"
+            )
+        
+        # Normalize contact field for template processing
+        contact = resume_data.get("contact") or resume_data.get("contact_info")
+        if not contact:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Resume data incomplete. Please fill in contact information."
+            )
+        
+        if "contact" not in resume_data and "contact_info" in resume_data:
+            resume_data["contact"] = resume_data["contact_info"]
+        
+        # Generate PDF with user's actual data
+        logger.info(f"Generating preview for resume {resume_id} with template {template_name}")
+        try:
+            # Render template files (returns dict of {filename: content})
+            rendered_files = latex_compiler.render_template(template_name, resume_data)
+            
+            # Extract main.tex content and any additional files
+            latex_source = rendered_files.get('main.tex', '')
+            additional_files = {k: v for k, v in rendered_files.items() if k != 'main.tex'}
+            
+            # Compile to PDF
+            pdf_content = latex_compiler.compile_pdf(latex_source, template_name, additional_files)
+        except Exception as e:
+            import traceback
+            logger.error(f"PDF generation failed for preview: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"PDF generation failed: {str(e)}"
+            )
+        
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"inline; filename={resume_id}_{template_name}_preview.pdf",
+                "Cache-Control": "no-cache, no-store, must-revalidate"  # Don't cache preview
+            }
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        logger.error(f"Error generating resume preview: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Preview generation failed: {str(e)}"
+        )
         
         # Get user's resume data from Firestore
         resume_data = get_merged_resume_data(resume_id, user_id)

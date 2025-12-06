@@ -4,6 +4,7 @@ import { apiClient } from '../../services/api'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
+import InsufficientCreditsModal from '../InsufficientCreditsModal'
 
 interface AIEnhancedTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     label?: string
@@ -24,6 +25,8 @@ export function AIEnhancedTextarea({
     const [showPreview, setShowPreview] = useState(false)
     const [enhancedText, setEnhancedText] = useState('')
     const [originalText, setOriginalText] = useState('')
+    const [showCreditsModal, setShowCreditsModal] = useState(false)
+    const [creditsInfo, setCreditsInfo] = useState({ required: 1, current: 0 })
 
     const handleEnhance = async () => {
         const textToEnhance = String(value || '')
@@ -51,9 +54,22 @@ export function AIEnhancedTextarea({
                 setShowPreview(true)
                 toast.success('AI suggestions ready!')
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('AI Enhance error:', error)
-            toast.error('Failed to enhance text. Please try again.')
+            
+            // Check if it's a 402 Payment Required error (insufficient credits)
+            if (error?.response?.status === 402) {
+                const errorDetail = error?.response?.data?.detail
+                if (errorDetail && typeof errorDetail === 'object') {
+                    setCreditsInfo({
+                        required: errorDetail.required || 1,
+                        current: errorDetail.current_balance || 0
+                    })
+                }
+                setShowCreditsModal(true)
+            } else {
+                toast.error('Failed to enhance text. Please try again.')
+            }
         } finally {
             setIsEnhancing(false)
         }
@@ -179,6 +195,15 @@ export function AIEnhancedTextarea({
                     </button>
                 )}
             </div>
+
+            {/* Insufficient Credits Modal */}
+            <InsufficientCreditsModal
+                isOpen={showCreditsModal}
+                onClose={() => setShowCreditsModal(false)}
+                featureName="AI Content Enhancement"
+                requiredCredits={creditsInfo.required}
+                currentBalance={creditsInfo.current}
+            />
         </div>
     )
 }

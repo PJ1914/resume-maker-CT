@@ -42,8 +42,10 @@ async def add_security_headers(request: Request, call_next):
     # Prevent MIME type sniffing
     response.headers["X-Content-Type-Options"] = "nosniff"
     
-    # Prevent clickjacking - SAMEORIGIN allows Firebase auth popups
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    # Allow iframes for PDF preview endpoints (they need to be embedded in the frontend)
+    # For all other routes, prevent clickjacking with SAMEORIGIN
+    if "/preview/" not in request.url.path and request.url.path != "/":
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
     
     # Enable XSS protection
     response.headers["X-XSS-Protection"] = "1; mode=block"
