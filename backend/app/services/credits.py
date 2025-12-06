@@ -26,8 +26,8 @@ class FeatureType(str, Enum):
 # Credit costs for each feature
 FEATURE_COSTS = {
     FeatureType.ATS_SCORING: 5,
-    FeatureType.AI_REWRITE: 3,
-    FeatureType.AI_SUGGESTION: 1,  # 1 credit per enhancement
+    FeatureType.AI_REWRITE: 1,  # 1 credit for content enhancement/improvement
+    FeatureType.AI_SUGGESTION: 3,  # 3 credits per AI summary generation
     FeatureType.PDF_EXPORT: 2,
 }
 

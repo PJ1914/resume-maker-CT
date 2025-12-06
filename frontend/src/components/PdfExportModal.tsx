@@ -8,6 +8,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { exportAndDownloadPDF } from '../services/pdf-export.service';
 import { API_URL } from '@/config/firebase';
+import InsufficientCreditsModal from './InsufficientCreditsModal';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -33,6 +34,8 @@ export default function PdfExportModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(true);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const [creditsInfo, setCreditsInfo] = useState({ required: 1, current: 0 });
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -48,7 +51,18 @@ export default function PdfExportModal({
         onClose();
         setSuccess(false);
       }, 2000);
-    } catch (err) {
+    } catch (err: any) {
+      // Handle insufficient credits (402 error)
+      if (err?.response?.status === 402 || err?.message?.includes('402')) {
+        const errorData = err.response?.data || {}
+        const errorDetail = errorData.detail || errorData
+        setCreditsInfo({
+          required: errorDetail.required || 2,
+          current: errorDetail.current_balance || 0
+        })
+        setShowCreditsModal(true)
+        return
+      }
       setError(err instanceof Error ? err.message : 'Failed to export PDF');
       console.error('Export error:', err);
     } finally {
@@ -297,6 +311,15 @@ export default function PdfExportModal({
           </div>
         </div>
       </Dialog>
+
+      {/* Insufficient Credits Modal */}
+      <InsufficientCreditsModal
+        isOpen={showCreditsModal}
+        onClose={() => setShowCreditsModal(false)}
+        featureName="PDF Export"
+        requiredCredits={creditsInfo.required}
+        currentBalance={creditsInfo.current}
+      />
     </Transition>
   );
 }

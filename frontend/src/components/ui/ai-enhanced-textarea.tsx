@@ -59,7 +59,8 @@ export function AIEnhancedTextarea({
             
             // Check if it's a 402 Payment Required error (insufficient credits)
             if (error?.response?.status === 402) {
-                const errorDetail = error?.response?.data?.detail
+                const errorData = error?.response?.data
+                const errorDetail = errorData?.detail || errorData
                 if (errorDetail && typeof errorDetail === 'object') {
                     setCreditsInfo({
                         required: errorDetail.required || 1,

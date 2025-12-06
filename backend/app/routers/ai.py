@@ -57,14 +57,14 @@ async def improve_content(
         user_id = current_user['uid']
         
         # Check credits
-        if not has_sufficient_credits(user_id, FeatureType.AI_SUGGESTION):
+        if not has_sufficient_credits(user_id, FeatureType.AI_REWRITE):
             user_credits = get_user_credits(user_id)
             raise HTTPException(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail={
-                    "message": "Insufficient credits for AI suggestion",
+                    "message": "Insufficient credits for AI content enhancement",
                     "current_balance": user_credits["balance"],
-                    "required": FEATURE_COSTS[FeatureType.AI_SUGGESTION]
+                    "required": FEATURE_COSTS[FeatureType.AI_REWRITE]
                 }
             )
 
@@ -141,7 +141,7 @@ Provide ONLY a comma-separated list of skills, nothing else.""",
             improved_text = request.text  # Keep original for skill suggestions
 
         # Deduct credits
-        credits_result = deduct_credits(user_id, FeatureType.AI_SUGGESTION, f"AI Suggestion for {request.context}")
+        credits_result = deduct_credits(user_id, FeatureType.AI_REWRITE, f"AI Content Enhancement for {request.context}")
         if not credits_result['success']:
             logger.warning(f"Credit deduction failed for user {user_id}: {credits_result.get('error')}")
 

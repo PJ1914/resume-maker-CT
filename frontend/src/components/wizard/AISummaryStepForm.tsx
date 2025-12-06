@@ -18,7 +18,7 @@ export default function AISummaryStepForm({ data, onChange, resumeData }: AISumm
   const [editedSummary, setEditedSummary] = useState(data)
   const [hasGenerated, setHasGenerated] = useState(!!data)
   const [showCreditsModal, setShowCreditsModal] = useState(false)
-  const [creditsInfo, setCreditsInfo] = useState({ required: 1, current: 0 })
+  const [creditsInfo, setCreditsInfo] = useState({ required: 3, current: 0 })
 
   useEffect(() => {
     setEditedSummary(data)
@@ -50,9 +50,10 @@ export default function AISummaryStepForm({ data, onChange, resumeData }: AISumm
       
       // Handle insufficient credits (402 Payment Required)
       if (error?.response?.status === 402) {
-        const errorDetail = error.response.data
+        const errorData = error.response.data
+        const errorDetail = errorData.detail || errorData
         setCreditsInfo({
-          required: errorDetail.required || 1,
+          required: errorDetail.required || 3,
           current: errorDetail.current_balance || 0
         })
         setShowCreditsModal(true)

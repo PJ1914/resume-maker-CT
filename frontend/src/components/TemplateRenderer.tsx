@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { ResumeDetail } from '@/services/resume.service';
 import { getAuthToken } from '@/services/auth.service';
+import InsufficientCreditsModal from './InsufficientCreditsModal';
 
 interface TemplateRendererProps {
   resume: ResumeDetail;
@@ -15,6 +16,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = React.memo(({ r
   const template = resume.template || 'resume_1'
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showCreditsModal, setShowCreditsModal] = useState(false)
+  const [creditsInfo, setCreditsInfo] = useState({ required: 1, current: 0 })
   
   useEffect(() => {
     const fetchPreview = async () => {
@@ -32,6 +35,26 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = React.memo(({ r
             }
           }
         )
+        
+        // Handle insufficient credits (402)
+        if (response.status === 402) {
+          try {
+            const errorData = await response.json()
+            const errorDetail = errorData.detail || errorData
+            setCreditsInfo({
+              required: errorDetail.required || 2,
+              current: errorDetail.current_balance || 0
+            })
+          } catch {
+            setCreditsInfo({
+              required: 2,
+              current: 0
+            })
+          }
+          setShowCreditsModal(true)
+          setLoading(false)
+          return
+        }
         
         if (!response.ok) {
           throw new Error(`Preview failed: ${response.statusText}`)
@@ -71,6 +94,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = React.memo(({ r
     return (
       <div className="w-full bg-secondary-100 dark:bg-secondary-800 rounded-lg overflow-hidden flex items-center justify-center" style={{ height: '800px' }}>
         <p className="text-secondary-600 dark:text-secondary-400">Failed to load preview</p>
+        <InsufficientCreditsModal
+          isOpen={showCreditsModal}
+          onClose={() => setShowCreditsModal(false)}
+          featureName="Resume Preview"
+          requiredCredits={creditsInfo.required}
+          currentBalance={creditsInfo.current}
+        />
       </div>
     )
   }
@@ -83,6 +113,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = React.memo(({ r
         className="w-full h-full"
         title={`Resume Preview - ${template}`}
         style={{ border: 'none' }}
+      />
+      <InsufficientCreditsModal
+        isOpen={showCreditsModal}
+        onClose={() => setShowCreditsModal(false)}
+        featureName="Resume Preview"
+        requiredCredits={creditsInfo.required}
+        currentBalance={creditsInfo.current}
       />
     </div>
   );
