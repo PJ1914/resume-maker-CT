@@ -186,7 +186,7 @@ export default function ResumeDetailPage() {
     console.log('Scoring with preferGemini:', useGemini, 'skipCache:', skipCache)
 
     scoreResume(
-      { resumeId: id, preferGemini: useGemini, useCache: !skipCache },
+      { resumeId: id, preferGemini: useGemini },
       {
         onSuccess: (data) => {
           console.log('Score completed successfully, method:', data?.scoring_method, 'score:', data?.total_score)
