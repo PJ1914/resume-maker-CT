@@ -15,7 +15,10 @@ export const resumeKeys = {
 export function useResumes() {
   return useQuery({
     queryKey: resumeKeys.list(),
-    queryFn: () => resumeService.getAllResumes(),
+    queryFn: async () => {
+      const response = await resumeService.listResumes();
+      return response.resumes; // Extract resumes array from response
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
