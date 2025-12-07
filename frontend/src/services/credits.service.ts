@@ -28,12 +28,13 @@ export interface CreditPackage {
 }
 
 export interface CreditTransaction {
-  transaction_id: string;
+  id: string;
   type: 'DEDUCTION' | 'PURCHASE' | 'ADMIN_GRANT' | 'MONTHLY_RESET';
   amount: number;
   balance_after: number;
   description: string;
   timestamp: string;
+  feature?: string;
 }
 
 export type FeatureType = 'ATS_SCORING' | 'AI_REWRITE' | 'PDF_EXPORT';

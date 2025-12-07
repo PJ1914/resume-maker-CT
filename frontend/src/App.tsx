@@ -8,11 +8,21 @@ import AppTour from './components/AppTour'
 import { SEO, HomeSchema } from './components/SEO'
 import { Analytics } from './components/Analytics'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Preloader from '@/components/ui/preloader'
 
 function App() {
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Initialize theme
+    const theme = localStorage.getItem('theme')
+    if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [])
 
   return (
     <>

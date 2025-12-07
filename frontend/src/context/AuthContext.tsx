@@ -17,6 +17,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
+  deleteAccount: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -34,14 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const token = await user.getIdToken()
           localStorage.setItem('authToken', token)
           console.log('[AUTH] Stored Firebase ID token in localStorage')
-          
+
           // Fetch user profile to get admin status (non-blocking with timeout)
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-          
+
           // Use AbortController for timeout
           const controller = new AbortController()
           const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
-          
+
           try {
             const response = await fetch(`${API_URL}/me`, {
               headers: {
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               signal: controller.signal
             })
             clearTimeout(timeoutId)
-            
+
             if (response.ok) {
               const profile = await response.json()
               setIsAdmin(profile.isAdmin || false)
@@ -128,6 +129,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const deleteAccount = async () => {
+    try {
+      if (auth.currentUser) {
+        await auth.currentUser.delete()
+        toast.success('Account deleted successfully')
+      }
+    } catch (error: any) {
+      console.error('Delete account error:', error)
+      // Re-authentication might be required
+      if (error.code === 'auth/requires-recent-login') {
+        toast.error('Please sign in again to delete your account')
+      } else {
+        toast.error('Failed to delete account')
+      }
+      throw error
+    }
+  }
+
   const value = {
     user,
     loading,
@@ -135,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signInWithGoogle,
     signOut,
+    deleteAccount,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

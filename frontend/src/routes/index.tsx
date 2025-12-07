@@ -12,6 +12,7 @@ import TemplateSelectionPage from '../pages/TemplateSelectionPage'
 import { TemplatesPage } from '../pages/TemplatesPage'
 import CreditPurchasePage from '../pages/CreditPurchasePage'
 import CreditHistoryPage from '../pages/CreditHistoryPage'
+import ProfilePage from '../pages/ProfilePage'
 import { useAuth } from '../context/AuthContext'
 
 export default function AppRoutes() {
@@ -30,6 +31,17 @@ export default function AppRoutes() {
           <ProtectedRoute>
             <AppLayout>
               <DashboardPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <ProfilePage />
             </AppLayout>
           </ProtectedRoute>
         }
