@@ -8,7 +8,7 @@ export default function ResumesPage() {
   const { data: resumesData, isLoading: loading } = useResumes()
   const { mutate: deleteResume } = useDeleteResume()
 
-  const resumes = resumesData?.resumes || []
+  const resumes = resumesData || []
 
   const handleDelete = async (resumeId: string, filename: string) => {
     if (!confirm(`Delete "${filename}"?`)) return
@@ -130,7 +130,7 @@ export default function ResumesPage() {
       ) : (
         /* Resume List */
         <div className="space-y-4">
-          {resumes.map((resume) => (
+          {resumes.map((resume: ResumeListItem) => (
             <div
               key={resume.resume_id}
               className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-4 sm:p-6 hover:border-secondary-300 dark:hover:border-secondary-600 hover:shadow-md transition-all"

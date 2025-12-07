@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const { data: resumesData, isLoading: loading } = useResumes()
 
-  const resumes = resumesData?.resumes || []
+  const resumes = resumesData || []
 
   const stats = useMemo(() => {
     interface Resume {
