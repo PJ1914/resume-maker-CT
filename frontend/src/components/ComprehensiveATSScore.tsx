@@ -112,11 +112,16 @@ export default function ComprehensiveATSScore({
   if (loading) {
     return (
       <div className="bg-white dark:bg-secondary-900 rounded-xl border border-secondary-200 dark:border-secondary-800 p-8">
-        <div className="flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-900 dark:border-primary-500 mx-auto mb-4"></div>
-            <p className="text-secondary-600 dark:text-secondary-400 font-medium">Analyzing your resume...</p>
-            <p className="text-sm text-secondary-500 dark:text-secondary-500 mt-2">Evaluating 6 ATS parameters</p>
+        <div className="space-y-4 animate-pulse">
+          <div className="h-12 bg-secondary-300 dark:bg-secondary-800 rounded w-3/4"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-full"></div>
+            <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-5/6"></div>
+            <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-4/6"></div>
+          </div>
+          <div className="space-y-3 pt-4">
+            <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-full"></div>
+            <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-5/6"></div>
           </div>
         </div>
       </div>

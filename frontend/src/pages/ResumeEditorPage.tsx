@@ -900,10 +900,43 @@ export const ResumeEditorPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900 mx-auto mb-4"></div>
-          <p className="text-secondary-600">Loading resume...</p>
+      <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
+        <div className="container mx-auto p-4 sm:p-6 max-w-7xl">
+          {/* Header Skeleton */}
+          <div className="mb-6 animate-pulse">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
+              <div className="h-7 w-48 bg-secondary-300 dark:bg-secondary-800 rounded"></div>
+            </div>
+            <div className="h-10 w-full max-w-md bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
+          </div>
+          
+          {/* Editor Skeleton */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Left Panel */}
+            <div className="space-y-4 animate-pulse">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white dark:bg-secondary-900 rounded-xl p-6 space-y-4">
+                  <div className="h-6 w-32 bg-secondary-300 dark:bg-secondary-800 rounded"></div>
+                  <div className="space-y-3">
+                    <div className="h-10 bg-secondary-200 dark:bg-secondary-800 rounded-lg"></div>
+                    <div className="h-10 bg-secondary-200 dark:bg-secondary-800 rounded-lg"></div>
+                    <div className="h-24 bg-secondary-200 dark:bg-secondary-800 rounded-lg"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Right Panel - Preview */}
+            <div className="bg-white dark:bg-secondary-900 rounded-xl p-6 animate-pulse">
+              <div className="h-6 w-24 bg-secondary-300 dark:bg-secondary-800 rounded mb-4"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-full"></div>
+                <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-5/6"></div>
+                <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-4/6"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

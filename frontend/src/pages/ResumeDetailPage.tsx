@@ -384,12 +384,52 @@ export default function ResumeDetailPage() {
     return statusConfig[status] || statusConfig.UPLOADED
   }
 
-  if (loading) {
+  if (loading || !resume) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900 mx-auto"></div>
-          <p className="mt-4 text-secondary-600">Loading resume details...</p>
+      <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 py-6">
+        <div className="container mx-auto px-4 max-w-7xl">
+          {/* Header Skeleton */}
+          <div className="mb-6 animate-pulse">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
+              <div className="h-8 w-64 bg-secondary-300 dark:bg-secondary-800 rounded"></div>
+            </div>
+            
+            {/* Action Buttons Skeleton */}
+            <div className="flex flex-wrap gap-3 mb-6">
+              <div className="h-10 w-32 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
+              <div className="h-10 w-32 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
+              <div className="h-10 w-32 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
+            </div>
+          </div>
+          
+          {/* Content Grid Skeleton */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left Column - Info Cards */}
+            <div className="lg:col-span-1 space-y-4 animate-pulse">
+              <div className="bg-white dark:bg-secondary-900 rounded-xl p-6 space-y-4">
+                <div className="h-5 w-24 bg-secondary-300 dark:bg-secondary-800 rounded"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded"></div>
+                  <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded"></div>
+                  <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-3/4"></div>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-secondary-900 rounded-xl p-6 space-y-4">
+                <div className="h-5 w-32 bg-secondary-300 dark:bg-secondary-800 rounded"></div>
+                <div className="h-32 bg-secondary-200 dark:bg-secondary-800 rounded-lg"></div>
+              </div>
+            </div>
+            
+            {/* Right Column - Preview */}
+            <div className="lg:col-span-2 animate-pulse">
+              <div className="bg-white dark:bg-secondary-900 rounded-xl p-6 space-y-4">
+                <div className="h-6 w-40 bg-secondary-300 dark:bg-secondary-800 rounded mb-4"></div>
+                <div className="aspect-[8.5/11] bg-secondary-200 dark:bg-secondary-800 rounded-lg"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )

@@ -19,8 +19,23 @@ const CreditPurchasePage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4">
       {loading ? (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="max-w-6xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-300 rounded w-48 mx-auto"></div>
+            <div className="h-6 bg-gray-200 rounded w-64 mx-auto mt-2"></div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-xl p-6 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-32"></div>
+                  <div className="h-10 bg-gray-200 rounded"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
         <div className="max-w-6xl mx-auto">
@@ -127,7 +142,7 @@ const CreditPurchasePage = () => {
                 >
                   {isProcessing ? (
                     <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <div className="h-5 w-5 rounded-full border-4 border-white border-t-transparent animate-pulse"></div>
                       Processing...
                     </span>
                   ) : (

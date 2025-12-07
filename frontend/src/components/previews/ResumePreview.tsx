@@ -23,7 +23,11 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ templateId, width 
         <div className="w-full h-full overflow-hidden relative bg-gray-50 flex items-center justify-center group-hover:shadow-lg transition-shadow">
             <div className="absolute inset-0 flex items-center justify-center">
                 {loading && (
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    <div className="space-y-2 w-16">
+                      <div className="h-3 bg-gray-200 rounded-full animate-pulse"></div>
+                      <div className="h-3 bg-gray-200 rounded-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                      <div className="h-3 bg-gray-200 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                    </div>
                 )}
             </div>
 

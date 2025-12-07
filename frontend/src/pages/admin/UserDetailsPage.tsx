@@ -46,7 +46,35 @@ export default function UserDetailsPage() {
         }
     })
 
-    if (isLoading) return <div className="p-8 text-center">Loading user details...</div>
+    if (isLoading) return (
+        <div className="p-8 space-y-6">
+            <div className="animate-pulse space-y-6">
+                {/* Header */}
+                <div className="h-8 w-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                
+                {/* User Info Card */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-4">
+                    <div className="flex items-center gap-4">
+                        <div className="h-16 w-16 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+                        <div className="space-y-2 flex-1">
+                            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Stats Cards */}
+                <div className="grid md:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
     if (!user) return <div className="p-8 text-center">User not found</div>
 
     const tabs = [

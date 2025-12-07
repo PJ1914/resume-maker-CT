@@ -77,10 +77,36 @@ export default function ResumesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900 mx-auto"></div>
-          <p className="mt-4 text-secondary-600">Loading resumes...</p>
+      <div className="p-4 sm:p-8 max-w-7xl mx-auto">
+        {/* Header Skeleton */}
+        <div className="mb-6 sm:mb-8">
+          <div className="h-8 w-48 bg-secondary-200 dark:bg-secondary-800 rounded animate-pulse mb-2"></div>
+          <div className="h-4 w-32 bg-secondary-200 dark:bg-secondary-800 rounded animate-pulse"></div>
+        </div>
+
+        {/* Resume Cards Skeleton */}
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-4 sm:p-6 animate-pulse"
+            >
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
+                <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 w-full">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-secondary-200 dark:bg-secondary-800 flex-shrink-0"></div>
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <div className="h-5 bg-secondary-200 dark:bg-secondary-800 rounded w-3/4"></div>
+                    <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-1/2"></div>
+                    <div className="h-2 bg-secondary-200 dark:bg-secondary-800 rounded-full w-full"></div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-9 w-9 bg-secondary-200 dark:bg-secondary-800 rounded-lg"></div>
+                  <div className="h-9 w-9 bg-secondary-200 dark:bg-secondary-800 rounded-lg"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     )

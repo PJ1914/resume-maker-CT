@@ -50,7 +50,34 @@ export default function AdminDashboardPage() {
     )
 
     if (isLoading) {
-        return <div className="p-8 text-center text-gray-400">Loading dashboard...</div>
+        return (
+            <div className="p-8 space-y-6">
+                <div className="animate-pulse space-y-6">
+                    {/* Stats Grid */}
+                    <div className="grid md:grid-cols-4 gap-6">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-3">
+                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                                <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
+                                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    {/* Charts */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-4">
+                            <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-32"></div>
+                            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-4">
+                            <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-32"></div>
+                            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return (

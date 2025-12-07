@@ -38,7 +38,21 @@ export default function SettingsPage() {
         updateMutation.mutate(data)
     }
 
-    if (isLoading) return <div className="p-8 text-center">Loading settings...</div>
+    if (isLoading) return (
+        <div className="p-8 space-y-4">
+            <div className="animate-pulse space-y-4">
+                <div className="h-8 w-48 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                <div className="grid md:grid-cols-2 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-3">
+                            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
 
     return (
         <div className="space-y-6">
