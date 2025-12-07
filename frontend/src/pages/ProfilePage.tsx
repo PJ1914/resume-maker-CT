@@ -64,8 +64,60 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary-50 to-secondary-100 dark:from-secondary-950 dark:to-secondary-900 flex items-center justify-center">
-        <p className="text-secondary-600 dark:text-secondary-400">Loading profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-secondary-50 to-secondary-100 dark:from-secondary-950 dark:to-secondary-900 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Side - Main Profile Skeleton */}
+            <div className="lg:col-span-2">
+              <div className="bg-white dark:bg-secondary-800 rounded-3xl shadow-xl overflow-hidden animate-pulse">
+                {/* Header Skeleton */}
+                <div className="h-32 sm:h-40 bg-secondary-300 dark:bg-secondary-700"></div>
+                
+                {/* Profile Content Skeleton */}
+                <div className="px-6 sm:px-8 pb-8 -mt-16">
+                  {/* Avatar Skeleton */}
+                  <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-secondary-300 dark:bg-secondary-700 border-4 border-white dark:border-secondary-800"></div>
+                  
+                  {/* Info Skeleton */}
+                  <div className="mt-8 space-y-3">
+                    <div className="h-8 w-48 bg-secondary-300 dark:bg-secondary-700 rounded"></div>
+                    <div className="h-4 w-32 bg-secondary-200 dark:bg-secondary-700 rounded"></div>
+                    <div className="h-4 w-40 bg-secondary-200 dark:bg-secondary-700 rounded"></div>
+                  </div>
+                  
+                  {/* Buttons Skeleton */}
+                  <div className="flex gap-3 pt-6">
+                    <div className="h-10 w-32 bg-secondary-300 dark:bg-secondary-700 rounded-xl"></div>
+                    <div className="h-10 w-32 bg-secondary-300 dark:bg-secondary-700 rounded-xl"></div>
+                  </div>
+                  
+                  {/* Stats Skeleton */}
+                  <div className="grid grid-cols-3 gap-3 pt-6">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-secondary-100 dark:bg-secondary-700 rounded-2xl p-4 space-y-2">
+                        <div className="h-4 w-24 bg-secondary-200 dark:bg-secondary-600 rounded"></div>
+                        <div className="h-6 w-16 bg-secondary-200 dark:bg-secondary-600 rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Right Side Skeleton */}
+            <div className="space-y-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-white dark:bg-secondary-800 rounded-2xl p-6 animate-pulse">
+                  <div className="h-6 w-32 bg-secondary-300 dark:bg-secondary-700 rounded mb-4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-secondary-200 dark:bg-secondary-700 rounded w-full"></div>
+                    <div className="h-4 bg-secondary-200 dark:bg-secondary-700 rounded w-5/6"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
