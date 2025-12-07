@@ -2,17 +2,37 @@ import { useNavigate } from 'react-router-dom'
 import { FileText, Trash2, Eye, Upload, AlertCircle, Sparkles } from 'lucide-react'
 import { useResumes, useDeleteResume } from '@/hooks/useResumes'
 import type { ResumeListItem } from '@/services/resume.service'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { useState } from 'react'
 
 export default function ResumesPage() {
   const navigate = useNavigate()
   const { data: resumesData, isLoading: loading } = useResumes()
   const { mutate: deleteResume } = useDeleteResume()
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedResume, setSelectedResume] = useState<{ id: string; filename: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const resumes = resumesData || []
 
-  const handleDelete = async (resumeId: string, filename: string) => {
-    if (!confirm(`Delete "${filename}"?`)) return
-    deleteResume(resumeId)
+  const handleDeleteClick = (resumeId: string, filename: string) => {
+    setSelectedResume({ id: resumeId, filename })
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = () => {
+    if (!selectedResume) return
+    setIsDeleting(true)
+    deleteResume(selectedResume.id, {
+      onSuccess: () => {
+        setIsDeleting(false)
+        setShowDeleteModal(false)
+        setSelectedResume(null)
+      },
+      onError: () => {
+        setIsDeleting(false)
+      }
+    })
   }
 
   const handleView = (resumeId: string) => {
@@ -204,7 +224,7 @@ export default function ResumesPage() {
                     <span className="sm:hidden">View</span>
                   </button>
                   <button
-                    onClick={() => handleDelete(resume.resume_id, resume.original_filename)}
+                    onClick={() => handleDeleteClick(resume.resume_id, resume.original_filename)}
                     className="flex-1 sm:flex-none justify-center p-2 sm:p-2.5 bg-secondary-50 dark:bg-secondary-800 hover:bg-danger-50 dark:hover:bg-danger-900/20 rounded-lg transition-colors flex items-center gap-2 text-sm text-danger-600 dark:text-danger-400 sm:text-current"
                     title="Delete"
                   >
@@ -217,6 +237,22 @@ export default function ResumesPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setSelectedResume(null)
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Resume"
+        message={selectedResume ? `Are you sure you want to delete "${selectedResume.filename}"? This action cannot be undone.` : 'Delete this resume?'}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+        loading={isDeleting}
+      />
     </div>
   )
 }
