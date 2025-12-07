@@ -57,14 +57,14 @@ async def improve_content(
         user_id = current_user['uid']
         
         # Check credits
-        if not has_sufficient_credits(user_id, FeatureType.AI_SUGGESTION):
+        if not has_sufficient_credits(user_id, FeatureType.AI_REWRITE):
             user_credits = get_user_credits(user_id)
             raise HTTPException(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail={
-                    "message": "Insufficient credits for AI suggestion",
+                    "message": "Insufficient credits for AI content enhancement",
                     "current_balance": user_credits["balance"],
-                    "required": FEATURE_COSTS[FeatureType.AI_SUGGESTION]
+                    "required": FEATURE_COSTS[FeatureType.AI_REWRITE]
                 }
             )
 
@@ -141,13 +141,18 @@ Provide ONLY a comma-separated list of skills, nothing else.""",
             improved_text = request.text  # Keep original for skill suggestions
 
         # Deduct credits
-        deduct_credits(user_id, FeatureType.AI_SUGGESTION, f"AI Suggestion for {request.context}")
+        credits_result = deduct_credits(user_id, FeatureType.AI_REWRITE, f"AI Content Enhancement for {request.context}")
+        if not credits_result['success']:
+            logger.warning(f"Credit deduction failed for user {user_id}: {credits_result.get('error')}")
 
         return ImprovementResponse(
             original=request.text, improved=improved_text, suggestions=suggestions
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"AI improvement failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"AI improvement failed: {str(e)}"
         )
@@ -197,13 +202,18 @@ Provide ONLY the rewritten content, nothing else."""
         improved_text = response.text.strip()
 
         # Deduct credits
-        deduct_credits(user_id, FeatureType.AI_REWRITE, f"AI Rewrite for {request.context}")
+        credits_result = deduct_credits(user_id, FeatureType.AI_REWRITE, f"AI Rewrite for {request.context}")
+        if not credits_result['success']:
+            logger.warning(f"Credit deduction failed for user {user_id}: {credits_result.get('error')}")
 
         return ImprovementResponse(
             original=request.text, improved=improved_text, suggestions=[]
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"AI rewrite failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"AI rewrite failed: {str(e)}")
 
 
@@ -478,7 +488,36 @@ Generate the professional summary now (text only, no formatting):"""
             )
         )
         
-        summary = response.text.strip()
+        # Check for safety ratings or other blocks
+        if hasattr(response, 'prompt_feedback'):
+            logger.warning(f"Prompt feedback: {response.prompt_feedback}")
+        
+        # Try to get text safely
+        summary = None
+        try:
+            if response and hasattr(response, 'text'):
+                summary = response.text.strip()
+        except Exception as text_error:
+            logger.warning(f"Could not access response.text: {text_error}")
+        
+        if not summary:
+            # Try candidates
+            if hasattr(response, 'candidates') and response.candidates:
+                for candidate in response.candidates:
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'text') and part.text:
+                                summary = part.text.strip()
+                                break
+                    if summary:
+                        break
+        
+        if not summary:
+            logger.error(f"Gemini API returned no usable content. Response: {response}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="AI service could not generate a summary. Please try again or check your internet connection."
+            )
         
         # Remove quotes if Gemini added them
         if summary.startswith('"') and summary.endswith('"'):
@@ -493,6 +532,8 @@ Generate the professional summary now (text only, no formatting):"""
         
         return GenerateSummaryResponse(summary=summary)
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Summary generation failed: {str(e)}", exc_info=True)
         raise HTTPException(

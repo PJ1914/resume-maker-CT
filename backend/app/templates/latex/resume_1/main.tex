@@ -101,6 +101,7 @@
   \resumeSubheading
     {\VAR{exp.company|escape_tex}}{\VAR{exp.location|escape_tex}}
     {\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex} -- \VAR{exp.end_date|escape_tex}}
+    \BLOCK{ if exp.description or exp.highlights }
     \resumeItemListStart
         \BLOCK{ if exp.description }
         \item \VAR{exp.description|escape_tex}
@@ -109,6 +110,7 @@
         \item \VAR{highlight|escape_tex}
         \BLOCK{ endfor }
     \resumeItemListEnd
+    \BLOCK{ endif }
 \BLOCK{ endfor }
 
 \resumeSubHeadingListEnd

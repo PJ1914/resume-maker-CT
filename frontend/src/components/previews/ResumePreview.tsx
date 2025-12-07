@@ -36,7 +36,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ templateId, width 
       */}
             <div className="w-full h-full flex items-start justify-center overflow-hidden">
                 <Document
-                    file={`${API_URL}/api/resumes/templates/${templateId}/preview`}
+                    file={`${API_URL}/api/resumes/template-preview/${templateId}`}
                     onLoadSuccess={onDocumentLoadSuccess}
                     loading={null}
                     error={

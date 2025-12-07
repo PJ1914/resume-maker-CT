@@ -1,54 +1,47 @@
 
+\BLOCK{ if skills }
 \cvsection{Skills}
 
-\cvtag{Product Development}
-\cvtag{Data Analytics}
-\cvtag{Tableau}
-\cvtag{Visualisation}
-\cvtag{Research}
-\cvtag{Strategy}
-\cvtag{Negotiation}
-\cvtag{R} 
-\cvtag{Business Analysis}
-\cvtag{Client Relationship}
-\cvtag{Business Development}
-%\divider\smallskip
+\BLOCK{ if skills.technical }
+\BLOCK{ for skill in skills.technical }
+\cvtag{\VAR{skill|escape_tex}}
+\BLOCK{ endfor }
+\BLOCK{ endif }
 
+\BLOCK{ if skills.soft }
+\BLOCK{ for skill in skills.soft }
+\cvtag{\VAR{skill|escape_tex}}
+\BLOCK{ endfor }
+\BLOCK{ endif }
+\BLOCK{ endif }
+
+\BLOCK{ if certifications }
 \cvsection{Certifications}
 
-\cvevent{Data Analytics using R and Python}{Jigsaw Academy}{ Dec 2018}{}
-
-
-\divider
-
-\cvevent{Machine Learning and Data Science}{Udemy}{Feb 2019}{}
-
-
-%% Yeah I didn't spend too much time making all the 
-%% spacing consistent... sorry. Use \smallskip, \medskip, 
-%% \bigskip, \vpsace etc to make ajustments.
-\medskip
-
-
-
-\cvsection{Strength}
-\begin{itemize}
-\item Product Development
-\item Data driven techniques
-\item UX/UI \& Digital Products
-\item Entrepreneurial Mindset
-\end{itemize}
+\BLOCK{ for cert in certifications }
+\cvevent{\VAR{cert.name|escape_tex}}{\VAR{cert.issuer|escape_tex}}{\VAR{cert.date|escape_tex}}{}
 
 \divider
+\BLOCK{ endfor }
+\BLOCK{ endif }
 
+\BLOCK{ if languages }
+\cvsection{Languages}
 
-\cvsection{Training}
+\BLOCK{ for lang in languages }
+\cvtag{\VAR{lang.name|escape_tex}} (\VAR{lang.proficiency|escape_tex})
+\BLOCK{ endfor }
+\BLOCK{ endif }
 
-\cvevent{Research \& Development Department}{National Engineering Industries Ltd}{June 2012 -- July 2012}{Jaipur, Rajasthan}
-\begin{itemize}
-\item Studies the various elements in the engineering component of bearing, including the types, construction, working, production and innovation. 
+\BLOCK{ if achievements }
+\cvsection{Achievements}
 
-\end{itemize}
+\BLOCK{ for ach in achievements }
+\cvevent{\VAR{ach.title|escape_tex}}{}{\VAR{ach.date|escape_tex}}{}
+
+\divider
+\BLOCK{ endfor }
+\BLOCK{ endif }
 
 
 

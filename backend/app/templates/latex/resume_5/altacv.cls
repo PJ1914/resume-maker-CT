@@ -80,8 +80,8 @@
 
 \newcommand{\printinfo}[2]{\mbox{\textcolor{accent}{\normalfont #1}\hspace{0.5em}#2\hspace{2em}}}
 
-\newcommand{\name}[1]{\def\@name{#1}}
-\newcommand{\tagline}[1]{\def\@tagline{#1}}
+\newcommand{\name}[1]{\gdef\@name{#1}}
+\newcommand{\tagline}[1]{\long\def\@tagline{#1}}
 \newcommand{\photo}[2]{\def\@photo{#2}\def\@photodiameter{#1}}
 \newcommand{\email}[1]{\printinfo{\emailsymbol}{#1}}
 \newcommand{\mailaddress}[1]{\printinfo{\mailsymbol}{#1}}

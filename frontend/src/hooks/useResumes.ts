@@ -15,7 +15,10 @@ export const resumeKeys = {
 export function useResumes() {
   return useQuery({
     queryKey: resumeKeys.list(),
-    queryFn: () => resumeService.listResumes(),
+    queryFn: async () => {
+      const response = await resumeService.listResumes();
+      return response.resumes; // Extract resumes array from response
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
@@ -27,40 +30,6 @@ export function useResume(id: string | undefined) {
     queryFn: () => resumeService.getResume(id!),
     enabled: !!id, // Only run if id exists
     staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
-
-// Hook to create resume
-export function useCreateResume() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: any) => resumeService.createResume(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: resumeKeys.lists() });
-      toast.success('Resume created successfully!');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create resume');
-    },
-  });
-}
-
-// Hook to update resume
-export function useUpdateResume() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      resumeService.updateResume(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: resumeKeys.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: resumeKeys.lists() });
-      toast.success('Resume updated successfully!');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update resume');
-    },
   });
 }
 

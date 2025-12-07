@@ -4,6 +4,7 @@ import { AIEnhancedTextarea } from '../ui/ai-enhanced-textarea'
 import { apiClient } from '@/services/api'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
+import InsufficientCreditsModal from '../InsufficientCreditsModal'
 
 interface AISummaryStepFormProps {
   data: string
@@ -16,6 +17,8 @@ export default function AISummaryStepForm({ data, onChange, resumeData }: AISumm
   const [isEditing, setIsEditing] = useState(false)
   const [editedSummary, setEditedSummary] = useState(data)
   const [hasGenerated, setHasGenerated] = useState(!!data)
+  const [showCreditsModal, setShowCreditsModal] = useState(false)
+  const [creditsInfo, setCreditsInfo] = useState({ required: 3, current: 0 })
 
   useEffect(() => {
     setEditedSummary(data)
@@ -44,6 +47,19 @@ export default function AISummaryStepForm({ data, onChange, resumeData }: AISumm
       }
     } catch (error: any) {
       console.error('Generate summary error:', error)
+      
+      // Handle insufficient credits (402 Payment Required)
+      if (error?.response?.status === 402) {
+        const errorData = error.response.data
+        const errorDetail = errorData.detail || errorData
+        setCreditsInfo({
+          required: errorDetail.required || 3,
+          current: errorDetail.current_balance || 0
+        })
+        setShowCreditsModal(true)
+        return
+      }
+      
       const errorMsg = error.response?.data?.detail || 'Failed to generate summary'
       toast.error(errorMsg)
     } finally {
@@ -263,6 +279,15 @@ export default function AISummaryStepForm({ data, onChange, resumeData }: AISumm
           </motion.div>
         </AnimatePresence>
       )}
+      
+      {/* Insufficient Credits Modal */}
+      <InsufficientCreditsModal
+        isOpen={showCreditsModal}
+        onClose={() => setShowCreditsModal(false)}
+        featureName="AI Summary Generation"
+        requiredCredits={creditsInfo.required}
+        currentBalance={creditsInfo.current}
+      />
     </div>
   )
 }

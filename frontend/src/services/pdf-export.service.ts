@@ -73,17 +73,21 @@ export async function exportResumePDF(
     );
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-      throw new Error(error.detail || `PDF export failed with status ${response.status}`);
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      
+      // Create a proper error object with response data attached
+      const error: any = new Error(errorData.detail || errorData.message || `PDF export failed with status ${response.status}`);
+      error.response = {
+        status: response.status,
+        data: errorData
+      };
+      throw error;
     }
 
     return await response.json();
   } catch (error) {
     console.error('Error exporting PDF:', error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error(String(error));
+    throw error;
   }
 }
 

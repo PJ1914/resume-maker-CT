@@ -17,6 +17,7 @@ export function useResumeScore(resumeId: string | undefined) {
     enabled: !!resumeId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
+    throwOnError: false, // Don't throw on 404, just return error in data
   });
 }
 
@@ -25,8 +26,8 @@ export function useScoreResume() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ resumeId, preferGemini = true, useCache = true }: { resumeId: string; preferGemini?: boolean; useCache?: boolean }) =>
-      resumeService.scoreResume(resumeId, preferGemini, useCache),
+    mutationFn: ({ resumeId, preferGemini = true }: { resumeId: string; preferGemini?: boolean }) =>
+      resumeService.scoreResume(resumeId, preferGemini),
     onSuccess: (data, variables) => {
       // Directly update the cache with the new score from POST response
       // This ensures we show the correct score immediately without refetching
