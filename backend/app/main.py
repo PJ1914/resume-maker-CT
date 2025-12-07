@@ -11,7 +11,7 @@ load_dotenv()
 from app.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("resume_maker")
-from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, credits, payments
+from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, credits, payments, admin
 
 # Print startup info
 logger.info("Resume Maker API - Starting...")
@@ -60,6 +60,9 @@ async def add_security_headers(request: Request, call_next):
     # Permissions policy
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     
+    # Allow popups for Google Sign-In
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    
     return response
 
 
@@ -73,6 +76,7 @@ app.include_router(scoring.router, prefix="/api/scoring", tags=["Scoring"])
 app.include_router(ai.router, tags=["AI"])
 app.include_router(credits.router, prefix="/api/credits", tags=["Credits"])
 app.include_router(payments.router, prefix="/api", tags=["Payments"])
+app.include_router(admin.router, prefix="/api", tags=["Admin"])
 
 @app.get("/")
 async def root():

@@ -20,5 +20,5 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         displayName=current_user.get("name"),
         photoURL=current_user.get("picture"),
         emailVerified=current_user.get("email_verified", False),
-        isAdmin=is_user_admin(user_email, user_id),
+        isAdmin=current_user.get("admin", False) or is_user_admin(user_email, user_id),
     )

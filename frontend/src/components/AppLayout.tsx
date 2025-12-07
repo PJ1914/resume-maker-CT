@@ -45,25 +45,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
+    <div className="min-h-screen bg-black text-white">
       {/* Top Navbar */}
-      <nav className="fixed top-0 z-50 w-full bg-white dark:bg-secondary-900 border-b border-secondary-200 dark:border-secondary-800 shadow-soft">
+      <nav className="fixed top-0 z-50 w-full bg-black border-b border-white/10">
         <div className="px-3 py-3 lg:px-5 lg:pl-3">
           <div className="flex items-center justify-between">
             {/* Left side */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="inline-flex items-center p-2 text-secondary-700 dark:text-secondary-300 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 focus:outline-none focus:ring-2 focus:ring-primary-800 transition-colors"
+                className="inline-flex items-center p-2 text-gray-400 rounded-lg hover:bg-white/10 focus:outline-none transition-colors"
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
 
               <Link to="/dashboard" className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-primary-900 flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-white" />
+                <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-black" />
                 </div>
-                <span className="text-xl font-bold text-primary-900 dark:text-white hidden sm:inline-block">
+                <span className="text-xl font-bold text-white hidden sm:inline-block">
                   Prativeda
                 </span>
               </Link>
@@ -76,9 +76,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-full overflow-hidden flex items-center justify-center bg-secondary-100 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700">
+                  <div className="h-8 w-8 rounded-full overflow-hidden flex items-center justify-center bg-white/10 border border-white/10">
                     {user?.photoURL ? (
                       <img
                         src={user.photoURL}
@@ -94,12 +94,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     )}
                   </div>
                   <div className="hidden md:block text-left">
-                    <div className="text-sm font-medium text-secondary-900 dark:text-secondary-50">
+                    <div className="text-sm font-medium text-white">
                       {user?.displayName || user?.email?.split('@')[0] || 'User'}
                     </div>
-                    <div className="text-xs text-secondary-500 dark:text-secondary-400">{user?.email}</div>
+                    <div className="text-xs text-gray-400">{user?.email}</div>
                   </div>
-                  <ChevronDown className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
                 </button>
 
                 {/* User dropdown */}
@@ -109,10 +109,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       className="fixed inset-0 z-10"
                       onClick={() => setUserMenuOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-secondary-900 rounded-lg shadow-medium border border-secondary-200 dark:border-secondary-800 py-1 z-20">
+                    <div className="absolute right-0 mt-2 w-48 bg-[#0a0a0a] rounded-lg shadow-xl border border-white/10 py-1 z-20">
                       <Link
                         to="/profile"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <User className="h-4 w-4" />
@@ -120,7 +120,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       </Link>
                       <Link
                         to="/credits/history"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <History className="h-4 w-4" />
@@ -128,7 +128,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-danger-600 dark:text-danger-400 hover:bg-secondary-50 dark:hover:bg-secondary-800"
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
                       >
                         <LogOut className="h-4 w-4" />
                         Logout
@@ -145,7 +145,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } bg-white dark:bg-secondary-900 border-r border-secondary-200 dark:border-secondary-800`}
+          } bg-black border-r border-white/10`}
       >
         <div className="h-full px-3 pb-4 overflow-y-auto">
           <ul className="space-y-2 font-medium">
@@ -164,8 +164,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       }
                     }}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${active
-                      ? 'bg-primary-900 text-white shadow-soft dark:bg-primary-600'
-                      : 'text-secondary-700 dark:text-secondary-300 hover:bg-secondary-100 dark:hover:bg-secondary-800'
+                      ? 'bg-white/10 text-white'
+                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
                       }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -177,21 +177,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </ul>
 
           {/* Quick Actions */}
-          <div className="mt-8 pt-6 border-t border-secondary-200">
-            <h3 className="px-4 text-xs font-semibold text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-3">
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Quick Actions
             </h3>
             <div className="space-y-2">
               <button
                 onClick={() => navigate('/resume/create')}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-primary-900 dark:text-primary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg transition-colors font-medium"
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors font-medium"
               >
                 <Sparkles className="h-4 w-4" />
                 Create from Scratch
               </button>
               <button
                 onClick={() => navigate('/upload')}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-primary-900 dark:text-primary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg transition-colors font-medium"
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors font-medium"
               >
                 <Upload className="h-4 w-4" />
                 Upload Existing
@@ -200,11 +200,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Stats Card */}
-          <div className="mt-8 mx-3 p-4 bg-secondary-100 dark:bg-secondary-800 rounded-lg border border-secondary-300 dark:border-secondary-700">
-            <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-50 mb-2">
+          <div className="mt-8 mx-3 p-4 bg-[#0a0a0a] rounded-lg border border-white/10">
+            <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
               💡 Pro Tip
             </h3>
-            <p className="text-xs text-secondary-700 dark:text-secondary-300">
+            <p className="text-xs text-gray-400">
               Use AI features to enhance your resume and get better ATS scores!
             </p>
           </div>
@@ -222,7 +222,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

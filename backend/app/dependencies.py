@@ -42,3 +42,14 @@ async def get_current_user_optional(
     
     token = auth_header.split(" ")[1]
     return await verify_firebase_token(token)
+
+async def admin_only(user: dict = Depends(get_current_user)) -> dict:
+    """
+    Dependency to ensure the user has admin privileges.
+    """
+    if not user.get("admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    return user

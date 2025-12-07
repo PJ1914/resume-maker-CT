@@ -14,6 +14,19 @@ import CreditPurchasePage from '../pages/CreditPurchasePage'
 import CreditHistoryPage from '../pages/CreditHistoryPage'
 import ProfilePage from '../pages/ProfilePage'
 import { useAuth } from '../context/AuthContext'
+import AdminGuard from '../components/admin/AdminGuard'
+import AdminLayout from '../components/layouts/AdminLayout'
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage'
+import UsersPage from '../pages/admin/UsersPage'
+import UserDetailsPage from '../pages/admin/UserDetailsPage'
+import AdminResumesPage from '../pages/admin/ResumesPage'
+import ResumeDetailsPage from '../pages/admin/ResumeDetailsPage'
+import AdminTemplatesPage from '../pages/admin/TemplatesPage'
+import PortfoliosPage from '../pages/admin/PortfoliosPage'
+import PaymentsPage from '../pages/admin/PaymentsPage'
+import AIMonitoringPage from '../pages/admin/AIMonitoringPage'
+import AnnouncementsPage from '../pages/admin/AnnouncementsPage'
+import SettingsPage from '../pages/admin/SettingsPage'
 
 export default function AppRoutes() {
   const { user } = useAuth()
@@ -137,6 +150,24 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* Admin Routes */}
+      <Route element={<AdminGuard />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="users/:uid" element={<UserDetailsPage />} />
+          <Route path="resumes" element={<AdminResumesPage />} />
+          <Route path="resumes/:id" element={<ResumeDetailsPage />} />
+          <Route path="templates" element={<AdminTemplatesPage />} />
+          <Route path="portfolios" element={<PortfoliosPage />} />
+          <Route path="payments" element={<PaymentsPage />} />
+          <Route path="ai" element={<AIMonitoringPage />} />
+          <Route path="announcements" element={<AnnouncementsPage />} />
+          <Route path="support" element={<div className="p-8">Support Tickets (Coming Soon)</div>} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+      </Route>
 
       {/* Catch all - redirect to login or dashboard */}
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />

@@ -6,9 +6,9 @@ const CreditBalance = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full">
         <Coins className="w-4 h-4 text-gray-400" />
-        <span className="text-sm text-gray-500">...</span>
+        <span className="text-sm text-gray-400">...</span>
       </div>
     );
   }
@@ -21,11 +21,11 @@ const CreditBalance = () => {
   if (isAdmin) {
     return (
       <div
-        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-300"
+        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20"
         title="Admin - Unlimited Credits"
       >
-        <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-600" />
-        <span className="text-xs sm:text-sm font-medium text-yellow-700">
+        <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
+        <span className="text-xs sm:text-sm font-medium text-yellow-400">
           <span className="sm:hidden">Unlim.</span>
           <span className="hidden sm:inline">Unlimited</span>
         </span>
@@ -36,14 +36,14 @@ const CreditBalance = () => {
   return (
     <div
       className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full cursor-pointer transition-colors ${isLow
-          ? 'bg-red-50 hover:bg-red-100'
-          : 'bg-blue-50 hover:bg-blue-100'
+        ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400'
+        : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400'
         }`}
       onClick={() => window.location.href = '/credits/purchase'}
       title="Click to purchase credits"
     >
-      <Coins className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLow ? 'text-red-600' : 'text-blue-600'}`} />
-      <span className={`text-xs sm:text-sm font-medium ${isLow ? 'text-red-700' : 'text-blue-700'}`}>
+      <Coins className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLow ? 'text-red-400' : 'text-blue-400'}`} />
+      <span className={`text-xs sm:text-sm font-medium`}>
         {balance} <span className="hidden sm:inline">Credits</span>
       </span>
     </div>
