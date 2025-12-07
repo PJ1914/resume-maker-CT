@@ -1,21 +1,19 @@
 import { Coins, Check, Sparkles, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useCreditBalance, useCreditPackages, usePurchaseCredits } from '../hooks/useCredits';
+import { useCreditBalance } from '../hooks/useCredits';
+import { usePaymentPlans, usePaymentFlow } from '../hooks/usePayments';
 
 const CreditPurchasePage = () => {
   const navigate = useNavigate();
   const { data: balanceData } = useCreditBalance();
-  const { data: packages = [], isLoading: loading } = useCreditPackages();
-  const { mutate: purchaseCredits, isPending: purchasing } = usePurchaseCredits();
+  const { data: plansData, isLoading: loading } = usePaymentPlans();
+  const { initiatePayment, isProcessing } = usePaymentFlow();
 
   const currentBalance = balanceData?.balance || 0;
+  const packages = plansData?.plans || [];
 
-  const handlePurchase = (packageId: string) => {
-    purchaseCredits(packageId, {
-      onSuccess: (data) => {
-        alert(`Payment initiated! Payment ID: ${data.payment_id}\n\nIn production, this would redirect to payment gateway.\n\nFor now, contact admin to complete payment and receive credits.`);
-      },
-    });
+  const handlePurchase = async (quantity: number) => {
+    await initiatePayment('PLAN#Resume', quantity);
   };
 
   return (
@@ -53,14 +51,18 @@ const CreditPurchasePage = () => {
 
         {/* Packages Grid */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {packages.map((pkg) => (
+          {packages.map((pkg, index) => {
+            const isPopular = index === 1; // Middle package is most popular
+            const pricePerCredit = (pkg.price / pkg.quantity).toFixed(2);
+            
+            return (
             <div
-              key={pkg.id}
+              key={`${pkg.quantity}-${pkg.price}`}
               className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105 ${
-                pkg.popular ? 'ring-2 ring-blue-500' : ''
+                isPopular ? 'ring-2 ring-blue-500' : ''
               }`}
             >
-              {pkg.popular && (
+              {isPopular && (
                 <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 text-sm font-semibold rounded-bl-lg">
                   Most Popular
                 </div>
@@ -68,24 +70,22 @@ const CreditPurchasePage = () => {
               
               <div className="p-8">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {pkg.name}
+                  {pkg.quantity === 100 ? 'Starter' : pkg.quantity === 500 ? 'Professional' : 'Basic'} Pack
                 </h3>
                 
                 <div className="flex items-baseline gap-2 mb-6">
                   <span className="text-4xl font-bold text-gray-900">
                     ₹{pkg.price}
                   </span>
-                  {pkg.discount_percentage && (
-                    <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                      {pkg.discount_percentage}% OFF
-                    </span>
-                  )}
+                  <span className="text-sm text-gray-500">
+                    (₹{pricePerCredit}/credit)
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2 mb-6 text-blue-600">
                   <Coins className="w-5 h-5" />
                   <span className="text-xl font-semibold">
-                    {pkg.credits} Credits
+                    {pkg.quantity} Credits
                   </span>
                 </div>
 
@@ -93,19 +93,19 @@ const CreditPurchasePage = () => {
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <span className="text-gray-600">
-                      {Math.floor(pkg.credits / 5)} ATS Score analyses
+                      ~{Math.floor(pkg.quantity / 5)} ATS Score analyses
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <span className="text-gray-600">
-                      {Math.floor(pkg.credits / 3)} AI content rewrites
+                      ~{Math.floor(pkg.quantity / 3)} AI content rewrites
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <span className="text-gray-600">
-                      {Math.floor(pkg.credits / 2)} PDF exports
+                      ~{Math.floor(pkg.quantity / 2)} PDF exports
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -117,15 +117,15 @@ const CreditPurchasePage = () => {
                 </div>
 
                 <button
-                  onClick={() => handlePurchase(pkg.id)}
-                  disabled={purchasing}
+                  onClick={() => handlePurchase(pkg.quantity)}
+                  disabled={isProcessing}
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
-                    pkg.popular
+                    isPopular
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
                       : 'bg-gray-900 text-white hover:bg-gray-800'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {purchasing ? (
+                  {isProcessing ? (
                     <span className="flex items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       Processing...
@@ -136,7 +136,7 @@ const CreditPurchasePage = () => {
                 </button>
               </div>
             </div>
-          ))}
+          )})}
         </div>
 
         {/* Free Monthly Credits Info */}
