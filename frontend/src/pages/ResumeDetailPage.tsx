@@ -395,6 +395,9 @@ export default function ResumeDetailPage() {
               <div className="h-8 w-64 bg-secondary-300 dark:bg-secondary-800 rounded"></div>
             </div>
             
+
+
+            
             {/* Action Buttons Skeleton */}
             <div className="flex flex-wrap gap-3 mb-6">
               <div className="h-10 w-32 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
