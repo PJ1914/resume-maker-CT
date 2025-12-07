@@ -104,7 +104,7 @@ const CreditHistoryPage = () => {
           <div className="space-y-3">
             {transactions.map((transaction) => (
               <div
-                key={transaction.transaction_id}
+                key={transaction.id}
                 className="bg-white dark:bg-secondary-900 rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow border border-gray-200 dark:border-secondary-800"
               >
                 <div className="flex items-start justify-between gap-4">
