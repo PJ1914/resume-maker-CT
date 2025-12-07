@@ -14,14 +14,12 @@ import Preloader from '@/components/ui/preloader'
 function App() {
   const [loading, setLoading] = useState(true)
 
+  // Auto-complete preloader after 3 seconds to ensure landing page shows
   useEffect(() => {
-    // Initialize theme
-    const theme = localStorage.getItem('theme')
-    if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 3000)
+    return () => clearTimeout(timer)
   }, [])
 
   return (

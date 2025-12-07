@@ -13,7 +13,7 @@ export default {
         skeleton: "var(--skeleton)",
         border: "var(--btn-border)",
         input: "var(--input)",
-        // Professional Black & White Theme
+        // Primary Colors (Black & White)
         primary: {
           50: '#f9f9f9',
           100: '#f3f3f3',
@@ -40,6 +40,7 @@ export default {
           900: '#000000',
           950: '#000000',
         },
+        // Success (Green)
         success: {
           50: '#f0fdf4',
           100: '#dcfce7',
@@ -52,13 +53,48 @@ export default {
           800: '#166534',
           900: '#145231',
         },
+        // Warning (Orange)
         warning: {
           500: '#f59e0b',
           600: '#d97706',
         },
+        // Danger (Red)
         danger: {
+          50: '#fef2f2',
+          100: '#fee2e2',
+          200: '#fecaca',
+          300: '#fca5a5',
+          400: '#f87171',
           500: '#ef4444',
           600: '#dc2626',
+          700: '#b91c1c',
+          800: '#991b1b',
+          900: '#7f1d1d',
+        },
+        // Unique "Cosmic Void" Futuristic Theme
+        cosmic: {
+          950: '#030014', // Deepest Void (Background)
+          900: '#0a0a1f', // Deep Space
+          800: '#11113a', // Lighter Space (Cards)
+          700: '#1a1a5e', // Borders
+          500: '#7000FF', // Electric Purple (Primary)
+          400: '#A259FF', // Lighter Purple
+          300: '#CB9EFF', // Soft Purple
+          100: '#E0CCFF', // Pale Purple
+        },
+        cyber: {
+          500: '#00F0FF', // Cyan Neon (Secondary)
+          400: '#59F9FF',
+        },
+        holo: {
+          500: '#FF0080', // Hot Pink (Accent)
+        },
+        silver: {
+          100: '#ffffff',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
         },
       },
       borderRadius: {
@@ -77,10 +113,6 @@ export default {
           "0px 0px 0px 1px rgba(25, 28, 33, 0.08)",
         ].join(", "),
       },
-      animation: {
-        ripple: "ripple 2s ease calc(var(--i, 0) * 0.2s) infinite",
-        orbit: "orbit calc(var(--duration) * 1s) linear infinite",
-      },
       keyframes: {
         ripple: {
           "0%, 100%": { transform: "translate(-50%, -50%) scale(1)" },
@@ -95,9 +127,41 @@ export default {
             transform:
               "rotate(360deg) translateY(calc(var(--radius) * 1px)) rotate(-360deg)",
           },
-        }
+        },
+        'gradient-x': {
+          '0%, 100%': {
+            'background-size': '200% 200%',
+            'background-position': 'left center'
+          },
+          '50%': {
+            'background-size': '200% 200%',
+            'background-position': 'right center'
+          },
+        },
+      },
+      animation: {
+        ripple: "ripple 2s ease calc(var(--i, 0) * 0.2s) infinite",
+        orbit: "orbit calc(var(--duration) * 1s) linear infinite",
+        'gradient-x': 'gradient-x 3s ease infinite',
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        '.transform-style-3d': {
+          'transform-style': 'preserve-3d',
+        },
+        '.backface-hidden': {
+          'backface-visibility': 'hidden',
+        },
+        '.rotate-y-180': {
+          'transform': 'rotateY(180deg)',
+        },
+        '.perspective-1000': {
+          'perspective': '1000px',
+        },
+      })
+    }
+  ],
 }

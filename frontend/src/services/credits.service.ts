@@ -150,6 +150,7 @@ export const creditService = {
     }
 
     const data = await response.json();
-    return data.transactions;
+    // Backend returns array directly
+    return Array.isArray(data) ? data : [];
   },
 };
