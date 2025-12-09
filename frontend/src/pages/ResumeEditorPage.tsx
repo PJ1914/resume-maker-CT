@@ -947,8 +947,8 @@ export const ResumeEditorPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <button onClick={() => navigate('/resumes')} className="btn-primary">
-            Back to Resumes
+          <button onClick={() => navigate(`/resumes/${resumeId}`)} className="btn-primary">
+            Back to Resume
           </button>
         </div>
       </div>
@@ -963,7 +963,7 @@ export const ResumeEditorPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
               <button
-                onClick={() => navigate('/resumes')}
+                onClick={() => navigate(`/resumes/${resumeId}`)}
                 className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100"
               >
                 <svg
