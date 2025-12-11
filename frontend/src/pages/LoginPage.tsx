@@ -116,7 +116,7 @@ const iconsArray: OrbitIcon[] = [
 ];
 
 export default function LoginPage() {
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, signInWithGitHub } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -158,6 +158,15 @@ export default function LoginPage() {
       await signInWithGoogle();
     } catch (err) {
       setError('Failed to sign in with Google.');
+      console.error(err);
+    }
+  };
+
+  const handleGitHubSignIn = async () => {
+    try {
+      await signInWithGitHub();
+    } catch (err) {
+      setError('Failed to sign in with GitHub.');
       console.error(err);
     }
   };
@@ -205,6 +214,7 @@ export default function LoginPage() {
           goTo={goToForgotPassword}
           handleSubmit={handleSubmit}
           onGoogleLogin={handleGoogleSignIn}
+          onGithubLogin={handleGitHubSignIn}
         />
       </span>
     </section>

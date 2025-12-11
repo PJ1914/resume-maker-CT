@@ -33,7 +33,7 @@ from app.services.tasks import process_resume_parsing
 from app.config import settings
 import logging
 
-router = APIRouter()
+router = APIRouter(prefix="/resumes")
 
 # File validation - use settings for security
 MAX_FILE_SIZE = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024  # Convert MB to bytes
@@ -467,7 +467,7 @@ async def create_resume(
         )
 
 
-@router.get("/resumes", response_model=ResumeListResponse)
+@router.get("", response_model=ResumeListResponse)
 async def list_resumes(
     current_user: dict = Depends(get_current_user),
     limit: int = 50
@@ -483,7 +483,7 @@ async def list_resumes(
         total=len(resumes)
     )
 
-@router.get("/resumes/{resume_id}", response_model=ResumeDetailResponse)
+@router.get("/{resume_id}", response_model=ResumeDetailResponse)
 async def get_resume(
     resume_id: str,
     current_user: dict = Depends(get_current_user)
@@ -543,7 +543,7 @@ async def get_resume(
             detail=f"Failed to get resume: {str(e)}"
         )
 
-@router.delete("/resumes/{resume_id}")
+@router.delete("/{resume_id}")
 async def delete_resume(
     resume_id: str,
     current_user: dict = Depends(get_current_user)

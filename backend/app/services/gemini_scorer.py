@@ -139,7 +139,15 @@ class GeminiATSScorer:
         else:
             sections_str = ''
         
-        prompt = f"""You are an expert ATS (Applicant Tracking System) analyzer. Analyze this resume and provide a comprehensive score.
+        prompt = f"""You are an expert ATS (Applicant Tracking System) analyzer. Analyze this resume and provide a comprehensive, REALISTIC score.
+
+**CRITICAL INSTRUCTIONS:**
+- Be STRICT and REALISTIC in your scoring - scores should vary widely based on resume quality
+- A score of 90+ should be RARE (only exceptional resumes)
+- A score of 70-80 is GOOD (solid professional resume)
+- A score of 50-70 is AVERAGE (needs improvement)
+- A score below 50 is POOR (significant issues)
+- DO NOT give generic scores - analyze the ACTUAL content
 
 **RESUME DATA:**
 
@@ -153,7 +161,7 @@ Sections Present:
 {sections_str}
 
 Full Resume Text:
-{resume_text[:3000]}
+{resume_text[:8000]}
 
 """
         
@@ -165,36 +173,38 @@ Full Resume Text:
 """
         
         prompt += """
-**SCORING CRITERIA (Total: 100 points):**
+**SCORING CRITERIA (Total: 100 points) - BE STRICT:**
 
 1. **Keywords & Skills (30 points)**
-   - Relevant technical keywords
-   - Industry-specific terms
-   - Skills alignment
-   - Action verbs
+   - Deduct points for: generic keywords, outdated skills, irrelevant terms
+   - Award points for: industry-specific terms, modern tech stack, relevant certifications
+   - 25-30: Exceptional keyword optimization
+   - 20-24: Good keyword usage
+   - 15-19: Average keywords
+   - Below 15: Poor or missing keywords
 
 2. **Section Quality (35 points)**
-   - Required sections present (Experience, Education, Skills)
-   - Recommended sections (Summary, Projects, Certifications)
-   - Content depth and relevance
-   - Proper organization
+   - Deduct heavily if missing: Experience (-10), Education (-8), Skills (-7)
+   - Deduct for: vague descriptions, no dates, poor organization
+   - Award for: detailed achievements, clear progression, relevant projects
+   - 30-35: Exceptional content depth
+   - 25-29: Good sections
+   - 20-24: Average sections
+   - Below 20: Missing or poor sections
 
 3. **Formatting (15 points)**
-   - ATS-friendly layout
-   - Consistent structure
-   - Appropriate length
-   - Bullet point usage
+   - Deduct for: inconsistent formatting, walls of text, poor structure
+   - Award for: clean layout, proper hierarchy, good use of whitespace
 
 4. **Quantification (10 points)**
-   - Metrics and numbers
-   - Measurable achievements
-   - Impact demonstration
+   - Deduct if no metrics (0-2 points)
+   - Few numbers (3-5 points)
+   - Good quantification (6-8 points)
+   - Excellent metrics throughout (9-10 points)
 
 5. **Readability (10 points)**
-   - Clear language
-   - Professional tone
-   - Grammar and spelling
-   - Conciseness
+   - Deduct for: typos, poor grammar, unclear language
+   - Award for: professional tone, clear communication
 
 **IMPORTANT - GENERATE SPECIFIC, ACTIONABLE SUGGESTIONS:**
 - Analyze the ACTUAL resume content provided above

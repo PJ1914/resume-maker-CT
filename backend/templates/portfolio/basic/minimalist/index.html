@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ personal.name }} - Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container">
+            <h1 class="name">{{ personal.name }}</h1>
+            <p class="tagline">{{ personal.title or personal.headline }}</p>
+        </div>
+    </header>
+
+    <!-- Contact Section -->
+    <section class="section contact-section">
+        <div class="container">
+            <div class="contact-grid">
+                {% if personal.email %}
+                <div class="contact-item">
+                    <span class="contact-label">Email</span>
+                    <a href="mailto:{{ personal.email }}" class="contact-value">{{ personal.email }}</a>
+                </div>
+                {% endif %}
+                
+                {% if personal.phone %}
+                <div class="contact-item">
+                    <span class="contact-label">Phone</span>
+                    <a href="tel:{{ personal.phone }}" class="contact-value">{{ personal.phone }}</a>
+                </div>
+                {% endif %}
+                
+                {% if personal.location %}
+                <div class="contact-item">
+                    <span class="contact-label">Location</span>
+                    <span class="contact-value">{{ personal.location }}</span>
+                </div>
+                {% endif %}
+                
+                {% if personal.linkedin %}
+                <div class="contact-item">
+                    <span class="contact-label">LinkedIn</span>
+                    <a href="{{ personal.linkedin }}" target="_blank" class="contact-value">Profile</a>
+                </div>
+                {% endif %}
+                
+                {% if personal.github %}
+                <div class="contact-item">
+                    <span class="contact-label">GitHub</span>
+                    <a href="{{ personal.github }}" target="_blank" class="contact-value">Profile</a>
+                </div>
+                {% endif %}
+                
+                {% if personal.website %}
+                <div class="contact-item">
+                    <span class="contact-label">Website</span>
+                    <a href="{{ personal.website }}" target="_blank" class="contact-value">Link</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    {% if summary %}
+    <section class="section summary-section">
+        <div class="container">
+            <h2 class="section-title">Summary</h2>
+            <div class="divider"></div>
+            <p class="summary-text">{{ summary }}</p>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Experience Section -->
+    {% if experience %}
+    <section class="section experience-section">
+        <div class="container">
+            <h2 class="section-title">Experience</h2>
+            <div class="divider"></div>
+            
+            {% for job in experience %}
+            <div class="experience-item">
+                <div class="experience-header">
+                    <div>
+                        <h3 class="job-title">{{ job.position or job.title }}</h3>
+                        <p class="company-name">{{ job.company }}</p>
+                    </div>
+                    <div class="job-meta">
+                        <span class="job-date">{{ job.start_date }} - {{ job.end_date or 'Present' }}</span>
+                        {% if job.location %}
+                        <span class="job-location">{{ job.location }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if job.description %}
+                <p class="job-description">{{ job.description }}</p>
+                {% endif %}
+                
+                {% if job.achievements %}
+                <ul class="achievements-list">
+                    {% for achievement in job.achievements %}
+                    <li>{{ achievement }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Projects Section -->
+    {% if projects %}
+    <section class="section projects-section">
+        <div class="container">
+            <h2 class="section-title">Projects</h2>
+            <div class="divider"></div>
+            
+            {% for project in projects %}
+            <div class="project-item">
+                <div class="project-header">
+                    <h3 class="project-title">{{ project.name or project.title }}</h3>
+                    {% if project.url or project.github %}
+                    <a href="{{ project.url or project.github }}" target="_blank" class="project-link">View →</a>
+                    {% endif %}
+                </div>
+                
+                {% if project.description %}
+                <p class="project-description">{{ project.description }}</p>
+                {% endif %}
+                
+                {% if project.technologies or project.tech_stack %}
+                <div class="tech-list">
+                    {% for tech in (project.technologies or project.tech_stack) %}
+                    <span class="tech-item">{{ tech }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Skills Section -->
+    {% if skills %}
+    <section class="section skills-section">
+        <div class="container">
+            <h2 class="section-title">Skills</h2>
+            <div class="divider"></div>
+            
+            <div class="skills-list">
+                {% for skill in skills %}
+                <span class="skill-item">{{ skill.name or skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Education Section -->
+    {% if education %}
+    <section class="section education-section">
+        <div class="container">
+            <h2 class="section-title">Education</h2>
+            <div class="divider"></div>
+            
+            {% for edu in education %}
+            <div class="education-item">
+                <div class="education-header">
+                    <div>
+                        <h3 class="degree">{{ edu.degree }}</h3>
+                        <p class="institution">{{ edu.institution or edu.school }}</p>
+                    </div>
+                    <span class="education-date">{{ edu.start_date }} - {{ edu.end_date or edu.graduation_date }}</span>
+                </div>
+                
+                {% if edu.gpa %}
+                <p class="gpa">GPA: {{ edu.gpa }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Certifications Section -->
+    {% if certifications %}
+    <section class="section certifications-section">
+        <div class="container">
+            <h2 class="section-title">Certifications</h2>
+            <div class="divider"></div>
+            
+            <div class="certifications-list">
+                {% for cert in certifications %}
+                <div class="certification-item">
+                    <h3 class="certification-name">{{ cert.name or cert.title }}</h3>
+                    <p class="certification-issuer">{{ cert.issuer or cert.organization }}</p>
+                    {% if cert.date or cert.year %}
+                    <p class="certification-date">{{ cert.date or cert.year }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="divider"></div>
+            <p class="footer-text">© {{ current_year or '2024' }} {{ personal.name }}. Portfolio generated with Prativeda CT.</p>
+        </div>
+    </footer>
+</body>
+</html>

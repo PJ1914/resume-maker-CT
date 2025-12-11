@@ -16,10 +16,20 @@ export function useResumes() {
   return useQuery({
     queryKey: resumeKeys.list(),
     queryFn: async () => {
-      const response = await resumeService.listResumes();
-      return response.resumes; // Extract resumes array from response
+      try {
+        console.log('[useResumes] Fetching resumes...');
+        const response = await resumeService.listResumes();
+        console.log('[useResumes] Response:', response);
+        const resumes = response?.resumes || [];
+        console.log('[useResumes] Resumes count:', resumes.length);
+        return resumes;
+      } catch (error) {
+        console.error('[useResumes] Error fetching resumes:', error);
+        return []; // Return empty array on error
+      }
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 1, // Retry once on failure
   });
 }
 

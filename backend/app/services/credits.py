@@ -22,6 +22,9 @@ class FeatureType(str, Enum):
     AI_REWRITE = "ai_rewrite"
     AI_SUGGESTION = "ai_suggestion"
     PDF_EXPORT = "pdf_export"
+    PORTFOLIO_GENERATE = "portfolio_generate"
+    PORTFOLIO_DEPLOY = "portfolio_deploy"
+    PORTFOLIO_TEMPLATE_UNLOCK = "portfolio_template_unlock"
 
 # Credit costs for each feature
 FEATURE_COSTS = {
@@ -29,6 +32,9 @@ FEATURE_COSTS = {
     FeatureType.AI_REWRITE: 1,  # 1 credit for content enhancement/improvement
     FeatureType.AI_SUGGESTION: 3,  # 3 credits per AI summary generation
     FeatureType.PDF_EXPORT: 2,
+    FeatureType.PORTFOLIO_GENERATE: 3,  # 3 credits to generate portfolio
+    FeatureType.PORTFOLIO_DEPLOY: 1,  # 1 credit to deploy to GitHub Pages
+    FeatureType.PORTFOLIO_TEMPLATE_UNLOCK: 0,  # Variable cost, set dynamically
 }
 
 # Free tier monthly credits
@@ -469,6 +475,93 @@ def deduct_credits(
     except Exception as e:
         logging.exception("Error deducting credits")
         return {'success': False, 'new_balance': 0, 'cost': cost}
+
+
+def deduct_credits_custom(
+    user_id: str,
+    amount: int,
+    description: str,
+    user_email: str = None
+) -> Dict:
+    """
+    Deduct a custom amount of credits.
+    Admins are not charged (unlimited credits).
+    
+    Args:
+        user_id: User's Firebase UID
+        amount: Number of credits to deduct
+        description: Description of the transaction
+        user_email: Optional user email for admin check
+    
+    Returns:
+        Dict with 'success' (bool), 'new_balance' (int), 'cost' (int)
+    """
+    from app.firebase import resume_maker_app
+    
+    # Admins have unlimited credits - don't deduct
+    if is_admin_user(user_id, user_email):
+        logging.info("Admin %s used custom deduction - no credits deducted", user_id)
+        return {'success': True, 'new_balance': ADMIN_UNLIMITED_BALANCE, 'cost': 0}
+    
+    if not resume_maker_app:
+        logging.info("[DEV] Would deduct %s credits from %s for %s", amount, user_id, description)
+        return {'success': True, 'new_balance': 100, 'cost': amount}
+    
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+
+        balance_ref = db.collection('users').document(user_id)\
+                       .collection('credits').document('balance')
+
+        @firestore.transactional
+        def _tx_deduct(transaction, ref, amt, desc):
+            snapshot = ref.get(transaction=transaction)
+            if not snapshot.exists:
+                raise ValueError("Balance document does not exist")
+            data = snapshot.to_dict()
+            current_balance = data.get('balance', 0)
+            if current_balance < amt:
+                raise ValueError("INSUFFICIENT_FUNDS")
+
+            new_balance = current_balance - amt
+            transaction.update(ref, {
+                'balance': new_balance,
+                'total_spent': firestore.Increment(amt),
+                'updated_at': datetime.now(timezone.utc),
+            })
+
+            # Create transaction record
+            txn_ref = db.collection('users').document(user_id)\
+                       .collection('credit_transactions').document()
+            transaction.set(txn_ref, {
+                'type': CreditTransactionType.USAGE.value,
+                'amount': -amt,
+                'feature': 'custom',
+                'description': desc,
+                'balance_after': new_balance,
+                'timestamp': datetime.now(timezone.utc),
+            })
+
+            return new_balance
+
+        try:
+            transaction = db.transaction()
+            new_balance = _tx_deduct(transaction, balance_ref, amount, description)
+            logging.info("Deducted %s credits from %s. New balance: %s", amount, user_id, new_balance)
+            return {'success': True, 'new_balance': new_balance, 'cost': amount}
+        except ValueError as ve:
+            if str(ve) == "INSUFFICIENT_FUNDS":
+                snapshot = balance_ref.get()
+                current = snapshot.to_dict().get('balance', 0) if snapshot.exists else 0
+                logging.warning("Insufficient credits for %s. Current: %s, Required: %s", user_id, current, amount)
+                return {'success': False, 'new_balance': current, 'cost': amount}
+            logging.exception("Error in custom credit deduction transaction")
+            return {'success': False, 'new_balance': 0, 'cost': amount}
+
+    except Exception as e:
+        logging.exception("Error deducting custom credits")
+        return {'success': False, 'new_balance': 0, 'cost': amount}
 
 
 def get_credit_history(user_id: str, limit: int = 50) -> List[Dict]:

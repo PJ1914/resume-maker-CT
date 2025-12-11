@@ -1,0 +1,83 @@
+{
+  "id": "modern",
+  "name": "Modern Portfolio",
+  "description": "Clean, elegant design with good typography. Fixed width layout optimized for desktop viewing.",
+  "tier": "basic",
+  "version": "1.0.0",
+  "tech_stack": {
+    "framework": "html",
+    "styling": "css",
+    "animations": "none",
+    "responsive": false,
+    "dark_mode": false,
+    "javascript": false
+  },
+  "features": [
+    "Pure HTML + CSS",
+    "Fixed width (1200px)",
+    "Clean typography with Inter font",
+    "Gradient header background",
+    "Elegant hover effects",
+    "Timeline layout for experience",
+    "Grid layout for projects and skills",
+    "Print-friendly styles",
+    "No JavaScript required",
+    "Fast loading"
+  ],
+  "sections": [
+    "header",
+    "about",
+    "experience",
+    "projects",
+    "skills",
+    "education",
+    "certifications",
+    "footer"
+  ],
+  "colors": {
+    "primary": "#667eea",
+    "secondary": "#764ba2",
+    "text": "#1a1a1a",
+    "background": "#ffffff",
+    "accent": "#f8f9fa"
+  },
+  "fonts": {
+    "primary": "Inter",
+    "fallback": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  },
+  "layout": {
+    "width": "1200px",
+    "padding": "40px",
+    "type": "fixed"
+  },
+  "files": [
+    "index.html",
+    "styles.css"
+  ],
+  "cdn_dependencies": [
+    "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+  ],
+  "browser_support": {
+    "chrome": "90+",
+    "firefox": "88+",
+    "safari": "14+",
+    "edge": "90+"
+  },
+  "deployment": {
+    "github_pages": true,
+    "vercel": true,
+    "netlify": true
+  },
+  "customization": {
+    "colors": false,
+    "fonts": false,
+    "layout": false
+  },
+  "notes": [
+    "This is a basic template with no responsive design",
+    "Best viewed on desktop screens (1920x1080 or larger)",
+    "Uses Google Fonts CDN for Inter font family",
+    "Gradient header can be customized by editing CSS",
+    "All sections are optional and will hide if no data"
+  ]
+}

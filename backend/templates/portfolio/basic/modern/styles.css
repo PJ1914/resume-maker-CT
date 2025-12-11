@@ -1,0 +1,470 @@
+/* ============================================
+   Modern Portfolio Template - Styles
+   Fixed Width: 1200px
+   Pure CSS, No JavaScript
+   ============================================ */
+
+/* CSS Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Container - Fixed Width */
+.container {
+    width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+/* ============================================
+   Header Section
+   ============================================ */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    padding: 80px 0;
+    text-align: center;
+}
+
+.name {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 400;
+    opacity: 0.95;
+    margin-bottom: 32px;
+}
+
+.contact-info {
+    font-size: 16px;
+    margin-bottom: 24px;
+    opacity: 0.9;
+}
+
+.contact-link {
+    color: #ffffff;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+}
+
+.contact-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.contact-text {
+    color: #ffffff;
+}
+
+.separator {
+    margin: 0 12px;
+    opacity: 0.6;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.social-link {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* ============================================
+   Section Styles
+   ============================================ */
+.section {
+    padding: 80px 0;
+}
+
+.section:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.section-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 40px;
+    position: relative;
+    padding-bottom: 16px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+}
+
+/* ============================================
+   About Section
+   ============================================ */
+.about-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: #4a4a4a;
+    max-width: 900px;
+}
+
+/* ============================================
+   Experience Section
+   ============================================ */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 32px;
+    border-left: 2px solid #e0e0e0;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 8px;
+    width: 10px;
+    height: 10px;
+    background: #667eea;
+    border-radius: 50%;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.job-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.timeline-date {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.company-name {
+    font-size: 18px;
+    font-weight: 500;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+.job-location {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.job-description {
+    font-size: 16px;
+    line-height: 1.7;
+    color: #4a4a4a;
+    margin-bottom: 12px;
+}
+
+.achievements-list {
+    margin-left: 20px;
+    margin-top: 12px;
+}
+
+.achievements-list li {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #4a4a4a;
+    margin-bottom: 8px;
+}
+
+/* ============================================
+   Projects Section
+   ============================================ */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+}
+
+.project-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 32px;
+    transition: all 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.project-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+}
+
+.project-description {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #4a4a4a;
+    margin-bottom: 16px;
+}
+
+.tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.tech-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+.project-link {
+    display: inline-block;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+    transition: color 0.3s ease;
+}
+
+.project-link:hover {
+    color: #764ba2;
+}
+
+/* ============================================
+   Skills Section
+   ============================================ */
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.skill-item {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 16px 24px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a1a;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.skill-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+/* ============================================
+   Education Section
+   ============================================ */
+.education-list {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.education-item {
+    padding-bottom: 32px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.education-item:last-child {
+    border-bottom: none;
+}
+
+.education-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.degree {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.education-date {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.institution {
+    font-size: 17px;
+    font-weight: 500;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+.education-location {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.gpa {
+    font-size: 15px;
+    color: #4a4a4a;
+}
+
+/* ============================================
+   Certifications Section
+   ============================================ */
+.certifications-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.certification-item {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+}
+
+.certification-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.certification-issuer {
+    font-size: 15px;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+.certification-date {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.footer {
+    background: #1a1a1a;
+    color: #ffffff;
+    padding: 40px 0;
+    text-align: center;
+    margin-top: auto;
+}
+
+.footer-text {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.footer-credit {
+    font-size: 13px;
+    opacity: 0.6;
+}
+
+.footer-link {
+    color: #667eea;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: #764ba2;
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+    body {
+        background: #ffffff;
+    }
+    
+    .header {
+        background: none;
+        color: #1a1a1a;
+        padding: 40px 0;
+    }
+    
+    .social-link {
+        border-color: #1a1a1a;
+        color: #1a1a1a;
+    }
+    
+    .section {
+        page-break-inside: avoid;
+        padding: 40px 0;
+    }
+    
+    .project-card,
+    .certification-item {
+        page-break-inside: avoid;
+    }
+}

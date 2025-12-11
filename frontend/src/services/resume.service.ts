@@ -1,5 +1,7 @@
 import { apiClient } from './api'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 export interface UploadUrlResponse {
   upload_url: string
   resume_id: string
@@ -93,7 +95,7 @@ export const resumeService = {
     // Use apiClient but override for multipart/form-data
     const token = await import('./auth.service').then(m => m.getAuthToken())
     
-    const response = await fetch('/api/upload-direct', {
+    const response = await fetch(`${API_URL}/api/resumes/upload-direct`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -113,7 +115,15 @@ export const resumeService = {
    * Get list of user's resumes
    */
   async listResumes(limit = 50): Promise<{ resumes: ResumeListItem[]; total: number }> {
-    return apiClient.get(`/api/resumes?limit=${limit}`)
+    console.log('[resume.service] Fetching resumes with limit:', limit);
+    try {
+      const result = await apiClient.get(`/api/resumes?limit=${limit}`) as { resumes: ResumeListItem[]; total: number };
+      console.log('[resume.service] Got resumes:', result);
+      return result;
+    } catch (error) {
+      console.error('[resume.service] Error fetching resumes:', error);
+      throw error;
+    }
   },
 
   /**
