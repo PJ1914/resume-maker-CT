@@ -11,12 +11,16 @@ from datetime import datetime, timezone
 class KeywordMatcher:
     """Match keywords and calculate relevance scores."""
     
-    # Common ATS keywords by category
+    # Comprehensive ATS keywords by category - 100+ keywords
     TECHNICAL_KEYWORDS = {
-        'programming': ['python', 'java', 'javascript', 'c++', 'sql', 'react', 'node', 'django', 'flask'],
-        'data': ['machine learning', 'data analysis', 'sql', 'tableau', 'power bi', 'excel', 'statistics'],
-        'cloud': ['aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform', 'jenkins'],
-        'soft_skills': ['leadership', 'communication', 'teamwork', 'problem solving', 'analytical'],
+        'programming': ['python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'sql', 'nosql', 'react', 'angular', 'vue', 'node', 'django', 'flask', 'spring', 'dotnet', '.net', 'php', 'ruby', 'golang', 'rust', 'kotlin', 'swift'],
+        'data': ['machine learning', 'deep learning', 'ai', 'artificial intelligence', 'data science', 'data analysis', 'analytics', 'sql', 'nosql', 'mongodb', 'postgresql', 'mysql', 'tableau', 'power bi', 'excel', 'statistics', 'pandas', 'numpy', 'tensorflow', 'pytorch', 'scikit-learn', 'big data', 'spark', 'hadoop'],
+        'cloud': ['aws', 'azure', 'gcp', 'google cloud', 'cloud computing', 'docker', 'kubernetes', 'k8s', 'terraform', 'jenkins', 'ci/cd', 'devops', 'microservices', 'serverless', 'lambda', 'ec2', 's3', 'cloudformation'],
+        'web': ['html', 'css', 'sass', 'less', 'bootstrap', 'tailwind', 'webpack', 'vite', 'rest api', 'graphql', 'json', 'xml', 'responsive design', 'ui/ux', 'frontend', 'backend', 'full stack'],
+        'mobile': ['ios', 'android', 'react native', 'flutter', 'swift', 'kotlin', 'mobile development', 'app development'],
+        'soft_skills': ['leadership', 'communication', 'teamwork', 'collaboration', 'problem solving', 'analytical', 'critical thinking', 'agile', 'scrum', 'project management', 'stakeholder management', 'mentoring', 'training'],
+        'tools': ['git', 'github', 'gitlab', 'jira', 'confluence', 'slack', 'vscode', 'intellij', 'eclipse', 'postman', 'figma', 'sketch'],
+        'certifications': ['aws certified', 'azure certified', 'pmp', 'scrum master', 'certified', 'certification'],
     }
     
     @staticmethod
@@ -56,18 +60,26 @@ class KeywordMatcher:
         """
         resume_text_lower = resume_text.lower()
         
-        # Count technical keywords
+        # Count technical keywords with scoring boost
         tech_count = 0
         tech_found = []
+        category_coverage = set()
         
         for category, keywords in KeywordMatcher.TECHNICAL_KEYWORDS.items():
+            category_hits = 0
             for keyword in keywords:
                 if keyword.lower() in resume_text_lower:
                     tech_count += 1
                     tech_found.append(keyword)
+                    category_hits += 1
+            if category_hits > 0:
+                category_coverage.add(category)
         
-        # Score: 0-30 points based on technical keywords
-        keyword_score = min(30, tech_count * 2)
+        # More generous scoring: 0-30 points
+        # Award points for keyword diversity across categories
+        base_score = min(25, tech_count * 1.5)  # More generous multiplier
+        diversity_bonus = len(category_coverage) * 1.5  # Bonus for diverse skills
+        keyword_score = min(30, base_score + diversity_bonus)
         
         return {
             'score': keyword_score,
@@ -80,8 +92,19 @@ class KeywordMatcher:
 class SectionAnalyzer:
     """Analyze presence and quality of resume sections."""
     
-    REQUIRED_SECTIONS = ['experience', 'education', 'skills']
-    RECOMMENDED_SECTIONS = ['summary', 'projects', 'certifications']
+    # Required sections with variations
+    REQUIRED_SECTIONS = {
+        'experience': ['experience', 'work experience', 'employment', 'work history', 'professional experience', 'career history'],
+        'education': ['education', 'academic background', 'qualifications', 'academic history'],
+        'skills': ['skills', 'technical skills', 'core competencies', 'expertise', 'proficiencies']
+    }
+    
+    # Recommended sections with variations
+    RECOMMENDED_SECTIONS = {
+        'summary': ['summary', 'profile', 'objective', 'professional summary', 'about me', 'overview'],
+        'projects': ['projects', 'key projects', 'notable projects', 'portfolio'],
+        'certifications': ['certifications', 'certificates', 'licenses', 'credentials']
+    }
     
     @staticmethod
     def analyze_sections(sections: Dict[str, str]) -> Dict:
@@ -94,6 +117,12 @@ class SectionAnalyzer:
         Returns:
             Analysis with scores
         """
+        # Fuzzy match sections
+        def has_section(required_key, section_names_lower):
+            """Check if any variation of required section exists"""
+            variations = SectionAnalyzer.REQUIRED_SECTIONS.get(required_key) or SectionAnalyzer.RECOMMENDED_SECTIONS.get(required_key, [])
+            return any(var in section_names_lower for var in variations)
+        
         # Handle both dict and list formats for sections
         if isinstance(sections, list):
             # Convert list format to dict format for scoring
@@ -108,32 +137,35 @@ class SectionAnalyzer:
         else:
             section_names = set(sections.keys()) if sections else set()
         
-        # Required sections (20 points max)
-        required_present = sum(1 for s in SectionAnalyzer.REQUIRED_SECTIONS if s in section_names)
-        required_score = (required_present / len(SectionAnalyzer.REQUIRED_SECTIONS)) * 20
+        # Create lowercase version for fuzzy matching
+        section_names_lower = ' '.join(str(s).lower() for s in section_names)
         
-        # Recommended sections (10 points max)
-        recommended_present = sum(1 for s in SectionAnalyzer.RECOMMENDED_SECTIONS if s in section_names)
-        recommended_score = (recommended_present / len(SectionAnalyzer.RECOMMENDED_SECTIONS)) * 10
+        # Check required sections (25 points total) - use fuzzy matching
+        required_score = 0
+        missing_required = []
         
-        # Content quality - check if sections have substantial content
-        quality_bonus = 0
-        for section in SectionAnalyzer.REQUIRED_SECTIONS:
-            if section in sections:
-                content = sections[section]
-                if len(content) > 100:  # At least 100 chars
-                    quality_bonus += 2
+        for section_key in ['experience', 'education', 'skills']:
+            if has_section(section_key, section_names_lower):
+                required_score += 9  # More generous: 27 points if all 3 present
+            else:
+                missing_required.append(section_key)
         
-        total_score = required_score + recommended_score + quality_bonus
+        # Check recommended sections (10 points total) - use fuzzy matching
+        recommended_score = 0
+        missing_recommended = []
+        
+        for section_key in ['summary', 'projects', 'certifications']:
+            if has_section(section_key, section_names_lower):
+                recommended_score += 4  # 12 points if all 3 present
+            else:
+                missing_recommended.append(section_key)
+        
+        total_score = min(35, required_score + recommended_score)
         
         return {
             'score': min(35, total_score),  # Max 35 points
-            'required_sections': list(SectionAnalyzer.REQUIRED_SECTIONS),
-            'required_present': required_present,
-            'recommended_sections': list(SectionAnalyzer.RECOMMENDED_SECTIONS),
-            'recommended_present': recommended_present,
-            'missing_required': [s for s in SectionAnalyzer.REQUIRED_SECTIONS if s not in section_names],
-            'missing_recommended': [s for s in SectionAnalyzer.RECOMMENDED_SECTIONS if s not in section_names],
+            'missing_required': missing_required,
+            'missing_recommended': missing_recommended,
         }
 
 
@@ -147,7 +179,7 @@ class FormattingAnalyzer:
         
         Args:
             text: Resume text
-            layout_type: Layout type from parser
+                layout_type: Layout type from parser
             
         Returns:
             Formatting analysis
@@ -155,39 +187,41 @@ class FormattingAnalyzer:
         score = 0
         issues = []
         
-        # 1. Length check (5 points)
+        # 1. Length check (5 points) - more lenient
         word_count = len(text.split())
-        if 300 <= word_count <= 800:
+        if 250 <= word_count <= 1000:
             score += 5
-        elif 200 <= word_count <= 1000:
+        elif 150 <= word_count <= 1200:
+            score += 4
+        elif word_count > 100:
             score += 3
         else:
-            issues.append(f"Resume length not optimal ({word_count} words). Aim for 300-800.")
+            issues.append(f"Resume is very short ({word_count} words). Add more details.")
         
-        # 2. Bullet points (5 points)
-        bullet_pattern = r'[•●○■□▪▫-]\s'
-        bullets = len(re.findall(bullet_pattern, text))
-        if bullets >= 5:
+        # 2. Bullet points (5 points) - detect more patterns
+        bullet_pattern = r'[•●○■□▪▫➤►▸-]\s|^\s*[-*]\s'
+        bullets = len(re.findall(bullet_pattern, text, re.MULTILINE))
+        if bullets >= 3:
             score += 5
-        elif bullets >= 3:
-            score += 3
+        elif bullets >= 1:
+            score += 4
         else:
-            issues.append("Few or no bullet points found. Use bullets for achievements.")
+            score += 2  # Give partial credit even without bullets
         
-        # 3. Consistent formatting (5 points)
+        # 3. Consistent formatting (5 points) - more generous
         lines = text.split('\n')
         consistent_lines = sum(1 for line in lines if line.strip())
-        if consistent_lines > 20:
+        if consistent_lines > 15:
             score += 5
+        elif consistent_lines > 10:
+            score += 4
         else:
-            score += 2
+            score += 3
         
-        # 4. Layout penalty for complex multi-column
-        if layout_type == 'complex':
-            score -= 2
-            issues.append("Complex layout may not parse well in ATS systems.")
-        elif layout_type == 'single_column':
-            score += 2  # Bonus for simple layout
+        # 4. Layout - modern ATS handles complex layouts fine
+        if layout_type == 'single_column':
+            score += 1  # Small bonus for simple layout
+        # Remove penalty for complex layouts - modern ATS can handle them
         
         return {
             'score': max(0, min(15, score)),  # 0-15 points
@@ -212,19 +246,21 @@ class QuantificationDetector:
         Returns:
             Quantification analysis
         """
-        # Patterns for quantified achievements
-        number_pattern = r'\b\d+[.,]?\d*\s*[%kKmMbB]?\b'
+        # Enhanced patterns for quantified achievements
+        number_pattern = r'\b\d+[.,]?\d*\s*[%kKmMbBtT+xX×]?\b'
         percentage_pattern = r'\b\d+\.?\d*\s*%'
-        money_pattern = r'[\$€£]\s*\d+[.,]?\d*[kKmMbB]?'
+        money_pattern = r'[\$€£¥₹]\s*\d+[.,]?\d*[kKmMbBtT]?'
+        metric_words = r'\b(increased|decreased|improved|reduced|grew|saved|generated|achieved|delivered)\s+by\s+\d+'
         
         numbers = len(re.findall(number_pattern, text))
         percentages = len(re.findall(percentage_pattern, text))
         money = len(re.findall(money_pattern, text))
+        metrics = len(re.findall(metric_words, text, re.IGNORECASE))
         
-        total_quantified = numbers + percentages + money
+        total_quantified = numbers + percentages + money + (metrics * 2)  # Weight metric words higher
         
-        # Score: 0-10 points
-        score = min(10, total_quantified)
+        # More generous scoring: 0-10 points
+        score = min(10, total_quantified * 0.8)  # Easier to get high score
         
         return {
             'score': score,
