@@ -91,8 +91,8 @@ export const getStructuredData = (type: string, config: SEOConfig) => {
     url: BASE_URL,
     logo: `${BASE_URL}/logo.png`,
     sameAs: [
-      'https://twitter.com/prativeda',
-      'https://linkedin.com/company/prativeda',
+      'https://instagram.com/code_tapasya',
+      'https://linkedin.com/company/codetapasya',
     ],
   };
 

@@ -23,6 +23,18 @@ function App() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Add overflow hidden to body during loading
+  useEffect(() => {
+    if (loading) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [loading])
+
   return (
     <>
       {loading && <Preloader onComplete={() => setLoading(false)} />}
