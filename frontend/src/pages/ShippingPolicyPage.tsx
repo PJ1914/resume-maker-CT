@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Truck, Package, Globe, Clock, Smartphone } from 'lucide-react'
 import PublicLayout from '../components/layouts/PublicLayout'
+import { SEO } from '../components/SEO'
 
 export default function ShippingPolicyPage() {
     const navigate = useNavigate()
@@ -134,7 +135,13 @@ When we introduce physical products, we plan to offer:
     ]
 
     return (
-        <PublicLayout>
+    <>
+      <SEO
+        title="Shipping Policy - Prativeda"
+        description="Learn about our digital delivery and shipping policies."
+        url="https://prativeda.codetapasya.com/shipping-policy"
+      />
+      <PublicLayout>
             {/* Hero Section */}
             <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
                 <div className="container mx-auto max-w-7xl">
@@ -204,6 +211,7 @@ When we introduce physical products, we plan to offer:
                     </motion.div>
                 </div>
             </section>
-        </PublicLayout>
+      </PublicLayout>
+    </>
     )
 }

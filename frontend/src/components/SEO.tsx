@@ -7,16 +7,17 @@ type SEOProps = {
   image?: string
   keywords?: string
   canonical?: string
+  structuredData?: Record<string, any>
 }
 
 const DEFAULTS = {
-  title: 'Prativeda – ATS Resume Maker by CodeTapasya',
+  title: 'Prativeda – AI Resume Builder | ATS-Optimized Resumes',
   description:
-    "Prativeda is India’s smartest ATS resume builder powered by CodeTapasya. Create modern, ATS-approved resumes instantly. Free forever.",
+    'Create ATS-optimized resumes with AI analysis. Get higher ATS scores, pass screening, land more interviews. Free templates + intelligent parsing by Prativeda.',
   url: 'https://prativeda.codetapasya.com',
-  image: 'https://prativeda.codetapasya.com/og.png',
+  image: 'https://prativeda.codetapasya.com/og-resume.jpg',
   keywords:
-    'resume maker, ATS resume, free resume builder, resume templates India, LaTeX resume',
+    'resume maker, ATS resume, AI resume, free resume builder, resume templates, resume optimization, job application, career tools',
   canonical: 'https://prativeda.codetapasya.com',
 }
 
@@ -28,6 +29,10 @@ export function SEO(props: SEOProps) {
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta name="description" content={meta.description} />
       <meta name="keywords" content={meta.keywords} />
+      <meta charSet="UTF-8" />
+      <meta name="language" content="English" />
+      <meta name="revisit-after" content="30 days" />
+      <meta name="author" content="Prativeda" />
       <link rel="canonical" href={meta.canonical} />
 
       {/* Open Graph */}
@@ -36,12 +41,21 @@ export function SEO(props: SEOProps) {
       <meta property="og:url" content={meta.url} />
       <meta property="og:image" content={meta.image} />
       <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Prativeda" />
 
       {/* Twitter Cards */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={meta.title} />
       <meta name="twitter:description" content={meta.description} />
       <meta name="twitter:image" content={meta.image} />
+      <meta name="twitter:creator" content="@prativeda" />
+
+      {/* Structured Data (JSON-LD) */}
+      {props.structuredData && (
+        <script type="application/ld+json">
+          {JSON.stringify(props.structuredData)}
+        </script>
+      )}
 
       {/* Favicon placeholders (ensure files exist in public/) */}
       <link rel="icon" href="/favicon.ico" />
@@ -59,11 +73,11 @@ export function HomeSchema() {
     name: 'Prativeda',
     url: 'https://prativeda.codetapasya.com',
     description:
-      "Prativeda is India's smartest ATS-friendly resume maker powered by LaTeX and AI.",
+      'AI-powered resume builder with ATS optimization. Create professional, ATS-friendly resumes that get results.',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'All',
     author: { '@type': 'Organization', name: 'CodeTapasya' },
-    image: 'https://prativeda.codetapasya.com/og.png',
+    image: 'https://prativeda.codetapasya.com/og-resume.jpg',
     offers: { '@type': 'Offer', price: '0.00', priceCurrency: 'INR' },
   }
   return (

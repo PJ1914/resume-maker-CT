@@ -1,3 +1,12 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /dashboard
 Sitemap: https://prativeda.codetapasya.com/sitemap.xml
+
+# Respect crawl delays
+User-agent: AhrefsBot
+Crawl-delay: 1
+
+User-agent: MJ12bot
+Crawl-delay: 1

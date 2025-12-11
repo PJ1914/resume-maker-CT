@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Check, Sparkles, Zap, Crown } from 'lucide-react'
 import PublicLayout from '../components/layouts/PublicLayout'
+import { SEO } from '../components/SEO'
 
 export default function PricingPage() {
   const navigate = useNavigate()
@@ -62,7 +63,14 @@ export default function PricingPage() {
   ]
 
   return (
-    <PublicLayout>
+    <>
+      <SEO
+        title="Pricing - Prativeda | Affordable Resume & Portfolio Tools"
+        description="Transparent pricing for resume building and ATS optimization. Pay per use with credits. No hidden fees."
+        keywords="resume pricing, ATS scoring cost, portfolio pricing, affordable resume tools"
+        url="https://prativeda.codetapasya.com/pricing"
+      />
+      <PublicLayout>
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-7xl">
@@ -182,5 +190,6 @@ export default function PricingPage() {
         </div>
       </section>
     </PublicLayout>
+    </>
   )
 }

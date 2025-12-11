@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Shield, Lock, Eye, Database, UserCheck } from 'lucide-react'
 import PublicLayout from '../components/layouts/PublicLayout'
+import { SEO } from '../components/SEO'
 
 export default function PrivacyPolicyPage() {
   const navigate = useNavigate()
@@ -149,7 +150,13 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
   ]
 
   return (
-    <PublicLayout>
+    <>
+      <SEO
+        title="Privacy Policy - Prativeda"
+        description="Read our privacy policy to understand how we handle your personal data and protect your privacy."
+        url="https://prativeda.codetapasya.com/privacy-policy"
+      />
+      <PublicLayout>
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-7xl">
@@ -220,5 +227,6 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
         </div>
       </section>
     </PublicLayout>
+    </>
   )
 }

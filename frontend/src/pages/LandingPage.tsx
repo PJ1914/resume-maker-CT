@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import PublicLayout from '../components/layouts/PublicLayout'
+import { SEO, HomeSchema } from '../components/SEO'
 import { useEffect, useState } from 'react'
 import {
   Sparkles,
@@ -81,7 +82,15 @@ export default function LandingPage() {
   ]
 
   return (
-    <PublicLayout>
+    <>
+      <SEO
+        title="Prativeda – AI Resume Builder | ATS-Optimized Resumes"
+        description="Create ATS-optimized resumes with AI analysis. Get higher ATS scores, pass screening, land more interviews. Free templates + intelligent parsing."
+        keywords="resume builder, ATS scoring, AI resume, job application, resume optimization"
+        url="https://prativeda.codetapasya.com"
+      />
+      <HomeSchema />
+      <PublicLayout>
 
 
 
@@ -845,5 +854,6 @@ export default function LandingPage() {
 
 
     </PublicLayout>
+    </>
   )
 }

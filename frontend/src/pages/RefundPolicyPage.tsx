@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Shield, CreditCard, RefreshCw } from 'lucide-react'
 import PublicLayout from '../components/layouts/PublicLayout'
+import { SEO } from '../components/SEO'
 
 export default function RefundPolicyPage() {
     const navigate = useNavigate()
@@ -154,7 +155,13 @@ Refund processing times may vary depending on your bank or payment provider. pra
     ]
 
     return (
-        <PublicLayout>
+    <>
+      <SEO
+        title="Refund Policy - Prativeda"
+        description="Understand our refund policy for resume and portfolio services."
+        url="https://prativeda.codetapasya.com/refund-policy"
+      />
+      <PublicLayout>
             {/* Hero Section */}
             <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
                 <div className="container mx-auto max-w-7xl">
@@ -224,6 +231,7 @@ Refund processing times may vary depending on your bank or payment provider. pra
                     </motion.div>
                 </div>
             </section>
-        </PublicLayout>
+      </PublicLayout>
+    </>
     )
 }

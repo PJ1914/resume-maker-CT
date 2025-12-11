@@ -15,6 +15,7 @@ import {
   Code2,
 } from 'lucide-react'
 import PublicLayout from '../components/layouts/PublicLayout'
+import { SEO } from '../components/SEO'
 
 export default function FeaturesPage() {
   const navigate = useNavigate()
@@ -133,7 +134,20 @@ export default function FeaturesPage() {
   ]
 
   return (
-    <PublicLayout>
+    <>
+      <SEO
+        title="Features - Prativeda | AI Resume Builder & ATS Scoring"
+        description="Discover Prativeda's powerful features: AI resume parsing, ATS scoring, portfolio templates, LaTeX export, and more to boost your job search."
+        keywords="resume features, ATS scoring, portfolio templates, LaTeX resume, resume parser, AI resume"
+        url="https://prativeda.com/features"
+      />
+      <SEO
+        title="Features - Prativeda | Professional Resume Builder"
+        description="Explore Prativeda's powerful features for ATS-optimized resumes, portfolio generation, and career tools."
+        keywords="resume features, ATS optimization, portfolio builder, career tools"
+        url="https://prativeda.codetapasya.com/features"
+      />
+      <PublicLayout>
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-7xl">
@@ -210,5 +224,6 @@ export default function FeaturesPage() {
         </div>
       </section>
     </PublicLayout>
+    </>
   )
 }
