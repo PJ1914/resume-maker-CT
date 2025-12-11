@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Code2,
 } from 'lucide-react'
+import PublicLayout from '../components/layouts/PublicLayout'
 
 export default function FeaturesPage() {
   const navigate = useNavigate()
@@ -132,62 +133,19 @@ export default function FeaturesPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Navigation */}
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10"
-      >
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-3 cursor-pointer"
-              onClick={() => navigate('/')}
-            >
-              <div className="relative h-10 w-10 bg-white rounded-lg flex items-center justify-center group">
-                <div className="absolute inset-0 bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-                <FileText className="h-6 w-6 text-black relative z-10" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">prativeda</span>
-            </motion.div>
-
-            <div className="flex items-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/login')}
-                className="px-6 py-2.5 border border-white/20 rounded-lg font-semibold hover:bg-white/5 transition-colors backdrop-blur-xl text-sm sm:text-base"
-              >
-                Sign In
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255,255,255,0.3)' }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/login')}
-                className="relative px-6 py-2.5 bg-white text-black rounded-lg font-semibold overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-                <span className="relative z-10">Get Started</span>
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </motion.nav>
-
+    <PublicLayout>
       {/* Hero Section */}
-      <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-20 px-4 sm:px-6">
+      <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16 sm:mb-20"
+            className="text-center mb-12 sm:mb-20"
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
               Powerful Features for
-              <br />
-              Your Career Success
+              <br className="hidden sm:block" />
+              <span className="sm:inline block mt-2 sm:mt-0">Your Career Success</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-white/60 max-w-3xl mx-auto font-light">
               Everything you need to create, optimize, and track your resume journey.
@@ -195,7 +153,7 @@ export default function FeaturesPage() {
           </motion.div>
 
           {/* Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -203,17 +161,17 @@ export default function FeaturesPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-100px' }}
                 transition={{ delay: index * 0.1 }}
-                className="group relative bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300"
+                className="group relative bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 <div className="relative">
-                  <div className="p-3 bg-white rounded-lg mb-6 w-fit group-hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-shadow">
+                  <div className="p-3 bg-white rounded-lg mb-4 sm:mb-6 w-fit group-hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-shadow">
                     <feature.icon className="h-6 w-6 text-black" />
                   </div>
 
-                  <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-white/60 mb-6 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-sm sm:text-base text-white/60 mb-6 leading-relaxed">{feature.description}</p>
 
                   <ul className="space-y-2">
                     {feature.details.map((detail, i) => (
@@ -233,7 +191,7 @@ export default function FeaturesPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
-            className="mt-20 text-center"
+            className="mt-16 sm:mt-20 text-center"
           >
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">Ready to Get Started?</h2>
             <p className="text-base sm:text-lg text-white/60 mb-8 max-w-2xl mx-auto">
@@ -243,7 +201,7 @@ export default function FeaturesPage() {
               whileHover={{ scale: 1.05, boxShadow: '0 0 50px rgba(255,255,255,0.5)' }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/login')}
-              className="group relative px-12 py-5 bg-white text-black rounded-xl font-bold text-lg overflow-hidden"
+              className="group relative px-8 py-4 sm:px-12 sm:py-5 bg-white text-black rounded-xl font-bold text-lg overflow-hidden w-full sm:w-auto"
             >
               <div className="absolute inset-0 bg-white blur-2xl opacity-50 group-hover:opacity-75 transition-opacity" />
               <span className="relative z-10">Create Your Resume Free</span>
@@ -251,21 +209,6 @@ export default function FeaturesPage() {
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 border-t border-white/10 mt-20">
-        <div className="container mx-auto max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-white rounded-md flex items-center justify-center">
-                <FileText className="h-5 w-5 text-black" />
-              </div>
-              <span className="font-semibold">prativeda</span>
-            </div>
-            <div className="text-white/50 text-sm">© 2025 prativeda. All rights reserved.</div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   )
 }

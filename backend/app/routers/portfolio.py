@@ -32,6 +32,8 @@ class TemplateMetadata(BaseModel):
     price_credits: int
     features: List[str]
     tags: List[str]
+    is_available: bool = True
+    is_coming_soon: bool = False
 
 
 class UnlockTemplateRequest(BaseModel):

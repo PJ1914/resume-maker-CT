@@ -126,7 +126,7 @@ export default function ResumeDetailPage() {
   const [showAICreditModal, setShowAICreditModal] = useState(false)
   const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false)
   const [reparsing, setReparsing] = useState(false)
-  const [useAIScorer, setUseAIScorer] = useState(true) // Toggle between CodeTapasya AI and Local scorer
+  const [useAIScorer, setUseAIScorer] = useState(true) // Toggle between prativeda AI and Local scorer
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const initialScorerSet = useRef(false)
 
@@ -196,11 +196,11 @@ export default function ResumeDetailPage() {
         },
         onError: (error: any) => {
           console.error('Scoring failed:', error)
-          
+
           // Check for specific error codes
           const statusCode = error?.response?.status || error?.status
           const errorDetail = error?.response?.data?.detail || error?.message
-          
+
           if (statusCode === 402) {
             setShowCreditsExhaustedModal(true)
           } else if (statusCode === 404) {
@@ -220,7 +220,7 @@ export default function ResumeDetailPage() {
 
   // Handle toggle change - automatically re-score with new scorer
   const handleScorerToggle = (checked: boolean) => {
-    console.log('Toggle changed to:', checked ? 'CodeTapasya AI' : 'Local')
+    console.log('Toggle changed to:', checked ? 'prativeda AI' : 'Local')
 
     // If switching to AI and already have a score, show credit confirmation
     if (checked && scoreData && id && resume) {
@@ -394,10 +394,10 @@ export default function ResumeDetailPage() {
               <div className="h-10 w-10 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
               <div className="h-8 w-64 bg-secondary-300 dark:bg-secondary-800 rounded"></div>
             </div>
-            
 
 
-            
+
+
             {/* Action Buttons Skeleton */}
             <div className="flex flex-wrap gap-3 mb-6">
               <div className="h-10 w-32 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
@@ -405,7 +405,7 @@ export default function ResumeDetailPage() {
               <div className="h-10 w-32 bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
             </div>
           </div>
-          
+
           {/* Content Grid Skeleton */}
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Left Column - Info Cards */}
@@ -418,13 +418,13 @@ export default function ResumeDetailPage() {
                   <div className="h-4 bg-secondary-200 dark:bg-secondary-800 rounded w-3/4"></div>
                 </div>
               </div>
-              
+
               <div className="bg-white dark:bg-secondary-900 rounded-xl p-6 space-y-4">
                 <div className="h-5 w-32 bg-secondary-300 dark:bg-secondary-800 rounded"></div>
                 <div className="h-32 bg-secondary-200 dark:bg-secondary-800 rounded-lg"></div>
               </div>
             </div>
-            
+
             {/* Right Column - Preview */}
             <div className="lg:col-span-2 animate-pulse">
               <div className="bg-white dark:bg-secondary-900 rounded-xl p-6 space-y-4">
@@ -567,7 +567,7 @@ export default function ResumeDetailPage() {
                     onCheckedChange={handleScorerToggle}
                     leftLabel="Local"
                     leftSubLabel="Free"
-                    rightLabel="CodeTapasya AI"
+                    rightLabel="prativeda AI"
                     rightSubLabel="Detailed"
                   />
                   {scoring && (
@@ -699,7 +699,7 @@ export default function ResumeDetailPage() {
                   onCheckedChange={setUseAIScorer}
                   leftLabel="Local"
                   leftSubLabel="Free"
-                  rightLabel="CodeTapasya AI"
+                  rightLabel="prativeda AI"
                   rightSubLabel="Detailed"
                 />
               </div>
@@ -741,7 +741,7 @@ export default function ResumeDetailPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Analyzing with {useAIScorer ? 'CodeTapasya AI' : 'Local Engine'}...
+                    Analyzing with {useAIScorer ? 'prativeda AI' : 'Local Engine'}...
                   </>
                 ) : (
                   <>

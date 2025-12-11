@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Send, Loader2 } from 'lucide-react'
+import { Send, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import axios from 'axios'
+import PublicLayout from '../components/layouts/PublicLayout'
 
 export default function ContactPage() {
   const navigate = useNavigate()
@@ -43,57 +44,14 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Navigation */}
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10"
-      >
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-3 cursor-pointer"
-              onClick={() => navigate('/')}
-            >
-              <div className="relative h-10 w-10 bg-white rounded-lg flex items-center justify-center group">
-                <div className="absolute inset-0 bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-                <FileText className="h-6 w-6 text-black relative z-10" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">CodeTapasya</span>
-            </motion.div>
-
-            <div className="flex items-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/login')}
-                className="px-6 py-2.5 border border-white/20 rounded-lg font-semibold hover:bg-white/5 transition-colors backdrop-blur-xl text-sm sm:text-base"
-              >
-                Sign In
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255,255,255,0.3)' }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/login')}
-                className="relative px-6 py-2.5 bg-white text-black rounded-lg font-semibold overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-                <span className="relative z-10">Get Started</span>
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </motion.nav>
-
+    <PublicLayout>
       {/* Hero Section */}
-      <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-20 px-4 sm:px-6">
+      <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16 sm:mb-20"
+            className="text-center mb-12 sm:mb-20"
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
               Get in Touch
@@ -109,11 +67,11 @@ export default function ContactPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-100px' }}
-              className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 sm:p-12 border border-white/10"
+              className="bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-6 sm:p-12 border border-white/10"
             >
-              <h2 className="text-2xl font-bold mb-8 text-center">Send us a Message</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center">Send us a Message</h2>
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-semibold mb-2">Name</label>
                     <input
@@ -122,7 +80,7 @@ export default function ContactPage() {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors text-sm sm:text-base"
                       placeholder="Your name"
                     />
                   </div>
@@ -134,7 +92,7 @@ export default function ContactPage() {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors text-sm sm:text-base"
                       placeholder="your.email@example.com"
                     />
                   </div>
@@ -147,7 +105,7 @@ export default function ContactPage() {
                     required
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors text-sm sm:text-base"
                     placeholder="What's this about?"
                   />
                 </div>
@@ -159,7 +117,7 @@ export default function ContactPage() {
                     required
                     value={formData.message}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors resize-none"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors resize-none text-sm sm:text-base"
                     placeholder="Tell us more..."
                   />
                 </div>
@@ -168,14 +126,14 @@ export default function ContactPage() {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 bg-white text-black rounded-lg font-semibold flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full py-3 sm:py-4 bg-white text-black rounded-lg font-semibold flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
                       <span>Send Message</span>
-                      <Send className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      <Send className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </motion.button>
@@ -184,21 +142,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 border-t border-white/10 mt-20">
-        <div className="container mx-auto max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-white rounded-md flex items-center justify-center">
-                <FileText className="h-5 w-5 text-black" />
-              </div>
-              <span className="font-semibold">CodeTapasya</span>
-            </div>
-            <div className="text-white/50 text-sm">© 2025 CodeTapasya. All rights reserved.</div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   )
 }

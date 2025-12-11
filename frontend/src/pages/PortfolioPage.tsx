@@ -233,17 +233,17 @@ export default function PortfolioPage() {
         onSuccess: async (data) => {
           console.log('[Unlock Success] Response:', data);
           console.log('[Unlock Success] Refetching unlocked templates and credits...');
-          
+
           // Force refetch both queries
           const results = await Promise.all([
             refetchUnlocked(),
             refetchCredits()
           ]);
-          
+
           console.log('[Unlock Success] Refetch results:', results);
           console.log('[Unlock Success] New unlocked templates:', results[0].data);
           console.log('[Unlock Success] New credits:', results[1].data);
-          
+
           setSelectedTemplate(template.id);
           toast.success('Template unlocked successfully!', { id: 'unlock' });
         },
@@ -1081,7 +1081,7 @@ export default function PortfolioPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
               onClick={() => setUnlockModal({ isOpen: false, template: null })}
             >
               <motion.div
@@ -1092,36 +1092,36 @@ export default function PortfolioPage() {
                 className="bg-[#111111] dark:bg-[#111111] w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-white/10"
               >
                 {/* Modal Header */}
-                <div className="relative p-6 bg-gradient-to-r from-yellow-600/90 to-yellow-800/90 dark:from-yellow-900/50 dark:to-yellow-800/50 text-white border-b border-white/10">
+                <div className="relative p-5 sm:p-6 bg-gradient-to-r from-yellow-600/90 to-yellow-800/90 dark:from-yellow-900/50 dark:to-yellow-800/50 text-white border-b border-white/10">
                   <button
                     onClick={() => setUnlockModal({ isOpen: false, template: null })}
                     className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
-                  <h3 className="text-xl font-bold mb-1 max-w-[90%]">Unlock Template</h3>
-                  <p className="text-yellow-100/80 text-sm truncate max-w-[90%]">
+                  <h3 className="text-lg sm:text-xl font-bold mb-1 max-w-[90%]">Unlock Template</h3>
+                  <p className="text-yellow-100/80 text-xs sm:text-sm truncate max-w-[90%]">
                     Unlock "{unlockModal.template.name}"
                   </p>
                 </div>
 
                 {/* Modal Body */}
-                <div className="p-6 bg-[#111111] dark:bg-[#111111]">
+                <div className="p-5 sm:p-6 bg-[#111111] dark:bg-[#111111]">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Option 1: Credits */}
                     <button
                       onClick={confirmUnlockWithCredits}
-                      className="group relative flex flex-col items-center p-6 rounded-2xl border border-white/10 hover:border-yellow-500/50 bg-[#0a0a0a] transition-all text-center"
+                      className="group relative flex flex-col items-center p-4 sm:p-6 rounded-2xl border border-white/10 hover:border-yellow-500/50 bg-[#0a0a0a] transition-all text-center"
                     >
-                      <div className="w-12 h-12 mb-4 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform">
-                        <Coins className="w-6 h-6" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 mb-3 sm:mb-4 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform">
+                        <Coins className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
-                      <h4 className="font-bold text-lg text-white mb-1">Use Credits</h4>
-                      <div className="flex items-baseline gap-1 text-2xl font-bold text-yellow-400">
+                      <h4 className="font-bold text-base sm:text-lg text-white mb-1">Use Credits</h4>
+                      <div className="flex items-baseline gap-1 text-xl sm:text-2xl font-bold text-yellow-400">
                         {unlockModal.template.price_credits}
-                        <span className="text-sm font-medium text-gray-400">pts</span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-400">pts</span>
                       </div>
-                      <p className="mt-2 text-xs font-medium text-gray-400 bg-white/5 px-3 py-1 rounded-full">
+                      <p className="mt-2 text-[10px] sm:text-xs font-medium text-gray-400 bg-white/5 px-2 sm:px-3 py-1 rounded-full">
                         Balance: {creditsData?.balance || 0}
                       </p>
 
@@ -1140,23 +1140,23 @@ export default function PortfolioPage() {
                         setUnlockModal({ isOpen: false, template: null });
                         handleRazorpayPayment(unlockModal.template);
                       }}
-                      className="group flex flex-col items-center p-6 rounded-2xl border border-white/10 hover:border-blue-500/50 bg-[#0a0a0a] transition-all text-center"
+                      className="group flex flex-col items-center p-4 sm:p-6 rounded-2xl border border-white/10 hover:border-blue-500/50 bg-[#0a0a0a] transition-all text-center"
                     >
-                      <div className="w-12 h-12 mb-4 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                        <CreditCard className="w-6 h-6" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 mb-3 sm:mb-4 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                        <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
-                      <h4 className="font-bold text-lg text-white mb-1">Pay Online</h4>
-                      <div className="flex items-baseline gap-1 text-2xl font-bold text-blue-400">
+                      <h4 className="font-bold text-base sm:text-lg text-white mb-1">Pay Online</h4>
+                      <div className="flex items-baseline gap-1 text-xl sm:text-2xl font-bold text-blue-400">
                         ₹{unlockModal.template.price_inr}
                       </div>
-                      <p className="mt-2 text-xs font-medium text-gray-400 bg-white/5 px-3 py-1 rounded-full">
+                      <p className="mt-2 text-[10px] sm:text-xs font-medium text-gray-400 bg-white/5 px-2 sm:px-3 py-1 rounded-full">
                         One-time purchase
                       </p>
                     </button>
                   </div>
 
                   <div className="mt-6 text-center">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-[10px] sm:text-xs text-gray-500">
                       Unlocking gives you permanent access to this template.
                     </p>
                   </div>

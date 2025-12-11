@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Shield, Lock, Eye, Database, UserCheck } from 'lucide-react'
+import { Shield, Lock, Eye, Database, UserCheck } from 'lucide-react'
+import PublicLayout from '../components/layouts/PublicLayout'
 
 export default function PrivacyPolicyPage() {
   const navigate = useNavigate()
@@ -8,7 +9,7 @@ export default function PrivacyPolicyPage() {
   const sections = [
     {
       title: '1. Information We Collect',
-      content: `CodeTapasya ("we", "our", or "us") collects information to provide you with a personalized learning experience. We collect:
+      content: `prativeda ("we", "our", or "us") collects information to provide you with a personalized learning experience. We collect:
 
 • Personal Information: Name, email address, username, and profile picture when you create an account
 • Learning Data: Course progress, quiz results, code submissions, and project uploads
@@ -73,7 +74,7 @@ You can control cookies through your browser settings, but disabling them may af
 • GitHub Disconnect: Remove GitHub integration and associated data at any time
 • Opt-out: Unsubscribe from marketing communications
 
-To exercise these rights, please contact us at privacy@codetapasya.com`,
+To exercise these rights, please contact us at privacy-prativeda@codetapasya.com`,
     },
     {
       title: '7. Rights Under GDPR (For EU Users)',
@@ -86,7 +87,7 @@ To exercise these rights, please contact us at privacy@codetapasya.com`,
     },
     {
       title: '8. Children\'s Privacy',
-      content: `CodeTapasya is designed for users aged 13 and above. We do not knowingly collect personal information from children under 13. If we become aware of such collection, we will delete the information immediately.`,
+      content: `prativeda is designed for users aged 13 and above. We do not knowingly collect personal information from children under 13. If we become aware of such collection, we will delete the information immediately.`,
     },
     {
       title: '9. International Data Transfers',
@@ -98,23 +99,23 @@ To exercise these rights, please contact us at privacy@codetapasya.com`,
     },
     {
       title: '11. Changes to This Policy',
-      content: `We may update this Privacy Policy periodically to reflect changes in our practices or legal requirements. We will notify users of significant changes via email or platform notifications. Continued use of CodeTapasya after changes constitutes acceptance of the updated policy.`,
+      content: `We may update this Privacy Policy periodically to reflect changes in our practices or legal requirements. We will notify users of significant changes via email or platform notifications. Continued use of prativeda after changes constitutes acceptance of the updated policy.`,
     },
     {
       title: '12. Contact Us',
       content: `If you have questions about this Privacy Policy or our data practices, please contact us:
 
-Email: privacy@codetapasya.com
-Support: support@codetapasya.com
-Address: CodeTapasya, Hyderabad, Telangana, India`,
+Email: privacy-prativeda@codetapasya.com
+Support: support-prativeda@codetapasya.com
+Address: prativeda, Hyderabad, Telangana, India`,
     },
     {
       title: '13. Grievance Officer (India – DPDPB Compliance)',
       content: `In accordance with the Digital Personal Data Protection Act (DPDPB), you may contact our designated Grievance Officer for data protection concerns:
 
 Grievance Officer: Pranay Jumbarthi
-Email: support@codetapasya.com
-Address: CodeTapasya, Hyderabad, Telangana, India
+Email: support-prativeda@codetapasya.com
+Address: prativeda, Hyderabad, Telangana, India
 Response Timeline: We aim to respond within 7 working days as per Indian law.`,
     },
   ]
@@ -148,59 +149,16 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
   ]
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Navigation */}
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10"
-      >
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-3 cursor-pointer"
-              onClick={() => navigate('/')}
-            >
-              <div className="relative h-10 w-10 bg-white rounded-lg flex items-center justify-center group">
-                <div className="absolute inset-0 bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-                <FileText className="h-6 w-6 text-black relative z-10" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">prativeda</span>
-            </motion.div>
-
-            <div className="flex items-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/login')}
-                className="px-6 py-2.5 border border-white/20 rounded-lg font-semibold hover:bg-white/5 transition-colors backdrop-blur-xl text-sm sm:text-base"
-              >
-                Sign In
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255,255,255,0.3)' }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/login')}
-                className="relative px-6 py-2.5 bg-white text-black rounded-lg font-semibold overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-                <span className="relative z-10">Get Started</span>
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </motion.nav>
-
+    <PublicLayout>
       {/* Hero Section */}
-      <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-20 px-4 sm:px-6">
+      <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 tracking-tight">
               Privacy Policy
             </h1>
             <p className="text-base sm:text-lg text-white/60 max-w-3xl mx-auto font-light">
@@ -213,7 +171,7 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
-            className="grid md:grid-cols-3 lg:grid-cols-5 gap-6 mb-20"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-16 sm:mb-20"
           >
             {principles.map((principle, index) => (
               <div
@@ -223,7 +181,7 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
                 <div className="p-3 bg-white rounded-lg mb-4 w-fit mx-auto">
                   <principle.icon className="h-6 w-6 text-black" />
                 </div>
-                <h3 className="font-bold mb-2">{principle.title}</h3>
+                <h3 className="font-bold mb-2 text-lg sm:text-xl">{principle.title}</h3>
                 <p className="text-white/60 text-sm">{principle.description}</p>
               </div>
             ))}
@@ -236,24 +194,24 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
             viewport={{ once: true, margin: '-100px' }}
             className="max-w-4xl mx-auto"
           >
-            <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 sm:p-12 border border-white/10">
-              <div className="space-y-12">
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-6 sm:p-12 border border-white/10">
+              <div className="space-y-8 sm:space-y-12">
                 {sections.map((section, index) => (
                   <div key={index}>
-                    <h2 className="text-2xl font-bold mb-4">{section.title}</h2>
-                    <p className="text-white/70 leading-relaxed whitespace-pre-line">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">{section.title}</h2>
+                    <p className="text-white/70 leading-relaxed whitespace-pre-line text-sm sm:text-base">
                       {section.content}
                     </p>
                   </div>
                 ))}
 
                 <div className="pt-8 border-t border-white/10">
-                  <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
-                  <p className="text-white/70 leading-relaxed">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4">Contact Us</h2>
+                  <p className="text-white/70 leading-relaxed text-sm sm:text-base">
                     If you have any questions about this Privacy Policy, please contact us at:
                   </p>
-                  <div className="mt-4 space-y-2 text-white/70">
-                    <p>Email: privacy@prativeda.com</p>
+                  <div className="mt-4 space-y-2 text-white/70 text-sm sm:text-base">
+                    <p>Email: privacy-prativeda@codetapasya.com</p>
                   </div>
                 </div>
               </div>
@@ -261,21 +219,6 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 border-t border-white/10 mt-20">
-        <div className="container mx-auto max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-white rounded-md flex items-center justify-center">
-                <FileText className="h-5 w-5 text-black" />
-              </div>
-              <span className="font-semibold">prativeda</span>
-            </div>
-            <div className="text-white/50 text-sm">© 2025 prativeda. All rights reserved.</div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   )
 }
