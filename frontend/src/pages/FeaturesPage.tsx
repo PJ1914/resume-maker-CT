@@ -139,7 +139,7 @@ export default function FeaturesPage() {
         title="Features - Prativeda | AI Resume Builder & ATS Scoring"
         description="Discover Prativeda's powerful features: AI resume parsing, ATS scoring, portfolio templates, LaTeX export, and more to boost your job search."
         keywords="resume features, ATS scoring, portfolio templates, LaTeX resume, resume parser, AI resume"
-        url="https://prativeda.com/features"
+        url="https://prativeda.codetapasya.com/features"
       />
       <SEO
         title="Features - Prativeda | Professional Resume Builder"

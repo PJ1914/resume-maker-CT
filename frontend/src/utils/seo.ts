@@ -12,7 +12,7 @@ export interface SEOConfig {
   twitterHandle?: string;
 }
 
-const BASE_URL = 'https://prativeda.com';
+const BASE_URL = 'https://prativeda.codetapasya.com';
 const TWITTER_HANDLE = '@prativeda';
 
 export const seoConfig: Record<string, SEOConfig> = {
