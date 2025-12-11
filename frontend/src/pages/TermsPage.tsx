@@ -355,8 +355,7 @@ Response Times: We aim to respond to all inquiries within 48 hours during busine
                     If you have any questions about these Terms of Service, please contact us at:
                   </p>
                   <div className="mt-4 space-y-2 text-white/70">
-                    <p>Email: legal@prativeda.com</p>
-                    <p>Address: 123 Innovation Drive, San Francisco, CA 94105</p>
+                    <p>Email: legal@codetapasya.com</p>
                   </div>
                 </div>
 
@@ -380,9 +379,9 @@ Response Times: We aim to respond to all inquiries within 48 hours during busine
               <div className="h-8 w-8 bg-white rounded-md flex items-center justify-center">
                 <FileText className="h-5 w-5 text-black" />
               </div>
-              <span className="font-semibold">prativeda</span>
+              <span className="font-semibold">CodeTapasya</span>
             </div>
-            <div className="text-white/50 text-sm">© 2025 prativeda. All rights reserved.</div>
+            <div className="text-white/50 text-sm">© 2025 CodeTapasya. All rights reserved.</div>
           </div>
         </div>
       </footer>

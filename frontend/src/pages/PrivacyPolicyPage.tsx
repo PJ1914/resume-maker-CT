@@ -254,7 +254,6 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
                   </p>
                   <div className="mt-4 space-y-2 text-white/70">
                     <p>Email: privacy@prativeda.com</p>
-                    <p>Address: 123 Innovation Drive, San Francisco, CA 94105</p>
                   </div>
                 </div>
               </div>
