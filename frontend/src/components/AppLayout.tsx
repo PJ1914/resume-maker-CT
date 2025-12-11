@@ -13,6 +13,7 @@ import {
   X,
   ChevronDown,
   History,
+  Globe,
 } from 'lucide-react'
 import CreditBalance from './CreditBalance'
 
@@ -31,6 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { name: 'My Resumes', href: '/resumes', icon: FileText },
     { name: 'Upload Resume', href: '/upload', icon: Upload },
     { name: 'Create New', href: '/resume/create', icon: Sparkles },
+    { name: 'Portfolio', href: '/portfolio', icon: Globe },
   ]
 
   const handleLogout = async () => {

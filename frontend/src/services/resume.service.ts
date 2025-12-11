@@ -113,7 +113,15 @@ export const resumeService = {
    * Get list of user's resumes
    */
   async listResumes(limit = 50): Promise<{ resumes: ResumeListItem[]; total: number }> {
-    return apiClient.get(`/api/resumes?limit=${limit}`)
+    console.log('[resume.service] Fetching resumes with limit:', limit);
+    try {
+      const result = await apiClient.get(`/api/resumes?limit=${limit}`);
+      console.log('[resume.service] Got resumes:', result);
+      return result;
+    } catch (error) {
+      console.error('[resume.service] Error fetching resumes:', error);
+      throw error;
+    }
   },
 
   /**

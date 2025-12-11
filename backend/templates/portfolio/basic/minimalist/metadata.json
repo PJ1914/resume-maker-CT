@@ -1,0 +1,73 @@
+{
+  "template_id": "minimalist",
+  "name": "Minimalist Portfolio",
+  "tier": "BASIC",
+  "price": 0,
+  "description": "Clean and minimal portfolio with maximum whitespace, monospace accents, and simple typography. Perfect for those who prefer understated elegance.",
+  "preview_image": "/templates/minimalist/preview.jpg",
+  "tech_stack": {
+    "framework": "html",
+    "styling": "css",
+    "animations": "none",
+    "responsive": false,
+    "dark_mode": false
+  },
+  "features": [
+    "Ultra-minimal design with generous whitespace",
+    "Monospace font accents for technical elements",
+    "1100px fixed width layout",
+    "Black, white, and gray color palette",
+    "Simple horizontal dividers",
+    "Clean typography with Inter font",
+    "Grid-based contact and certification sections",
+    "Subtle underline hover effects",
+    "Lightweight and fast loading",
+    "Print-optimized styles",
+    "No JavaScript required",
+    "Pure HTML and CSS"
+  ],
+  "sections": [
+    "header",
+    "contact",
+    "summary",
+    "experience",
+    "projects",
+    "skills",
+    "education",
+    "certifications",
+    "footer"
+  ],
+  "colors": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#999999",
+    "background": "#ffffff",
+    "divider": "#e0e0e0"
+  },
+  "fonts": {
+    "primary": "Inter",
+    "monospace": "JetBrains Mono",
+    "fallback": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  },
+  "layout": {
+    "width": "1100px",
+    "type": "fixed",
+    "sections_spacing": "5rem",
+    "items_spacing": "3rem"
+  },
+  "cdn_dependencies": [
+    "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap"
+  ],
+  "browser_support": {
+    "chrome": "90+",
+    "firefox": "88+",
+    "safari": "14+",
+    "edge": "90+"
+  },
+  "deployment_options": {
+    "github_pages": true,
+    "vercel": true,
+    "netlify": true,
+    "custom_hosting": true
+  }
+}

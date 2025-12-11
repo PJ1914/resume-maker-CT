@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ personal.name }} - Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container">
+            <h1 class="name">{{ personal.name }}</h1>
+            <p class="title">{{ personal.title or personal.position or 'Professional' }}</p>
+            
+            <div class="contact-info">
+                {% if personal.email %}
+                <a href="mailto:{{ personal.email }}" class="contact-link">{{ personal.email }}</a>
+                {% endif %}
+                {% if personal.phone %}
+                <span class="separator">•</span>
+                <a href="tel:{{ personal.phone }}" class="contact-link">{{ personal.phone }}</a>
+                {% endif %}
+                {% if personal.location %}
+                <span class="separator">•</span>
+                <span class="contact-text">{{ personal.location }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="social-links">
+                {% if personal.linkedin %}
+                <a href="{{ personal.linkedin }}" target="_blank" class="social-link">LinkedIn</a>
+                {% endif %}
+                {% if personal.github %}
+                <a href="{{ personal.github }}" target="_blank" class="social-link">GitHub</a>
+                {% endif %}
+                {% if personal.website %}
+                <a href="{{ personal.website }}" target="_blank" class="social-link">Website</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    {% if summary %}
+    <section class="section about-section">
+        <div class="container">
+            <h2 class="section-title">About</h2>
+            <p class="about-text">{{ summary }}</p>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Experience Section -->
+    {% if experience and experience|length > 0 %}
+    <section class="section experience-section">
+        <div class="container">
+            <h2 class="section-title">Experience</h2>
+            <div class="timeline">
+                {% for job in experience %}
+                <div class="timeline-item">
+                    <div class="timeline-header">
+                        <h3 class="job-title">{{ job.position or job.title }}</h3>
+                        <span class="timeline-date">{{ job.startDate }} - {{ job.endDate or 'Present' }}</span>
+                    </div>
+                    <p class="company-name">{{ job.company }}</p>
+                    {% if job.location %}
+                    <p class="job-location">{{ job.location }}</p>
+                    {% endif %}
+                    {% if job.description %}
+                    <p class="job-description">{{ job.description }}</p>
+                    {% endif %}
+                    {% if job.achievements and job.achievements|length > 0 %}
+                    <ul class="achievements-list">
+                        {% for achievement in job.achievements %}
+                        <li>{{ achievement }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Projects Section -->
+    {% if projects and projects|length > 0 %}
+    <section class="section projects-section">
+        <div class="container">
+            <h2 class="section-title">Projects</h2>
+            <div class="projects-grid">
+                {% for project in projects %}
+                <div class="project-card">
+                    <h3 class="project-title">{{ project.name or project.title }}</h3>
+                    {% if project.description %}
+                    <p class="project-description">{{ project.description }}</p>
+                    {% endif %}
+                    {% if project.technologies and project.technologies|length > 0 %}
+                    <div class="tech-tags">
+                        {% for tech in project.technologies %}
+                        <span class="tech-tag">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if project.link or project.url %}
+                    <a href="{{ project.link or project.url }}" target="_blank" class="project-link">View Project →</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Skills Section -->
+    {% if skills and skills|length > 0 %}
+    <section class="section skills-section">
+        <div class="container">
+            <h2 class="section-title">Skills</h2>
+            <div class="skills-grid">
+                {% for skill in skills %}
+                <div class="skill-item">{{ skill.name or skill }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Education Section -->
+    {% if education and education|length > 0 %}
+    <section class="section education-section">
+        <div class="container">
+            <h2 class="section-title">Education</h2>
+            <div class="education-list">
+                {% for edu in education %}
+                <div class="education-item">
+                    <div class="education-header">
+                        <h3 class="degree">{{ edu.degree }}</h3>
+                        <span class="education-date">{{ edu.startDate }} - {{ edu.endDate }}</span>
+                    </div>
+                    <p class="institution">{{ edu.institution }}</p>
+                    {% if edu.location %}
+                    <p class="education-location">{{ edu.location }}</p>
+                    {% endif %}
+                    {% if edu.gpa %}
+                    <p class="gpa">GPA: {{ edu.gpa }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Certifications Section -->
+    {% if certifications and certifications|length > 0 %}
+    <section class="section certifications-section">
+        <div class="container">
+            <h2 class="section-title">Certifications</h2>
+            <div class="certifications-list">
+                {% for cert in certifications %}
+                <div class="certification-item">
+                    <h3 class="certification-name">{{ cert.name or cert.title }}</h3>
+                    {% if cert.issuer %}
+                    <p class="certification-issuer">{{ cert.issuer }}</p>
+                    {% endif %}
+                    {% if cert.date or cert.issueDate %}
+                    <p class="certification-date">{{ cert.date or cert.issueDate }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">© {{ current_year or '2024' }} {{ personal.name }}. All rights reserved.</p>
+            <p class="footer-credit">Built with <a href="https://prativeda.codetapasya.com" target="_blank" class="footer-link">Prativeda CT</a></p>
+        </div>
+    </footer>
+</body>
+</html>

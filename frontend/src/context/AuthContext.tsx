@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  GithubAuthProvider,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   type User,
@@ -16,6 +17,7 @@ interface AuthContextType {
   isAdmin: boolean
   signIn: (email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
+  signInWithGitHub: () => Promise<void>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
 }
@@ -118,6 +120,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const signInWithGitHub = async () => {
+    try {
+      const provider = new GithubAuthProvider()
+      // Request necessary scopes for repo management and deployment
+      provider.addScope('repo')
+      provider.addScope('user')
+      provider.setCustomParameters({
+        allow_signup: 'true'
+      })
+      
+      const result = await signInWithPopup(auth, provider)
+      const token = await result.user.getIdToken()
+      localStorage.setItem('authToken', token)
+      
+      // Get GitHub OAuth access token from credential
+      const credential = GithubAuthProvider.credentialFromResult(result)
+      const githubAccessToken = credential?.accessToken
+      
+      if (githubAccessToken) {
+        // Send GitHub token to backend to store in resume-maker Firestore
+        try {
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+          const response = await fetch(`${API_URL}/api/auth/github-token`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              github_token: githubAccessToken,
+              username: result.user.displayName,
+              email: result.user.email,
+              photo_url: result.user.photoURL
+            })
+          })
+          
+          if (response.ok) {
+            console.log('[AUTH] GitHub token stored in backend')
+          } else {
+            console.warn('[AUTH] Failed to store GitHub token:', await response.text())
+          }
+        } catch (error) {
+          console.error('[AUTH] Error storing GitHub token:', error)
+          // Don't fail the sign-in if token storage fails
+        }
+      }
+      
+      console.log('[AUTH] Stored token after GitHub sign in')
+      toast.success('Successfully signed in with GitHub!')
+    } catch (error: any) {
+      console.error('GitHub sign in error:', error)
+      if (error.code !== 'auth/popup-closed-by-user') {
+        if (error.code === 'auth/account-exists-with-different-credential') {
+          toast.error('This email is already associated with another account')
+        } else {
+          toast.error(error.message || 'Failed to sign in with GitHub')
+        }
+      }
+      throw error
+    }
+  }
+
   const signOut = async () => {
     try {
       await firebaseSignOut(auth)
@@ -153,6 +217,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin,
     signIn,
     signInWithGoogle,
+    signInWithGitHub,
     signOut,
     deleteAccount,
   }

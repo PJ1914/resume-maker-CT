@@ -13,6 +13,7 @@ import { TemplatesPage } from '../pages/TemplatesPage'
 import CreditPurchasePage from '../pages/CreditPurchasePage'
 import CreditHistoryPage from '../pages/CreditHistoryPage'
 import ProfilePage from '../pages/ProfilePage'
+import PortfolioPage from '../pages/PortfolioPage'
 import { useAuth } from '../context/AuthContext'
 import AdminGuard from '../components/admin/AdminGuard'
 import AdminLayout from '../components/layouts/AdminLayout'
@@ -147,6 +148,17 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <CreditHistoryPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/portfolio"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <PortfolioPage />
+            </AppLayout>
           </ProtectedRoute>
         }
       />

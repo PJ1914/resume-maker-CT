@@ -67,6 +67,22 @@ coverage/
 .nyc_output/
 .pytest_cache/
 .coverage
+test_*.py
+*_test.py
+tests/
+backend/tests/
+
+# Development/Debug Scripts (backend root level)
+backend/check_*.py
+backend/fix_*.py
+backend/clear_*.py
+backend/remove_*.py
+backend/add_admin.py
+backend/setup_storage.py
+backend/seed_portfolio_templates.py
+backend/upload_portfolio_templates.py
+backend/cleanup_templates.py
+backend/test_*.py
 
 # LaTeX temporary files
 *.aux
@@ -93,20 +109,10 @@ temp/
 .cache/
 
 # Documentation files (phase completion markers)
-ALL_APIS_TESTED.md
-ALL_FIXED.md
-API_INTEGRATION_STATUS.md
-CORS_FIX.md
-FIX_PROBLEMS.md
-PHASE_*.md
-PROJECT_COMPLETE.md
-QUICK_REFERENCE.md
-QUICK_START.md
-SETUP.md
-SETUP_GUIDE.md
-STORAGE_SETUP.md
-VISUAL_TESTING_GUIDE.md
-BACKEND_FIXED.md
+*.md
+!README.md
+!backend/README.md
+!frontend/README.md
 
 # Batch files and scripts
 start.bat
