@@ -9,6 +9,8 @@ import ContactPage from '../pages/ContactPage'
 import AboutPage from '../pages/AboutPage'
 import PrivacyPolicyPage from '../pages/PrivacyPolicyPage'
 import TermsPage from '../pages/TermsPage'
+import RefundPolicyPage from '../pages/RefundPolicyPage'
+import ShippingPolicyPage from '../pages/ShippingPolicyPage'
 import DashboardPage from '../pages/DashboardPage'
 import ResumesPage from '../pages/ResumesPage'
 import UploadPage from '../pages/UploadPage'
@@ -44,7 +46,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Landing Page - Root */}
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+      <Route path="/" element={<LandingPage />} />
 
       <Route
         path="/login"
@@ -200,6 +202,8 @@ export default function AppRoutes() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsPage />} />
+      <Route path="/refund-policy" element={<RefundPolicyPage />} />
+      <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
 
       {/* Catch all - redirect to login */}
       <Route path="*" element={<Navigate to="/" replace />} />

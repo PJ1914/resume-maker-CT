@@ -7,6 +7,7 @@ import { TourProvider } from './context/TourContext'
 import AppTour from './components/AppTour'
 import { SEO, HomeSchema } from './components/SEO'
 import { Analytics } from './components/Analytics'
+import ScrollToTop from './components/ScrollToTop'
 
 import { useState, useEffect } from 'react'
 import Preloader from '@/components/ui/preloader'
@@ -31,6 +32,7 @@ function App() {
           v7_relativeSplatPath: true,
         }}
       >
+        <ScrollToTop />
         <AuthProvider>
           <LoaderProvider>
             <TourProvider>

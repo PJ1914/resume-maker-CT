@@ -8,82 +8,114 @@ export default function PrivacyPolicyPage() {
   const sections = [
     {
       title: '1. Information We Collect',
-      content: `We collect information you provide directly to us when you create an account, build a resume, or contact us for support. This includes:
-      
-• Personal information (name, email, phone number)
-• Resume content and work history
-• Payment information (processed securely through Stripe)
-• Usage data and analytics
-• Device and browser information`,
+      content: `CodeTapasya ("we", "our", or "us") collects information to provide you with a personalized learning experience. We collect:
+
+• Personal Information: Name, email address, username, and profile picture when you create an account
+• Learning Data: Course progress, quiz results, code submissions, and project uploads
+• GitHub Integration Data: Repository information, commit history, and code contributions when you connect your GitHub account
+• Usage Information: How you interact with our platform, pages visited, and features used
+• Technical Information: IP address, browser type, device information, and cookies
+• Payment Information: Billing details are processed securely through Razorpay. We do not store or collect card information directly. Razorpay is PCI-DSS compliant and acts as our trusted payment processor.`,
     },
     {
       title: '2. How We Use Your Information',
-      content: `We use the information we collect to:
+      content: `We use your information to:
 
-• Provide, maintain, and improve our services
-• Process your transactions and send related information
-• Send you technical notices and support messages
-• Respond to your comments and questions
-• Analyze usage patterns and optimize user experience
-• Detect and prevent fraud and abuse`,
+• Provide and maintain our educational services
+• Personalize your learning experience and track progress
+• Facilitate code repository management and project submissions
+• Process payments and manage subscriptions
+• Send important updates about courses and platform changes
+• Improve our platform through analytics and user feedback
+• Provide customer support and respond to inquiries
+• Prevent fraud and ensure platform security`,
     },
     {
-      title: '3. Information Sharing',
-      content: `We do not sell your personal information. We may share your information only in these circumstances:
+      title: '3. Information Sharing and Disclosure',
+      content: `We respect your privacy and will never sell your personal information. We may share your information only in these circumstances:
 
-• With your consent
-• With service providers who assist in our operations (e.g., hosting, analytics)
-• To comply with legal obligations
-• To protect our rights and prevent fraud
-• In connection with a business transfer or acquisition`,
+• Service Providers: With trusted third-party services like Firebase (authentication), Razorpay (payments), AWS (hosting), and GitHub (code repositories and project management)
+• Legal Requirements: When required by law or to protect our rights and users' safety
+• Business Transfers: In case of merger, acquisition, or sale of assets (users will be notified)
+• With Your Consent: When you explicitly agree to share information`,
     },
     {
       title: '4. Data Security',
       content: `We implement industry-standard security measures to protect your information:
 
-• End-to-end encryption for sensitive data
-• Firebase Authentication and Firestore security rules
+• Encryption of data in transit and at rest
+• Secure authentication through Firebase
+• OAuth-based secure integration with GitHub
 • Regular security audits and updates
-• Secure payment processing through certified providers
-• Access controls and monitoring`,
+• Limited access to personal data by employees
+• Secure payment processing through PCI-compliant providers`,
     },
     {
-      title: '5. Your Rights',
-      content: `You have the right to:
+      title: '5. Cookies and Tracking',
+      content: `We use cookies and similar technologies to enhance your experience:
 
-• Access your personal information
-• Correct inaccurate data
-• Delete your account and data
-• Export your resume data
-• Opt-out of marketing communications
-• Withdraw consent at any time`,
-    },
-    {
-      title: '6. Data Retention',
-      content: `We retain your information for as long as your account is active or as needed to provide services. You can request deletion of your data at any time through your account settings. Some information may be retained for legal compliance or legitimate business purposes.`,
-    },
-    {
-      title: '7. Cookies and Tracking',
-      content: `We use cookies and similar technologies to:
+• Essential Cookies: Required for platform functionality and user authentication
+• Analytics Cookies: Help us understand how users interact with our platform
+• Preference Cookies: Remember your settings and preferences
 
-• Maintain your session
-• Remember your preferences
-• Analyze site traffic and usage
-• Improve our services
+We use both session and persistent cookies, and third-party tools like Google Analytics, Firebase, and GitHub OAuth. These help track user behavior, preferences, and session activity.
 
-You can control cookies through your browser settings.`,
+You can control cookies through your browser settings, but disabling them may affect platform functionality.`,
     },
     {
-      title: '8. International Data Transfers',
-      content: `Your information may be transferred to and processed in countries other than your own. We ensure appropriate safeguards are in place to protect your data in accordance with this privacy policy and applicable laws.`,
+      title: '6. Your Rights and Choices',
+      content: `You have the following rights regarding your personal information:
+
+• Access: Request a copy of your personal data
+• Correction: Update or correct inaccurate information
+• Deletion: Request deletion of your account and associated data
+• Portability: Export your learning data
+• GitHub Disconnect: Remove GitHub integration and associated data at any time
+• Opt-out: Unsubscribe from marketing communications
+
+To exercise these rights, please contact us at privacy@codetapasya.com`,
     },
     {
-      title: '9. Children\'s Privacy',
-      content: `Our services are not intended for users under 16 years of age. We do not knowingly collect information from children. If you become aware that a child has provided us with personal information, please contact us.`,
+      title: '7. Rights Under GDPR (For EU Users)',
+      content: `If you are located in the European Union, you have the following additional rights:
+
+• Right to Object: You may object to how we process your data
+• Right to Restrict Processing: You may ask us to limit how we use your data
+• Right to Lodge Complaint: You may lodge a complaint with your local data protection authority
+• Legal Basis: We process your data based on consent, contracts, legal obligations, or our legitimate interest`,
     },
     {
-      title: '10. Changes to This Policy',
-      content: `We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last Updated" date. Continued use of our services constitutes acceptance of the updated policy.`,
+      title: '8. Children\'s Privacy',
+      content: `CodeTapasya is designed for users aged 13 and above. We do not knowingly collect personal information from children under 13. If we become aware of such collection, we will delete the information immediately.`,
+    },
+    {
+      title: '9. International Data Transfers',
+      content: `Your information may be transferred to and stored on servers located outside your country of residence, such as in India, AWS regions, or GitHub's global infrastructure. We implement contractual safeguards like Standard Contractual Clauses (SCCs) and technical protections to ensure your data remains secure during such transfers.`,
+    },
+    {
+      title: '10. Data Retention',
+      content: `We retain your personal information only as long as necessary to provide our services and comply with legal obligations. Learning progress and course data are retained until you delete your account or request removal. GitHub integration data is retained only while the connection is active.`,
+    },
+    {
+      title: '11. Changes to This Policy',
+      content: `We may update this Privacy Policy periodically to reflect changes in our practices or legal requirements. We will notify users of significant changes via email or platform notifications. Continued use of CodeTapasya after changes constitutes acceptance of the updated policy.`,
+    },
+    {
+      title: '12. Contact Us',
+      content: `If you have questions about this Privacy Policy or our data practices, please contact us:
+
+Email: privacy@codetapasya.com
+Support: support@codetapasya.com
+Address: CodeTapasya, Hyderabad, Telangana, India`,
+    },
+    {
+      title: '13. Grievance Officer (India – DPDPB Compliance)',
+      content: `In accordance with the Digital Personal Data Protection Act (DPDPB), you may contact our designated Grievance Officer for data protection concerns:
+
+Grievance Officer: Pranay Jumbarthi
+Email: support@codetapasya.com
+Address: CodeTapasya, Hyderabad, Telangana, India
+Response Timeline: We aim to respond within 7 working days as per Indian law.`,
     },
   ]
 

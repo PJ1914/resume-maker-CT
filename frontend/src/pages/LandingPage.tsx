@@ -83,7 +83,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-black text-white overflow-hidden">
       {/* Animated Background Grid */}
       <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
-      
+
       {/* Animated particles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {[...Array(20)].map((_, i) => (
@@ -281,7 +281,7 @@ export default function LandingPage() {
                 <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl p-8 border border-white/10 shadow-2xl">
                   {/* Glow Effect */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent rounded-2xl" />
-                  
+
                   {/* ATS Score Circle */}
                   <div className="relative flex items-center justify-center mb-6">
                     <svg className="w-32 h-32 -rotate-90">
@@ -460,7 +460,7 @@ export default function LandingPage() {
               className="group flex flex-col items-center gap-3"
             >
               <svg className="h-8 w-auto fill-white/30 group-hover:fill-white transition-all duration-300" viewBox="0 0 283 64" fill="none">
-                <path d="M141.68 16.25c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.46 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zM248.72 16c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.45 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zM200.24 34c0 6 3.92 10 10 10 4.12 0 7.21-1.87 8.8-4.92l7.68 4.43c-3.18 5.3-9.14 8.49-16.48 8.49-11.05 0-19-7.2-19-18s7.96-18 19-18c7.34 0 13.29 3.19 16.48 8.49l-7.68 4.43c-1.59-3.05-4.68-4.92-8.8-4.92-6.07 0-10 4-10 10zm82.48-29v46h-9V5h9zM36.95 0L73.9 64H0L36.95 0zm92.38 5l-27.71 48L73.91 5H84.3l17.32 30 17.32-30h10.39zm58.91 12v9.69c-1-.29-2.06-.49-3.2-.49-5.81 0-10 4-10 10V51h-9V17h9v9.2c0-5.08 5.91-9.2 13.2-9.2z"/>
+                <path d="M141.68 16.25c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.46 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zM248.72 16c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.45 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zM200.24 34c0 6 3.92 10 10 10 4.12 0 7.21-1.87 8.8-4.92l7.68 4.43c-3.18 5.3-9.14 8.49-16.48 8.49-11.05 0-19-7.2-19-18s7.96-18 19-18c7.34 0 13.29 3.19 16.48 8.49l-7.68 4.43c-1.59-3.05-4.68-4.92-8.8-4.92-6.07 0-10 4-10 10zm82.48-29v46h-9V5h9zM36.95 0L73.9 64H0L36.95 0zm92.38 5l-27.71 48L73.91 5H84.3l17.32 30 17.32-30h10.39zm58.91 12v9.69c-1-.29-2.06-.49-3.2-.49-5.81 0-10 4-10 10V51h-9V17h9v9.2c0-5.08 5.91-9.2 13.2-9.2z" />
               </svg>
               <span className="text-sm font-medium text-white/50 group-hover:text-white transition-colors">Vercel</span>
             </motion.div>
@@ -474,7 +474,7 @@ export default function LandingPage() {
               className="group flex flex-col items-center gap-3"
             >
               <svg className="h-10 w-auto fill-white/30 group-hover:fill-white transition-all duration-300" viewBox="0 0 98 96">
-                <path fillRule="evenodd" clipRule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/>
+                <path fillRule="evenodd" clipRule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" />
               </svg>
               <span className="text-sm font-medium text-white/50 group-hover:text-white transition-colors">GitHub</span>
             </motion.div>
@@ -488,7 +488,7 @@ export default function LandingPage() {
               className="group flex flex-col items-center gap-3"
             >
               <svg className="h-8 w-auto fill-white/30 group-hover:fill-white transition-all duration-300" viewBox="0 0 40 40">
-                <path d="M27.4635 24.3218L30.4904 21.2949L24.4949 15.2994L24.4365 15.3286L27.4635 24.3218ZM22.8304 16.7159L28.9135 22.799L31.9696 19.7429L25.8865 13.6598L22.8304 16.7159ZM20.7337 18.8126L23.7606 27.8058L26.7875 24.7789L23.7898 15.7565L20.7337 18.8126ZM31.9988 12.3383L28.9427 15.3944L35.0258 21.4775L38.0527 18.4506L31.9988 12.3383ZM27.4927 13.9284L24.4366 10.8723L21.3804 13.9284L24.4366 16.9845L27.4927 13.9284ZM20.1242 12.3675L17.0681 15.4236L23.1804 21.5067L26.2073 18.4798L20.1242 12.3675ZM15.7619 16.7451L18.7889 25.7383L21.8742 22.653L18.8181 13.6598L15.7619 16.7451ZM22.5973 29.0734C22.5681 29.0734 22.5681 29.0734 22.5389 29.0734C22.4805 29.0734 22.4512 29.0442 22.4512 29.015L20.355 19.9926L13.6944 26.6532C13.6944 26.6532 13.6944 26.6532 13.6944 26.6824L22.5973 29.0734ZM34.9674 10.8723L31.9404 13.8992L38.0235 19.9822L41.0504 16.9553L34.9674 10.8723ZM30.5196 9.28218L27.4635 12.3383L30.5196 15.3944L33.5757 12.3383L30.5196 9.28218ZM26.1573 7.72129L23.1012 10.7774L26.1573 13.8335L29.2135 10.7774L26.1573 7.72129ZM21.795 6.16039L18.7389 9.21651L21.795 12.2726L24.8512 9.21651L21.795 6.16039ZM17.4327 4.59949L14.3766 7.6556L17.4327 10.7117L20.4889 7.6556L17.4327 4.59949ZM13.0704 3.03859L10.0143 6.09471L13.0704 9.15083L16.1265 6.09471L13.0704 3.03859ZM24.4658 3.18016L22.5096 5.13636L25.5658 8.19248L27.5512 6.20708L24.4658 3.18016ZM20.8796 0.0240326L20.7337 0.140327L23.7898 3.19645L25.8281 1.15813L20.8796 0.0240326ZM28.9135 7.63389L26.8458 9.7016L29.9019 12.7577L31.9696 10.69L28.9135 7.63389ZM42.3658 18.2166L39.3096 21.2727L45.3927 27.3558L48.4196 24.3289L42.3658 18.2166ZM37.3296 16.6557L34.2735 19.7118L40.3566 25.795L43.4127 22.7389L37.3296 16.6557ZM47.7827 20.039L44.7266 23.0951L47.7827 26.1512L50.8389 23.0951L47.7827 20.039ZM38.0527 24.9988C38.0527 25.0572 38.0235 25.0864 37.9942 25.1157L35.8981 27.2118L44.8596 29.5735C44.8888 29.5735 44.9181 29.5735 44.9473 29.5735C45.035 29.5735 45.0642 29.5443 45.0935 29.515L47.1604 27.4481L38.0527 24.9988ZM7.01347 8.92861C6.92579 8.92861 6.86734 8.99938 6.86734 9.08706V30.6491C6.86734 30.9075 7.01347 31.1075 7.27192 31.1952L16.2335 34.1637L19.2896 31.1075L7.01347 8.92861ZM20.4596 32.278L12.5096 15.6536L9.45347 18.7097L17.4327 35.3633L20.4596 32.278ZM41.6673 30.3511L38.6112 33.4072L55.7827 37.4296L58.8389 34.3735L41.6673 30.3511ZM37.9066 31.8536L34.8505 34.9097L39.915 36.1075L42.9712 33.0514L37.9066 31.8536ZM53.0527 23.532L49.9966 26.5881L53.0527 29.6443L56.1089 26.5881L53.0527 23.532ZM48.6904 21.9711L45.6343 25.0272L48.6904 28.0833L51.7466 25.0272L48.6904 21.9711ZM33.5465 33.2903L30.4904 36.3464L33.5465 39.4025L36.6027 36.3464L33.5465 33.2903ZM29.1842 31.7294L26.1281 34.7855L29.1842 37.8416L32.2404 34.7855L29.1842 31.7294ZM24.8219 30.1685L21.7658 33.2247L24.8219 36.2808L27.8781 33.2247L24.8219 30.1685Z"/>
+                <path d="M27.4635 24.3218L30.4904 21.2949L24.4949 15.2994L24.4365 15.3286L27.4635 24.3218ZM22.8304 16.7159L28.9135 22.799L31.9696 19.7429L25.8865 13.6598L22.8304 16.7159ZM20.7337 18.8126L23.7606 27.8058L26.7875 24.7789L23.7898 15.7565L20.7337 18.8126ZM31.9988 12.3383L28.9427 15.3944L35.0258 21.4775L38.0527 18.4506L31.9988 12.3383ZM27.4927 13.9284L24.4366 10.8723L21.3804 13.9284L24.4366 16.9845L27.4927 13.9284ZM20.1242 12.3675L17.0681 15.4236L23.1804 21.5067L26.2073 18.4798L20.1242 12.3675ZM15.7619 16.7451L18.7889 25.7383L21.8742 22.653L18.8181 13.6598L15.7619 16.7451ZM22.5973 29.0734C22.5681 29.0734 22.5681 29.0734 22.5389 29.0734C22.4805 29.0734 22.4512 29.0442 22.4512 29.015L20.355 19.9926L13.6944 26.6532C13.6944 26.6532 13.6944 26.6532 13.6944 26.6824L22.5973 29.0734ZM34.9674 10.8723L31.9404 13.8992L38.0235 19.9822L41.0504 16.9553L34.9674 10.8723ZM30.5196 9.28218L27.4635 12.3383L30.5196 15.3944L33.5757 12.3383L30.5196 9.28218ZM26.1573 7.72129L23.1012 10.7774L26.1573 13.8335L29.2135 10.7774L26.1573 7.72129ZM21.795 6.16039L18.7389 9.21651L21.795 12.2726L24.8512 9.21651L21.795 6.16039ZM17.4327 4.59949L14.3766 7.6556L17.4327 10.7117L20.4889 7.6556L17.4327 4.59949ZM13.0704 3.03859L10.0143 6.09471L13.0704 9.15083L16.1265 6.09471L13.0704 3.03859ZM24.4658 3.18016L22.5096 5.13636L25.5658 8.19248L27.5512 6.20708L24.4658 3.18016ZM20.8796 0.0240326L20.7337 0.140327L23.7898 3.19645L25.8281 1.15813L20.8796 0.0240326ZM28.9135 7.63389L26.8458 9.7016L29.9019 12.7577L31.9696 10.69L28.9135 7.63389ZM42.3658 18.2166L39.3096 21.2727L45.3927 27.3558L48.4196 24.3289L42.3658 18.2166ZM37.3296 16.6557L34.2735 19.7118L40.3566 25.795L43.4127 22.7389L37.3296 16.6557ZM47.7827 20.039L44.7266 23.0951L47.7827 26.1512L50.8389 23.0951L47.7827 20.039ZM38.0527 24.9988C38.0527 25.0572 38.0235 25.0864 37.9942 25.1157L35.8981 27.2118L44.8596 29.5735C44.8888 29.5735 44.9181 29.5735 44.9473 29.5735C45.035 29.5735 45.0642 29.5443 45.0935 29.515L47.1604 27.4481L38.0527 24.9988ZM7.01347 8.92861C6.92579 8.92861 6.86734 8.99938 6.86734 9.08706V30.6491C6.86734 30.9075 7.01347 31.1075 7.27192 31.1952L16.2335 34.1637L19.2896 31.1075L7.01347 8.92861ZM20.4596 32.278L12.5096 15.6536L9.45347 18.7097L17.4327 35.3633L20.4596 32.278ZM41.6673 30.3511L38.6112 33.4072L55.7827 37.4296L58.8389 34.3735L41.6673 30.3511ZM37.9066 31.8536L34.8505 34.9097L39.915 36.1075L42.9712 33.0514L37.9066 31.8536ZM53.0527 23.532L49.9966 26.5881L53.0527 29.6443L56.1089 26.5881L53.0527 23.532ZM48.6904 21.9711L45.6343 25.0272L48.6904 28.0833L51.7466 25.0272L48.6904 21.9711ZM33.5465 33.2903L30.4904 36.3464L33.5465 39.4025L36.6027 36.3464L33.5465 33.2903ZM29.1842 31.7294L26.1281 34.7855L29.1842 37.8416L32.2404 34.7855L29.1842 31.7294ZM24.8219 30.1685L21.7658 33.2247L24.8219 36.2808L27.8781 33.2247L24.8219 30.1685Z" />
               </svg>
               <span className="text-sm font-medium text-white/50 group-hover:text-white transition-colors">Netlify</span>
             </motion.div>
@@ -502,10 +502,10 @@ export default function LandingPage() {
               className="group flex flex-col items-center gap-3"
             >
               <svg className="h-11 w-auto fill-white/30 group-hover:fill-white transition-all duration-300" viewBox="0 0 192 192">
-                <path d="M124.71 120.22L91 156.82a7.59 7.59 0 0 1-10.85-.33L35.05 98.4a7.59 7.59 0 0 1 1.49-11.27L124.71 120.22z"/>
-                <path d="M35.05 98.4L58.14 17.9a4 4 0 0 1 7.47-.6l59.93 103.15L91 156.82a7.59 7.59 0 0 1-10.85-.33L35.05 98.4z" opacity=".72"/>
-                <path d="M165.34 106.55L152.48 45.88a4 4 0 0 0-6.75-2L35.05 98.4l45.1 58.09a7.59 7.59 0 0 0 10.85.33l74.34-50.27z" opacity=".48"/>
-                <path d="M35.05 98.4l89.66-33.49L102.82 28.05a4 4 0 0 0-7.22-.18L35.05 98.4z" opacity=".48"/>
+                <path d="M124.71 120.22L91 156.82a7.59 7.59 0 0 1-10.85-.33L35.05 98.4a7.59 7.59 0 0 1 1.49-11.27L124.71 120.22z" />
+                <path d="M35.05 98.4L58.14 17.9a4 4 0 0 1 7.47-.6l59.93 103.15L91 156.82a7.59 7.59 0 0 1-10.85-.33L35.05 98.4z" opacity=".72" />
+                <path d="M165.34 106.55L152.48 45.88a4 4 0 0 0-6.75-2L35.05 98.4l45.1 58.09a7.59 7.59 0 0 0 10.85.33l74.34-50.27z" opacity=".48" />
+                <path d="M35.05 98.4l89.66-33.49L102.82 28.05a4 4 0 0 0-7.22-.18L35.05 98.4z" opacity=".48" />
               </svg>
               <span className="text-sm font-medium text-white/50 group-hover:text-white transition-colors">Firebase</span>
             </motion.div>
@@ -541,7 +541,7 @@ export default function LandingPage() {
                 className="group relative bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300 cursor-pointer"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
+
                 <div className="relative flex items-start justify-between mb-6">
                   <div className="p-3 bg-white rounded-lg group-hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-shadow">
                     <feature.icon className="h-6 w-6 text-black" />
@@ -550,7 +550,7 @@ export default function LandingPage() {
                     {feature.number}
                   </span>
                 </div>
-                
+
                 <h3 className="relative text-2xl font-bold mb-3">
                   {feature.title}
                 </h3>
@@ -597,11 +597,10 @@ export default function LandingPage() {
                       whileInView={{ scale: 1, opacity: 1 }}
                       viewport={{ once: true, margin: '-100px' }}
                       transition={{ delay: index * 0.05 }}
-                      className={`relative h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                        index < 3
+                      className={`relative h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${index < 3
                           ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.4)]'
                           : 'bg-white/20 border border-white/30 text-white'
-                      }`}
+                        }`}
                     >
                       {step}
                       {index < 3 && (
@@ -621,9 +620,8 @@ export default function LandingPage() {
                         whileInView={{ scaleX: 1 }}
                         viewport={{ once: true, margin: '-100px' }}
                         transition={{ delay: index * 0.05 + 0.1 }}
-                        className={`h-1 w-8 mx-2 origin-left transition-all duration-300 ${
-                          index < 2 ? 'bg-white' : 'bg-white/20'
-                        }`}
+                        className={`h-1 w-8 mx-2 origin-left transition-all duration-300 ${index < 2 ? 'bg-white' : 'bg-white/20'
+                          }`}
                       />
                     )}
                   </div>
@@ -723,7 +721,7 @@ export default function LandingPage() {
               className="group relative bg-white/5 backdrop-blur-xl rounded-2xl p-10 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
+
               <div className="relative">
                 <div className="p-4 bg-white w-fit rounded-xl mb-6 shadow-[0_0_30px_rgba(255,255,255,0.2)] group-hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-shadow">
                   <Upload className="h-8 w-8 text-black" />
@@ -751,7 +749,7 @@ export default function LandingPage() {
               className="group relative bg-white/5 backdrop-blur-xl rounded-2xl p-10 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
+
               <div className="relative">
                 <div className="p-4 bg-white w-fit rounded-xl mb-6 shadow-[0_0_30px_rgba(255,255,255,0.2)] group-hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-shadow">
                   <Palette className="h-8 w-8 text-black" />
@@ -879,7 +877,7 @@ export default function LandingPage() {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
-            
+
             <div className="relative z-10">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -958,6 +956,8 @@ export default function LandingPage() {
                 <li><Link to="/contact" className="text-white/60 hover:text-white text-sm block transition">Contact</Link></li>
                 <li><Link to="/privacy-policy" className="text-white/60 hover:text-white text-sm block transition">Privacy Policy</Link></li>
                 <li><Link to="/terms" className="text-white/60 hover:text-white text-sm block transition">Terms of Service</Link></li>
+                <li><Link to="/refund-policy" className="text-white/60 hover:text-white text-sm block transition">Refund Policy</Link></li>
+                <li><Link to="/shipping-policy" className="text-white/60 hover:text-white text-sm block transition">Shipping Policy</Link></li>
               </ul>
             </div>
           </div>

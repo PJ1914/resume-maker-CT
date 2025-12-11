@@ -7,139 +7,227 @@ export default function TermsPage() {
 
   const sections = [
     {
-      title: '1. Acceptance of Terms',
-      content: `By accessing and using prativeda ("Service"), you accept and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.
+      title: '1. Introduction and Acceptance of Terms',
+      content: `Welcome to CodeTapasya, India's premier coding education platform owned and operated by CodeTapasya Developers. By creating an account, accessing our services, or using any part of our platform, you ("User," "you," or "your") agree to be legally bound by these Terms and Conditions ("Terms," "Agreement").
 
-These Terms apply to all users, including visitors, registered users, and premium subscribers.`,
+These Terms constitute a legally binding agreement between you and CodeTapasya regarding your use of our comprehensive learning platform, including but not limited to:
+
+• Interactive Courses: Project-based programming courses in Python, JavaScript, Web Development, Data Science, and Machine Learning
+• Code Playground: Browser-based coding environment with multi-language support and instant feedback
+• GitHub Integration: Portfolio building and assignment submission through GitHub connectivity
+• Assessment System: Interactive quizzes, coding challenges, and progress tracking
+• Community Features: Discussion forums, peer collaboration, and mentorship programs
+• CodeTapasya AI: AI Assistant for instant coding help and learning guidance
+• Premium Services: Advanced features, priority support, and exclusive content
+
+CodeTapasya reserves the right to modify these Terms at any time. Material changes will be communicated via email notification and platform announcements. Continued use of our services after such modifications constitutes acceptance of the updated Terms.`,
     },
     {
-      title: '2. Description of Service',
-      content: `prativeda provides an AI-powered resume building platform that includes:
+      title: '2. User Registration and Account Management',
+      content: `Eligibility Requirements:
 
-• Resume creation and editing tools
-• ATS (Applicant Tracking System) scoring
-• Professional LaTeX templates
-• PDF export functionality
-• AI-powered content suggestions
-• Version control and storage
+• You must be at least 13 years old to create an account
+• Users between 13-17 years old must have verifiable parental or guardian consent
+• Corporate accounts require authorization from an authorized representative
+• International users must comply with their local laws regarding online education services
 
-We reserve the right to modify, suspend, or discontinue any part of the Service at any time.`,
+Account Security and Responsibilities:
+
+• Credential Protection: Maintain strict confidentiality of login credentials; never share passwords
+• Account Monitoring: Regularly monitor your account for unauthorized access or suspicious activity
+• Immediate Reporting: Report security breaches, unauthorized access, or suspicious activity within 24 hours
+• Accurate Information: Provide truthful, current, and complete registration information
+• Profile Updates: Keep account information updated, especially contact details for important notifications
+• Single Account Policy: One account per person; multiple accounts may result in termination
+
+CodeTapasya may require email verification, phone number confirmation, or additional identity verification for premium services or suspicious activity prevention.`,
     },
     {
-      title: '3. User Accounts',
-      content: `Account Creation:
-• You must provide accurate and complete information
-• You must be at least 16 years old to use the Service
-• One person or entity may maintain only one account
-• You are responsible for maintaining account security
+      title: '3. Comprehensive Acceptable Use Policy',
+      content: `CodeTapasya maintains a zero-tolerance policy for misuse. Users agree to engage ethically and professionally in all platform activities.
 
-Account Termination:
-• We may suspend or terminate accounts that violate these Terms
-• You may close your account at any time through account settings
-• Upon termination, your right to use the Service ceases immediately`,
+Strictly Prohibited Activities:
+
+• Academic Dishonesty: Plagiarizing code, submitting others' work as your own, or using unauthorized assistance in assessments
+• Harassment and Discrimination: Offensive behavior based on race, gender, religion, nationality, sexual orientation, disability, or any protected characteristic
+• Platform Abuse: Attempting to hack, overload, or disrupt our servers, databases, or security systems
+• Content Violations: Uploading malicious code, viruses, spam, or inappropriate content including adult material
+• Commercial Misuse: Using the platform for unauthorized commercial activities, solicitation, or advertising
+• Intellectual Property Infringement: Violating copyrights, trademarks, or other intellectual property rights
+• Account Fraud: Creating fake accounts, impersonating others, or providing false information
+• System Manipulation: Exploiting bugs, using automation tools, or manipulating progress tracking systems
+• Data Mining: Scraping, extracting, or harvesting platform data without explicit written permission
+
+Users must maintain respectful discourse, provide constructive feedback, use appropriate language, and contribute positively to the learning environment.`,
     },
     {
-      title: '4. User Content',
-      content: `You retain ownership of all content you create using our Service, including resumes and personal information.
+      title: '4. Intellectual Property Rights and Content Ownership',
+      content: `CodeTapasya's Proprietary Content:
 
-By using our Service, you grant us a limited license to:
-• Store and process your content to provide the Service
-• Display your content back to you
-• Make backups for service reliability
-• Improve our AI and algorithms (using anonymized data only)
+All educational materials, including courses, tutorials, videos, quizzes, coding challenges, platform features, user interface design, algorithms, and branding elements are the exclusive intellectual property of CodeTapasya and protected by Indian and international copyright laws.
 
-You represent that:
-• You own or have rights to all content you upload
-• Your content does not violate any laws or third-party rights
-• Your content is accurate and not misleading`,
+Licensed Use Permissions:
+
+• Personal Learning: Access and study content for personal skill development
+• Offline Study: Download permitted materials for offline learning during subscription period
+• Knowledge Application: Apply learned concepts in personal and professional projects
+• Portfolio Building: Showcase projects created using knowledge gained from our courses
+• Educational Sharing: Discuss concepts learned with peers in educational contexts
+
+Strict Usage Restrictions:
+
+• No Redistribution: Sharing, selling, or redistributing our content through any medium
+• No Commercial Use: Using our content for commercial training, workshops, or competing platforms
+• No Reverse Engineering: Attempting to copy, recreate, or reverse engineer our platform features
+• Attribution Requirements: Removing copyright notices, watermarks, or attribution information
+• No Derivative Works: Creating unauthorized derivative works or adaptations for commercial purposes
+
+User-Generated Content Policy: When you submit code, projects, comments, or participate in discussions, you retain ownership of your original work but grant CodeTapasya a perpetual, royalty-free license to display, modify, and use your submissions for educational purposes, platform improvement, and promotional activities.`,
     },
     {
-      title: '5. Prohibited Uses',
-      content: `You agree NOT to:
+      title: '5. Subscription Plans and Payment Terms',
+      content: `Service Tiers:
 
-• Use the Service for any illegal purpose
-• Violate any laws or regulations
-• Infringe on intellectual property rights
-• Upload malicious code or viruses
-• Attempt to gain unauthorized access to our systems
-• Scrape, data mine, or reverse engineer the Service
-• Impersonate others or provide false information
-• Spam, harass, or abuse other users
-• Resell or redistribute our Service without permission`,
+• Free Tier (Permanent): Access to blogs, sample projects, community forums, and basic playground features
+• Monthly Premium: ₹99/month - Full access to all courses, advanced playground features, priority support, and progress analytics
+• Annual Premium: ₹799/year - All monthly benefits plus early access to new courses, exclusive workshops, and enhanced community features
+• Enterprise Solutions: Custom pricing for institutions, schools, and corporate training programs
+
+Payment Processing and Billing:
+
+• Secure Processing: All payments processed through Razorpay with bank-grade security
+• Auto-Renewal: Subscriptions automatically renew unless cancelled before the next billing cycle
+• Currency: All prices displayed in Indian Rupees (INR) including applicable GST and taxes
+• Payment Methods: Credit cards, debit cards, UPI, net banking, and digital wallets accepted
+• Failed Payments: Service may be suspended for failed payments; 7-day grace period provided
+• Price Changes: 30-day advance notice for any subscription price modifications
+
+Subscription Management: Users can upgrade, downgrade, or cancel subscriptions through account settings. Changes take effect at the next billing cycle unless otherwise specified.
+
+Refunds: Refunds are not provided for partial use or mid-term cancellations, except as required by law`,
     },
     {
-      title: '6. Intellectual Property',
-      content: `Service Ownership:
-• The Service, including all code, designs, and content, is owned by prativeda
-• Our trademarks, logos, and brand features are protected
-• You may not use our intellectual property without written permission
+      title: '6. Community Guidelines and Learning Environment',
+      content: `CodeTapasya fosters an inclusive, supportive learning community. All users must contribute to maintaining this environment through respectful engagement and constructive participation.
 
-Third-Party Content:
-• Some templates and features may include third-party content
-• Such content is subject to the respective owners' terms`,
+Community Participation Standards:
+
+• Respectful Interaction: Treat all community members with dignity, regardless of skill level or background
+• Constructive Feedback: Provide helpful, specific feedback that encourages learning and improvement
+• Knowledge Sharing: Share insights, resources, and experiences that benefit the entire community
+• Mentorship Culture: Support beginners and contribute to peer learning initiatives
+• Professional Communication: Use appropriate language in all discussions, forums, and comments
+• Cultural Sensitivity: Respect diverse backgrounds, cultures, and learning styles
+
+Discussion Forum Guidelines: Stay on-topic, search before posting duplicate questions, provide context for coding problems, acknowledge helpful responses, and maintain confidentiality of other users' personal information.`,
     },
     {
-      title: '7. Payment and Subscriptions',
-      content: `Billing:
-• Subscription fees are billed in advance on a monthly or annual basis
-• All fees are in US dollars unless otherwise stated
-• We use Stripe for secure payment processing
+      title: '7. Code Submission and Project Guidelines',
+      content: `Original Work Requirements:
 
-Refunds:
-• Free trial periods do not require payment information
-• Refunds may be provided at our discretion
-• No refunds for partial subscription periods
+• Authenticity: All submitted code and projects must be your original work or properly attributed
+• Proper Attribution: Clearly cite external libraries, frameworks, tutorials, or code snippets used
+• License Compliance: Respect open-source licenses and attribution requirements
+• Academic Integrity: Collaboration is encouraged, but final submissions must represent your understanding
 
-Cancellation:
-• You may cancel your subscription at any time
-• Cancellation takes effect at the end of the current billing period
-• Access to premium features ends upon cancellation`,
+Code Quality and Safety Standards:
+
+• No Malicious Code: Submissions must not contain viruses, malware, or harmful scripts
+• Clean Code Practices: Follow industry standards for readability, documentation, and organization
+• Security Awareness: Avoid exposing sensitive information like API keys or personal data
+• Performance Considerations: Ensure code submissions don't consume excessive system resources
+
+GitHub Integration Terms: When connecting your GitHub account, you authorize CodeTapasya to access public repositories for portfolio display and assignment submission. Private repository access requires explicit permission and is used solely for educational purposes.`,
     },
     {
-      title: '8. Disclaimers',
-      content: `THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND.
+      title: '8. Platform Availability and Technical Support',
+      content: `Service Level Commitments:
 
-We do not guarantee:
-• Uninterrupted or error-free service
-• That resumes created will result in job offers
-• Specific ATS pass rates for individual resumes
-• That AI suggestions will be accurate or suitable
+• Uptime Target: 99.5% platform availability with minimal planned downtime
+• Maintenance Windows: Scheduled maintenance announced 48 hours in advance
+• Emergency Maintenance: Immediate action for security vulnerabilities or critical issues
+• Performance Monitoring: Continuous monitoring of platform performance and user experience
 
-You use the Service at your own risk.`,
+Support Services:
+
+• Free Users: Community forums, documentation, and email support (48-72 hour response)
+• Premium Users: Priority email support (24-48 hour response) and live chat during business hours
+• Enterprise Users: Dedicated account management and phone support
+• Technical Issues: Platform bugs, payment problems, and account access issues receive priority attention
+
+Planned Updates and Features: CodeTapasya continuously evolves with new courses, features, and improvements. The upcoming Scode collaborative coding platform will provide real-time collaboration with AI assistance.`,
     },
     {
-      title: '9. Limitation of Liability',
-      content: `TO THE MAXIMUM EXTENT PERMITTED BY LAW:
+      title: '9. Account Termination and Data Retention',
+      content: `User-Initiated Account Closure:
 
-• We are not liable for indirect, incidental, or consequential damages
-• Our total liability is limited to the amount you paid in the last 12 months
-• We are not responsible for lost data, profits, or opportunities
+• Self-Service Deletion: Users can delete accounts through settings with immediate effect
+• Data Export: Download personal data, certificates, and project history before deletion
+• Subscription Cancellation: Active subscriptions must be cancelled separately before account deletion
+• Irreversible Process: Account deletion is permanent and cannot be undone
 
-Some jurisdictions do not allow these limitations, so they may not apply to you.`,
+Platform-Initiated Termination: CodeTapasya reserves the right to suspend or terminate accounts for violations of these Terms, including but not limited to:
+• Severe Policy Violations: Harassment, plagiarism, or malicious activities
+• Fraudulent Activity: Payment fraud, fake accounts, or unauthorized access attempts
+• Repeated Minor Violations: Multiple warnings for community guideline breaches
+• Legal Requirements: Court orders or regulatory compliance requirements
+• Extended Inactivity: Accounts inactive for more than 2 years (with 60-day notice)
+
+Data Retention Policy: Upon account termination, learning certificates remain valid indefinitely. Personal data is deleted within 30 days, except for anonymized usage statistics retained for platform improvement.`,
     },
     {
-      title: '10. Indemnification',
-      content: `You agree to indemnify and hold prativeda harmless from any claims, damages, or expenses arising from:
+      title: '10. Disclaimers and Limitation of Liability',
+      content: `Educational Purpose Disclaimer: CodeTapasya provides educational content for skill development purposes. While our courses are designed to be industry-relevant and comprehensive, we make no guarantees regarding:
+• Employment Outcomes: Job placement, salary increases, or career advancement
+• Certification Value: Recognition by specific employers or educational institutions
+• Technology Currency: Rapid changes in programming languages and frameworks may affect content relevance
+• Individual Results: Learning outcomes vary based on effort, prior knowledge, and application
 
-• Your use of the Service
-• Your violation of these Terms
-• Your violation of any third-party rights
-• Content you upload or create`,
+Technical Disclaimers:
+• Content Accuracy: While we strive for accuracy, programming concepts and best practices evolve rapidly
+• Third-Party Integration: GitHub, payment processors, and other integrated services are governed by their respective terms
+• Browser Compatibility: Platform optimized for modern browsers; legacy browser support not guaranteed
+• Mobile Experience: Full functionality may vary on mobile devices
+
+Liability Limitations: CodeTapasya's total liability for any claims related to these Terms or platform usage is limited to the amount paid for services in the 12 months preceding the claim. We are not liable for:
+• Indirect, incidental, or consequential damages
+• Lost profits, data, or business opportunities
+• Third-party actions or content
+• Force majeure events beyond our reasonable control`,
     },
     {
-      title: '11. Changes to Terms',
-      content: `We may modify these Terms at any time. Changes will be effective immediately upon posting to our website. Your continued use of the Service constitutes acceptance of the modified Terms.
+      title: '11. Privacy and Data Protection',
+      content: `Your privacy is paramount to us. CodeTapasya adheres to strict data protection standards and Indian privacy laws. Our comprehensive Privacy Policy details how we collect, use, store, and protect your personal information.
 
-For material changes, we will provide notice through:
-• Email notification
-• In-app announcement
-• Website banner`,
+Data Processing Consent: By using our platform, you consent to our data practices as outlined in our Privacy Policy, including:
+• Learning Analytics: Progress tracking, course completion analytics, and personalized recommendations
+• Platform Improvement: Anonymized usage data to enhance user experience and course effectiveness
+• Communication: Educational content, platform updates, and subscription-related notifications
+• Security Monitoring: Account protection and fraud prevention measures
+
+International Users: Users outside India acknowledge that their data may be processed in India in accordance with Indian data protection laws and our Privacy Policy.`,
     },
     {
-      title: '12. Governing Law',
-      content: `These Terms are governed by the laws of the State of California, United States, without regard to conflict of law provisions.
+      title: '12. Governing Law and Dispute Resolution',
+      content: `Jurisdiction and Applicable Law: These Terms are governed by the laws of India. Any disputes arising from or relating to these Terms or your use of CodeTapasya shall be subject to the exclusive jurisdiction of courts in Hyderabad, Telangana, India.
 
-Any disputes will be resolved through binding arbitration in San Francisco, California, except that you may assert claims in small claims court.`,
+Dispute Resolution Process:
+• Good Faith Negotiation: Initial attempt to resolve disputes through direct communication
+• Mediation: If negotiation fails, disputes may be referred to mediation
+• Arbitration: Final disputes resolved through arbitration under the Indian Arbitration and Conciliation Act, 2015
+• Language: All proceedings conducted in English
+
+Consumer Rights: Nothing in these Terms limits your rights as a consumer under applicable Indian consumer protection laws.`,
+    },
+    {
+      title: '13. Contact Information and Legal Notices',
+      content: `For all matters related to these Terms, please contact us through the following channels:
+
+Grievance Officer: Pranay Jumbarthi
+Email: support@codetapasya.com
+Address: CodeTapasya, Hyderabad, Telangana, India
+Response Timeline: We aim to respond within 7 working days as per Indian law.
+Response Times: We aim to respond to all inquiries within 48 hours during business days. Legal matters may require additional processing time.`,
     },
   ]
 
