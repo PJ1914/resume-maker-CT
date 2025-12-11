@@ -33,7 +33,7 @@ from app.services.tasks import process_resume_parsing
 from app.config import settings
 import logging
 
-router = APIRouter()
+router = APIRouter(prefix="/resumes")
 
 # File validation - use settings for security
 MAX_FILE_SIZE = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024  # Convert MB to bytes
