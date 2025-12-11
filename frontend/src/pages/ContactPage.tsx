@@ -1,9 +1,46 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Mail, Phone, MapPin, Send } from 'lucide-react'
+import { FileText, Send, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'react-hot-toast'
+import axios from 'axios'
 
 export default function ContactPage() {
   const navigate = useNavigate()
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+      await axios.post(`${API_URL}/contact/`, formData)
+      toast.success('Message sent successfully! We will get back to you soon.')
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      })
+    } catch (error) {
+      console.error('Error sending message:', error)
+      toast.error('Failed to send message. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -24,7 +61,7 @@ export default function ContactPage() {
                 <div className="absolute inset-0 bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
                 <FileText className="h-6 w-6 text-black relative z-10" />
               </div>
-              <span className="text-xl font-bold tracking-tight">prativeda</span>
+              <span className="text-xl font-bold tracking-tight">CodeTapasya</span>
             </motion.div>
 
             <div className="flex items-center gap-4">
@@ -66,36 +103,50 @@ export default function ContactPage() {
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            {/* Contact Form */}
+          {/* Centered Contact Form */}
+          <div className="max-w-3xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-100px' }}
-              className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10"
+              className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 sm:p-12 border border-white/10"
             >
-              <h2 className="text-2xl font-bold mb-6">Send us a Message</h2>
-              <form className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors"
-                    placeholder="Your name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Email</label>
-                  <input
-                    type="email"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors"
-                    placeholder="your.email@example.com"
-                  />
+              <h2 className="text-2xl font-bold mb-8 text-center">Send us a Message</h2>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors"
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors"
+                      placeholder="your.email@example.com"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Subject</label>
                   <input
                     type="text"
+                    name="subject"
+                    required
+                    value={formData.subject}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors"
                     placeholder="What's this about?"
                   />
@@ -104,6 +155,10 @@ export default function ContactPage() {
                   <label className="block text-sm font-semibold mb-2">Message</label>
                   <textarea
                     rows={6}
+                    name="message"
+                    required
+                    value={formData.message}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors resize-none"
                     placeholder="Tell us more..."
                   />
@@ -112,89 +167,19 @@ export default function ContactPage() {
                   whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(255,255,255,0.3)' }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full py-4 bg-white text-black rounded-lg font-semibold flex items-center justify-center gap-2 group"
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-white text-black rounded-lg font-semibold flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <span>Send Message</span>
-                  <Send className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  {isSubmitting ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <span>Send Message</span>
+                      <Send className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </motion.button>
               </form>
-            </motion.div>
-
-            {/* Contact Info */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              className="space-y-8"
-            >
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
-                <p className="text-white/60 mb-8">
-                  Feel free to reach out through any of these channels. Our team is here to help!
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className="flex items-start gap-4 p-6 bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 hover:border-white/20 transition-all"
-                >
-                  <div className="p-3 bg-white rounded-lg">
-                    <Mail className="h-6 w-6 text-black" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
-                    <p className="text-white/60 text-sm">support@prativeda.com</p>
-                    <p className="text-white/60 text-sm">sales@prativeda.com</p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className="flex items-start gap-4 p-6 bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 hover:border-white/20 transition-all"
-                >
-                  <div className="p-3 bg-white rounded-lg">
-                    <Phone className="h-6 w-6 text-black" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Phone</h3>
-                    <p className="text-white/60 text-sm">+1 (555) 123-4567</p>
-                    <p className="text-white/60 text-sm">Mon-Fri, 9am-6pm EST</p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className="flex items-start gap-4 p-6 bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 hover:border-white/20 transition-all"
-                >
-                  <div className="p-3 bg-white rounded-lg">
-                    <MapPin className="h-6 w-6 text-black" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Office</h3>
-                    <p className="text-white/60 text-sm">123 Innovation Drive</p>
-                    <p className="text-white/60 text-sm">San Francisco, CA 94105</p>
-                  </div>
-                </motion.div>
-              </div>
-
-              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 mt-8">
-                <h3 className="text-xl font-bold mb-4">Business Hours</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Monday - Friday</span>
-                    <span className="font-semibold">9:00 AM - 6:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Saturday</span>
-                    <span className="font-semibold">10:00 AM - 4:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Sunday</span>
-                    <span className="font-semibold">Closed</span>
-                  </div>
-                </div>
-              </div>
             </motion.div>
           </div>
         </div>
@@ -208,9 +193,9 @@ export default function ContactPage() {
               <div className="h-8 w-8 bg-white rounded-md flex items-center justify-center">
                 <FileText className="h-5 w-5 text-black" />
               </div>
-              <span className="font-semibold">prativeda</span>
+              <span className="font-semibold">CodeTapasya</span>
             </div>
-            <div className="text-white/50 text-sm">© 2025 prativeda. All rights reserved.</div>
+            <div className="text-white/50 text-sm">© 2025 CodeTapasya. All rights reserved.</div>
           </div>
         </div>
       </footer>
