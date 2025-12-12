@@ -26,16 +26,16 @@ export default function TemplateSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-[#111111] rounded-2xl p-6 border border-white/10"
+            className="bg-white dark:bg-[#111111] rounded-2xl p-6 border border-secondary-200 dark:border-white/10 shadow-sm dark:shadow-none transition-colors"
         >
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white flex items-center gap-2">
                     <Layout className="h-5 w-5 text-purple-400" />
                     Template Library
                 </h2>
                 <button
                     onClick={() => navigate('/templates')}
-                    className="text-xs sm:text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-xs sm:text-sm text-secondary-500 dark:text-gray-400 hover:text-secondary-900 dark:hover:text-white transition-colors"
                 >
                     Browse Store
                 </button>
@@ -44,15 +44,15 @@ export default function TemplateSection() {
             {isLoading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="aspect-[3/4] bg-white/5 rounded-xl animate-pulse" />
+                        <div key={i} className="aspect-[3/4] bg-secondary-100 dark:bg-white/5 rounded-xl animate-pulse" />
                     ))}
                 </div>
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {displayTemplates.map((template: any) => (
-                        <div key={template.id} className="group relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a0a] hover:border-purple-500/30 transition-all">
+                        <div key={template.id} className="group relative rounded-xl overflow-hidden border border-secondary-200 dark:border-white/10 bg-secondary-50 dark:bg-[#0a0a0a] hover:border-purple-400 dark:hover:border-purple-500/30 transition-all">
                             {/* Thumbnail Placeholder */}
-                            <div className="aspect-[3/4] bg-[#1a1a1a] flex items-center justify-center relative">
+                            <div className="aspect-[3/4] bg-secondary-200 dark:bg-[#1a1a1a] flex items-center justify-center relative">
                                 <span className="text-gray-500 text-xs">{template.name} Preview</span>
 
                                 {/* Overlay */}
@@ -70,13 +70,13 @@ export default function TemplateSection() {
 
                             <div className="p-3">
                                 <div className="flex items-center justify-between mb-1">
-                                    <h3 className="font-medium text-white text-sm truncate">{template.name}</h3>
+                                    <h3 className="font-medium text-secondary-900 dark:text-white text-sm truncate">{template.name}</h3>
                                     {template.status === 'locked' && (
-                                        <Lock className="h-3 w-3 text-gray-400" />
+                                        <Lock className="h-3 w-3 text-secondary-400 dark:text-gray-400" />
                                     )}
                                 </div>
                                 <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-400">{template.type || 'Resume'}</span>
+                                    <span className="text-secondary-500 dark:text-gray-400">{template.type || 'Resume'}</span>
                                     {template.status === 'locked' ? (
                                         <span className="text-yellow-400 font-medium">{template.price || 'Premium'}</span>
                                     ) : (

@@ -50,64 +50,64 @@ export default function SettingsSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="bg-[#111111] rounded-2xl p-6 border border-white/10"
+                className="bg-white dark:bg-[#111111] rounded-2xl p-6 border border-secondary-200 dark:border-white/10 shadow-sm dark:shadow-none transition-colors"
             >
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                        <Settings className="h-5 w-5 text-gray-400" />
+                    <h2 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white flex items-center gap-2">
+                        <Settings className="h-5 w-5 text-secondary-400 dark:text-gray-400" />
                         Settings
                     </h2>
                 </div>
 
-                <div className="space-y-1 divide-y divide-white/10">
-                    <button className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors group">
+                <div className="space-y-1 divide-y divide-secondary-100 dark:divide-white/10">
+                    <button className="w-full flex items-center justify-between p-3 hover:bg-secondary-50 dark:hover:bg-white/5 rounded-lg transition-colors group">
                         <div className="flex items-center gap-3">
-                            <Shield className="h-5 w-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                            <Shield className="h-5 w-5 text-secondary-400 dark:text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
                             <div className="text-left">
-                                <div className="text-sm sm:text-base font-medium text-white">Account Security</div>
-                                <div className="text-[10px] sm:text-xs text-gray-400">Password, 2FA, Connected Accounts</div>
+                                <div className="text-sm sm:text-base font-medium text-secondary-900 dark:text-white">Account Security</div>
+                                <div className="text-[10px] sm:text-xs text-secondary-500 dark:text-gray-400">Password, 2FA, Connected Accounts</div>
                             </div>
                         </div>
                     </button>
 
-                    <button className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors group">
+                    <button className="w-full flex items-center justify-between p-3 hover:bg-secondary-50 dark:hover:bg-white/5 rounded-lg transition-colors group">
                         <div className="flex items-center gap-3">
-                            <Bell className="h-5 w-5 text-gray-400 group-hover:text-yellow-400 transition-colors" />
+                            <Bell className="h-5 w-5 text-secondary-400 dark:text-gray-400 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors" />
                             <div className="text-left">
-                                <div className="text-sm sm:text-base font-medium text-white">Notifications</div>
-                                <div className="text-[10px] sm:text-xs text-gray-400">Email alerts, App updates</div>
+                                <div className="text-sm sm:text-base font-medium text-secondary-900 dark:text-white">Notifications</div>
+                                <div className="text-[10px] sm:text-xs text-secondary-500 dark:text-gray-400">Email alerts, App updates</div>
                             </div>
                         </div>
                     </button>
 
                     <button
                         onClick={toggleTheme}
-                        className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors group"
+                        className="w-full flex items-center justify-between p-3 hover:bg-secondary-50 dark:hover:bg-white/5 rounded-lg transition-colors group"
                     >
                         <div className="flex items-center gap-3">
-                            <Moon className="h-5 w-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
+                            <Moon className="h-5 w-5 text-secondary-400 dark:text-gray-400 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors" />
                             <div className="text-left">
-                                <div className="text-sm sm:text-base font-medium text-white">App Preferences</div>
-                                <div className="text-[10px] sm:text-xs text-gray-400">Toggle Dark/Light Mode</div>
+                                <div className="text-sm sm:text-base font-medium text-secondary-900 dark:text-white">App Preferences</div>
+                                <div className="text-[10px] sm:text-xs text-secondary-500 dark:text-gray-400">Toggle Dark/Light Mode</div>
                             </div>
                         </div>
                     </button>
 
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors group"
+                        className="w-full flex items-center justify-between p-3 hover:bg-secondary-50 dark:hover:bg-white/5 rounded-lg transition-colors group"
                     >
                         <div className="flex items-center gap-3">
-                            <LogOut className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+                            <LogOut className="h-5 w-5 text-secondary-400 dark:text-gray-400 group-hover:text-secondary-900 dark:group-hover:text-white transition-colors" />
                             <div className="text-left">
-                                <div className="text-sm sm:text-base font-medium text-white group-hover:text-white">Sign Out</div>
+                                <div className="text-sm sm:text-base font-medium text-secondary-900 dark:text-white group-hover:text-secondary-900 dark:group-hover:text-white">Sign Out</div>
                             </div>
                         </div>
                     </button>
                 </div>
 
                 {/* Danger Zone */}
-                <div className="mt-8 pt-6 border-t border-white/10">
+                <div className="mt-8 pt-6 border-t border-secondary-100 dark:border-white/10">
                     <h3 className="text-xs font-semibold text-red-400 uppercase tracking-wider mb-3">Danger Zone</h3>
                     <button
                         onClick={() => setIsDeleteModalOpen(true)}

@@ -18,10 +18,10 @@ export default function ResumeSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-[#111111] rounded-2xl p-6 border border-white/10"
+            className="bg-white dark:bg-[#111111] rounded-2xl p-6 border border-secondary-200 dark:border-white/10 shadow-sm dark:shadow-none transition-colors"
         >
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white flex items-center gap-2">
                     <FileText className="h-5 w-5 text-purple-400" />
                     Your Resumes
                 </h2>
@@ -35,7 +35,7 @@ export default function ResumeSection() {
                     </button>
                     <button
                         onClick={() => navigate('/resumes')}
-                        className="text-xs sm:text-sm text-gray-400 hover:text-white px-2 py-1.5 transition-colors"
+                        className="text-xs sm:text-sm text-secondary-500 dark:text-gray-400 hover:text-secondary-900 dark:hover:text-white px-2 py-1.5 transition-colors"
                     >
                         View All
                     </button>
@@ -45,7 +45,7 @@ export default function ResumeSection() {
             {isLoading ? (
                 <div className="space-y-4">
                     {[1, 2].map((i) => (
-                        <div key={i} className="h-20 bg-white/5 rounded-xl animate-pulse" />
+                        <div key={i} className="h-20 bg-secondary-100 dark:bg-white/5 rounded-xl animate-pulse" />
                     ))}
                 </div>
             ) : recentResumes.length > 0 ? (
@@ -53,17 +53,17 @@ export default function ResumeSection() {
                     {recentResumes.map((resume: any, index: number) => (
                         <div
                             key={resume.id || `resume-${index}`}
-                            className="group flex items-center justify-between p-4 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-purple-500/30 transition-all"
+                            className="group flex items-center justify-between p-4 rounded-xl bg-secondary-50 dark:bg-[#0a0a0a] border border-secondary-200 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/30 transition-all"
                         >
                             <div className="flex items-center gap-4">
                                 <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
                                     <FileText className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-white text-sm sm:text-base truncate max-w-[150px] sm:max-w-xs">
+                                    <h3 className="font-semibold text-secondary-900 dark:text-white text-sm sm:text-base truncate max-w-[150px] sm:max-w-xs">
                                         {resume.title || 'Untitled Resume'}
                                     </h3>
-                                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                                    <div className="flex items-center gap-3 text-xs text-secondary-500 dark:text-gray-400">
                                         <span>Edited {resume.updated_at ? format(new Date(resume.updated_at), 'MMM d, yyyy') : 'Unknown'}</span>
                                         {resume.latest_score > 0 && (
                                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${resume.latest_score >= 70 ? 'bg-green-500/10 text-green-400' :
@@ -80,7 +80,7 @@ export default function ResumeSection() {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => navigate(`/editor/${resume.id}`)}
-                                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                    className="p-2 text-secondary-400 dark:text-gray-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-200 dark:hover:bg-white/10 rounded-lg transition-colors"
                                     title="Edit"
                                 >
                                     <Edit className="h-4 w-4" />
@@ -88,7 +88,7 @@ export default function ResumeSection() {
 
                                 {/* Dropdown Menu */}
                                 <Menu as="div" className="relative">
-                                    <Menu.Button className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                                    <Menu.Button className="p-2 text-secondary-400 dark:text-gray-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-200 dark:hover:bg-white/10 rounded-lg transition-colors">
                                         <MoreVertical className="h-4 w-4" />
                                     </Menu.Button>
                                     <Transition
@@ -100,13 +100,13 @@ export default function ResumeSection() {
                                         leaveFrom="transform opacity-100 scale-100"
                                         leaveTo="transform opacity-0 scale-95"
                                     >
-                                        <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right divide-y divide-white/10 rounded-md bg-[#111111] shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none z-10 border border-white/10">
+                                        <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right divide-y divide-secondary-100 dark:divide-white/10 rounded-md bg-white dark:bg-[#111111] shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none z-10 border border-secondary-200 dark:border-white/10">
                                             <div className="px-1 py-1">
                                                 <Menu.Item>
                                                     {({ active }) => (
                                                         <button
                                                             onClick={() => navigate(`/resumes/${resume.id}`)}
-                                                            className={`${active ? 'bg-white/10 text-white' : 'text-gray-300'
+                                                            className={`${active ? 'bg-secondary-100 dark:bg-white/10 text-secondary-900 dark:text-white' : 'text-secondary-700 dark:text-gray-300'
                                                                 } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                                                         >
                                                             <Download className="mr-2 h-4 w-4" />
@@ -117,7 +117,7 @@ export default function ResumeSection() {
                                                 <Menu.Item>
                                                     {({ active }) => (
                                                         <button
-                                                            className={`${active ? 'bg-white/10 text-white' : 'text-gray-300'
+                                                            className={`${active ? 'bg-secondary-100 dark:bg-white/10 text-secondary-900 dark:text-white' : 'text-secondary-700 dark:text-gray-300'
                                                                 } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                                                         >
                                                             <Copy className="mr-2 h-4 w-4" />
@@ -147,7 +147,7 @@ export default function ResumeSection() {
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-secondary-400 dark:text-gray-400">
                     <p>No resumes created yet.</p>
                     <button
                         onClick={() => navigate('/resume/create')}

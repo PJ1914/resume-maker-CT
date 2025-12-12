@@ -9,7 +9,7 @@ interface PublicLayoutProps {
 
 export default function PublicLayout({ children }: PublicLayoutProps) {
     return (
-        <div className="min-h-screen bg-black text-white relative">
+        <div className="min-h-screen bg-secondary-50 dark:bg-black text-secondary-900 dark:text-white relative">
             <StarryBackground />
             <PublicNavbar />
             <main className="relative z-10">

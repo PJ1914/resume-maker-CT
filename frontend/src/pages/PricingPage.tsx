@@ -71,125 +71,125 @@ export default function PricingPage() {
         url="https://prativeda.codetapasya.com/pricing"
       />
       <PublicLayout>
-      {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
-        <div className="container mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12 sm:mb-20"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/20 bg-white/5 backdrop-blur-xl mb-4 sm:mb-6">
-              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-semibold">Simple, Transparent Pricing</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 tracking-tight">
-              Choose Your Credit Pack
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-white/60 max-w-3xl mx-auto font-light">
-              Purchase credits as you go. No monthly subscriptions, just pure value.
-            </p>
-          </motion.div>
+        {/* Hero Section */}
+        <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
+          <div className="container mx-auto max-w-7xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-12 sm:mb-20"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-secondary-200 dark:border-white/20 bg-secondary-100 dark:bg-white/5 backdrop-blur-xl mb-4 sm:mb-6">
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm font-semibold">Simple, Transparent Pricing</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 tracking-tight text-secondary-900 dark:text-white">
+                Choose Your Credit Pack
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-secondary-600 dark:text-white/60 max-w-3xl mx-auto font-light">
+                Purchase credits as you go. No monthly subscriptions, just pure value.
+              </p>
+            </motion.div>
 
-          {/* Pricing Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {plans.map((plan, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-100px' }}
-                transition={{ delay: index * 0.1 }}
-                className={`relative rounded-2xl p-6 border transition-all duration-300 flex flex-col ${plan.highlighted
-                  ? 'bg-white/10 border-white/30 sm:scale-105 z-10 shadow-[0_0_50px_rgba(255,255,255,0.2)]'
-                  : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
-                  }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-white text-black text-xs font-bold rounded-full whitespace-nowrap">
-                    MOST POPULAR
-                  </div>
-                )}
-
-                <div className="mb-6">
-                  <div className="p-3 bg-white rounded-lg mb-4 w-fit">
-                    <plan.icon className="h-6 w-6 text-black" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
-                  <p className="text-white/60 text-sm mb-4">{plan.description}</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl sm:text-4xl font-bold">
-                      ₹{plan.price}
-                    </span>
-                  </div>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/login')}
-                  className={`w-full py-3 rounded-lg font-semibold mb-8 transition-all ${plan.highlighted
-                    ? 'bg-white text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]'
-                    : 'border border-white/20 hover:bg-white/5'
+            {/* Pricing Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+              {plans.map((plan, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`relative rounded-2xl p-6 border transition-all duration-300 flex flex-col ${plan.highlighted
+                    ? 'bg-secondary-50 dark:bg-white/10 border-secondary-300 dark:border-white/30 sm:scale-105 z-10 shadow-xl dark:shadow-[0_0_50px_rgba(255,255,255,0.2)]'
+                    : 'bg-white dark:bg-white/5 border-secondary-200 dark:border-white/10 hover:border-secondary-300 dark:hover:border-white/20 hover:bg-secondary-50 dark:hover:bg-white/10 shadow-lg dark:shadow-none'
                     }`}
                 >
-                  Buy Now
-                </motion.button>
-
-                <div className="space-y-3 mt-auto">
-                  {plan.features.map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <Check className="h-5 w-5 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
+                  {plan.highlighted && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-secondary-900 dark:bg-white text-white dark:text-black text-xs font-bold rounded-full whitespace-nowrap">
+                      MOST POPULAR
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  )}
 
-          {/* FAQ Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            className="mt-16 sm:mt-24 max-w-3xl mx-auto"
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12 text-center">
-              Frequently Asked Questions
-            </h2>
-            <div className="space-y-4 sm:space-y-6">
-              {[
-                {
-                  q: 'Do my credits expire?',
-                  a: 'No, your credits never expire. They remain in your account until you choose to use them.',
-                },
-                {
-                  q: 'What counts as one credit?',
-                  a: 'One credit typically covers one major AI operation, such as generating a resume section or optimizing content.',
-                },
-                {
-                  q: 'What payment methods do you accept?',
-                  a: 'We accept all major credit cards, UPI, and net banking options.',
-                },
-                {
-                  q: 'Can I buy multiple packs?',
-                  a: 'Yes, you can purchase as many packs as you need. Credits heavily stack in your account.',
-                },
-              ].map((faq, i) => (
-                <div
-                  key={i}
-                  className="bg-white/5 backdrop-blur-xl rounded-xl p-5 sm:p-6 border border-white/10"
-                >
-                  <h3 className="font-bold mb-2 text-base sm:text-lg">{faq.q}</h3>
-                  <p className="text-white/60 text-sm">{faq.a}</p>
-                </div>
+                  <div className="mb-6">
+                    <div className="p-3 bg-secondary-900 dark:bg-white rounded-lg mb-4 w-fit">
+                      <plan.icon className="h-6 w-6 text-white dark:text-black" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 text-secondary-900 dark:text-white">{plan.name}</h3>
+                    <p className="text-secondary-600 dark:text-white/60 text-sm mb-4">{plan.description}</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl sm:text-4xl font-bold text-secondary-900 dark:text-white">
+                        ₹{plan.price}
+                      </span>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate('/login')}
+                    className={`w-full py-3 rounded-lg font-semibold mb-8 transition-all ${plan.highlighted
+                      ? 'bg-secondary-900 dark:bg-white text-white dark:text-black hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]'
+                      : 'border border-secondary-200 dark:border-white/20 hover:bg-secondary-100 dark:hover:bg-white/5 text-secondary-900 dark:text-white'
+                      }`}
+                  >
+                    Buy Now
+                  </motion.button>
+
+                  <div className="space-y-3 mt-auto">
+                    {plan.features.map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Check className="h-5 w-5 flex-shrink-0 text-secondary-900 dark:text-white" />
+                        <span className="text-sm text-secondary-700 dark:text-white/80">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
               ))}
             </div>
-          </motion.div>
-        </div>
-      </section>
-    </PublicLayout>
+
+            {/* FAQ Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              className="mt-16 sm:mt-24 max-w-3xl mx-auto"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12 text-center text-secondary-900 dark:text-white">
+                Frequently Asked Questions
+              </h2>
+              <div className="space-y-4 sm:space-y-6">
+                {[
+                  {
+                    q: 'Do my credits expire?',
+                    a: 'No, your credits never expire. They remain in your account until you choose to use them.',
+                  },
+                  {
+                    q: 'What counts as one credit?',
+                    a: 'One credit typically covers one major AI operation, such as generating a resume section or optimizing content.',
+                  },
+                  {
+                    q: 'What payment methods do you accept?',
+                    a: 'We accept all major credit cards, UPI, and net banking options.',
+                  },
+                  {
+                    q: 'Can I buy multiple packs?',
+                    a: 'Yes, you can purchase as many packs as you need. Credits heavily stack in your account.',
+                  },
+                ].map((faq, i) => (
+                  <div
+                    key={i}
+                    className="bg-white dark:bg-white/5 backdrop-blur-xl rounded-xl p-5 sm:p-6 border border-secondary-200 dark:border-white/10 shadow-sm dark:shadow-none"
+                  >
+                    <h3 className="font-bold mb-2 text-base sm:text-lg text-secondary-900 dark:text-white">{faq.q}</h3>
+                    <p className="text-secondary-600 dark:text-white/60 text-sm">{faq.a}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      </PublicLayout>
     </>
   )
 }

@@ -53,10 +53,10 @@ export default function ContactPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12 sm:mb-20"
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight text-secondary-900 dark:text-white">
               Get in Touch
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-white/60 max-w-3xl mx-auto font-light">
+            <p className="text-base sm:text-lg md:text-xl text-secondary-600 dark:text-white/60 max-w-3xl mx-auto font-light">
               Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
             </p>
           </motion.div>
@@ -67,57 +67,57 @@ export default function ContactPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-100px' }}
-              className="bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-6 sm:p-12 border border-white/10"
+              className="bg-white dark:bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-6 sm:p-12 border border-secondary-200 dark:border-white/10 shadow-lg dark:shadow-none"
             >
-              <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center">Send us a Message</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-secondary-900 dark:text-white">Send us a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="block text-sm font-semibold mb-2">Name</label>
+                    <label className="block text-sm font-semibold mb-2 text-secondary-900 dark:text-gray-300">Name</label>
                     <input
                       type="text"
                       name="name"
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors text-sm sm:text-base"
+                      className="w-full px-4 py-3 bg-secondary-50 dark:bg-white/10 border border-secondary-300 dark:border-white/20 rounded-lg focus:outline-none focus:border-secondary-500 dark:focus:border-white/40 transition-colors text-sm sm:text-base text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-white/40"
                       placeholder="Your name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2">Email</label>
+                    <label className="block text-sm font-semibold mb-2 text-secondary-900 dark:text-gray-300">Email</label>
                     <input
                       type="email"
                       name="email"
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors text-sm sm:text-base"
+                      className="w-full px-4 py-3 bg-secondary-50 dark:bg-white/10 border border-secondary-300 dark:border-white/20 rounded-lg focus:outline-none focus:border-secondary-500 dark:focus:border-white/40 transition-colors text-sm sm:text-base text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-white/40"
                       placeholder="your.email@example.com"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Subject</label>
+                  <label className="block text-sm font-semibold mb-2 text-secondary-900 dark:text-gray-300">Subject</label>
                   <input
                     type="text"
                     name="subject"
                     required
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors text-sm sm:text-base"
+                    className="w-full px-4 py-3 bg-secondary-50 dark:bg-white/10 border border-secondary-300 dark:border-white/20 rounded-lg focus:outline-none focus:border-secondary-500 dark:focus:border-white/40 transition-colors text-sm sm:text-base text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-white/40"
                     placeholder="What's this about?"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Message</label>
+                  <label className="block text-sm font-semibold mb-2 text-secondary-900 dark:text-gray-300">Message</label>
                   <textarea
                     rows={6}
                     name="message"
                     required
                     value={formData.message}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-white/40 transition-colors resize-none text-sm sm:text-base"
+                    className="w-full px-4 py-3 bg-secondary-50 dark:bg-white/10 border border-secondary-300 dark:border-white/20 rounded-lg focus:outline-none focus:border-secondary-500 dark:focus:border-white/40 transition-colors resize-none text-sm sm:text-base text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-white/40"
                     placeholder="Tell us more..."
                   />
                 </div>
@@ -126,7 +126,7 @@ export default function ContactPage() {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 sm:py-4 bg-white text-black rounded-lg font-semibold flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed text-sm sm:text-base"
+                  className="w-full py-3 sm:py-4 bg-secondary-900 dark:bg-white text-white dark:text-black rounded-lg font-semibold flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-5 w-5 animate-spin" />

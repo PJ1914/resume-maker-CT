@@ -157,76 +157,76 @@ Response Timeline: We aim to respond within 7 working days as per Indian law.`,
         url="https://prativeda.codetapasya.com/privacy-policy"
       />
       <PublicLayout>
-      {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
-        <div className="container mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12 sm:mb-16"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 tracking-tight">
-              Privacy Policy
-            </h1>
-            <p className="text-base sm:text-lg text-white/60 max-w-3xl mx-auto font-light">
-              Last Updated: December 10, 2025
-            </p>
-          </motion.div>
+        {/* Hero Section */}
+        <section className="relative pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-20 px-4 sm:px-6">
+          <div className="container mx-auto max-w-7xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-12 sm:mb-16"
+            >
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 tracking-tight text-secondary-900 dark:text-white">
+                Privacy Policy
+              </h1>
+              <p className="text-base sm:text-lg text-secondary-600 dark:text-white/60 max-w-3xl mx-auto font-light">
+                Last Updated: December 10, 2025
+              </p>
+            </motion.div>
 
-          {/* Principles */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-16 sm:mb-20"
-          >
-            {principles.map((principle, index) => (
-              <div
-                key={index}
-                className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10 text-center"
-              >
-                <div className="p-3 bg-white rounded-lg mb-4 w-fit mx-auto">
-                  <principle.icon className="h-6 w-6 text-black" />
+            {/* Principles */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-16 sm:mb-20"
+            >
+              {principles.map((principle, index) => (
+                <div
+                  key={index}
+                  className="bg-white dark:bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-secondary-200 dark:border-white/10 text-center shadow-sm dark:shadow-none"
+                >
+                  <div className="p-3 bg-secondary-900 dark:bg-white rounded-lg mb-4 w-fit mx-auto">
+                    <principle.icon className="h-6 w-6 text-white dark:text-black" />
+                  </div>
+                  <h3 className="font-bold mb-2 text-lg sm:text-xl text-secondary-900 dark:text-white">{principle.title}</h3>
+                  <p className="text-secondary-600 dark:text-white/60 text-sm">{principle.description}</p>
                 </div>
-                <h3 className="font-bold mb-2 text-lg sm:text-xl">{principle.title}</h3>
-                <p className="text-white/60 text-sm">{principle.description}</p>
-              </div>
-            ))}
-          </motion.div>
+              ))}
+            </motion.div>
 
-          {/* Policy Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            className="max-w-4xl mx-auto"
-          >
-            <div className="bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-6 sm:p-12 border border-white/10">
-              <div className="space-y-8 sm:space-y-12">
-                {sections.map((section, index) => (
-                  <div key={index}>
-                    <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">{section.title}</h2>
-                    <p className="text-white/70 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                      {section.content}
+            {/* Policy Content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              className="max-w-4xl mx-auto"
+            >
+              <div className="bg-white dark:bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-6 sm:p-12 border border-secondary-200 dark:border-white/10 shadow-lg dark:shadow-none">
+                <div className="space-y-8 sm:space-y-12">
+                  {sections.map((section, index) => (
+                    <div key={index}>
+                      <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-secondary-900 dark:text-white">{section.title}</h2>
+                      <p className="text-secondary-700 dark:text-white/70 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                        {section.content}
+                      </p>
+                    </div>
+                  ))}
+
+                  <div className="pt-8 border-t border-secondary-200 dark:border-white/10">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-secondary-900 dark:text-white">Contact Us</h2>
+                    <p className="text-secondary-700 dark:text-white/70 leading-relaxed text-sm sm:text-base">
+                      If you have any questions about this Privacy Policy, please contact us at:
                     </p>
-                  </div>
-                ))}
-
-                <div className="pt-8 border-t border-white/10">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4">Contact Us</h2>
-                  <p className="text-white/70 leading-relaxed text-sm sm:text-base">
-                    If you have any questions about this Privacy Policy, please contact us at:
-                  </p>
-                  <div className="mt-4 space-y-2 text-white/70 text-sm sm:text-base">
-                    <p>Email: privacy-prativeda@codetapasya.com</p>
+                    <div className="mt-4 space-y-2 text-secondary-700 dark:text-white/70 text-sm sm:text-base">
+                      <p>Email: privacy-prativeda@codetapasya.com</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-    </PublicLayout>
+            </motion.div>
+          </div>
+        </section>
+      </PublicLayout>
     </>
   )
 }

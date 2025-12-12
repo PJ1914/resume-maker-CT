@@ -118,3 +118,64 @@
     text-wrap: balance;
   }
 }
+
+/* Custom Scrollbar - Light Mode */
+@media (prefers-color-scheme: light) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f5f5f5;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 4px;
+    border: 2px solid #f5f5f5;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b0b0b0;
+  }
+}
+
+/* Custom Scrollbar - Dark Mode */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(222, 94%, 8%);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #7000FF;
+    border-radius: 4px;
+    border: 2px solid hsl(222, 94%, 8%);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a259ff;
+    box-shadow: 0 0 8px rgba(112, 0, 255, 0.5);
+  }
+}
+
+/* Firefox Scrollbar - Light Mode */
+@media (prefers-color-scheme: light) {
+  * {
+    scrollbar-color: #d0d0d0 #f5f5f5;
+    scrollbar-width: thin;
+  }
+}
+
+/* Firefox Scrollbar - Dark Mode */
+@media (prefers-color-scheme: dark) {
+  * {
+    scrollbar-color: #7000FF hsl(222, 94%, 8%);
+    scrollbar-width: thin;
+  }
+}
