@@ -47,7 +47,8 @@ export async function getResume(userId: string, resumeId: string): Promise<Resum
 }
 
 /**
- * Save entire resume data
+ * Save entire resume data via backend API
+ * This ensures data is saved to the correct Firestore database
  */
 export async function saveResume(
   userId: string,
@@ -55,18 +56,25 @@ export async function saveResume(
   data: ResumeData
 ): Promise<void> {
   try {
-    const resumeRef = doc(db, 'users', userId, 'resume_data', resumeId);
+    const user = auth.currentUser;
+    if (!user) throw new Error('Not authenticated');
 
-    await setDoc(
-      resumeRef,
-      {
-        ...data,
-        id: resumeId,
-        userId,
-        updatedAt: serverTimestamp(),
+    const token = await user.getIdToken();
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+    const response = await fetch(`${API_URL}/api/resumes/${resumeId}/data`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
-      { merge: true }
-    );
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Save failed' }));
+      throw new Error(errorData.detail || `Save failed with status ${response.status}`);
+    }
   } catch (error) {
     console.error('Error saving resume:', error);
     throw error;
