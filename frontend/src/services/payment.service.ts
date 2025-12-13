@@ -23,12 +23,14 @@ export interface VerifyPaymentRequest {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
+  quantity: number;
 }
 
 export interface VerifyPaymentResponse {
   success: boolean;
   message: string;
-  credits_added?: number;
+  credits_added: number;
+  new_balance: number;
   user_id?: string;
 }
 
@@ -60,7 +62,8 @@ class PaymentService {
   async verifyPayment(
     orderId: string,
     paymentId: string,
-    signature: string
+    signature: string,
+    quantity: number
   ): Promise<VerifyPaymentResponse> {
     const response = await axios.post<VerifyPaymentResponse>(
       `${API_URL}/api/payments/verify`,
@@ -68,6 +71,7 @@ class PaymentService {
         razorpay_order_id: orderId,
         razorpay_payment_id: paymentId,
         razorpay_signature: signature,
+        quantity: quantity,
       },
       { headers: this.getAuthHeaders() }
     );

@@ -1,0 +1,155 @@
+{
+  "id": "corporate-executive",
+  "name": "Professional Elite",
+  "description": "Sophisticated dark-themed portfolio with sidebar navigation and elegant serif typography. Universal design suitable for all professional fields - business, technology, healthcare, education, creative, and more.",
+  "tier": "standard",
+  "version": "2.0.0",
+  "tech_stack": {
+    "framework": "html",
+    "styling": "tailwind-css",
+    "animations": "aos + javascript",
+    "responsive": true,
+    "dark_mode": true,
+    "javascript": true
+  },
+  "features": [
+    "Universal professional theme",
+    "Fixed sidebar navigation with mobile collapse",
+    "Professional profile section",
+    "Elegant serif typography (Playfair Display + Lato)",
+    "Smooth scroll animations (AOS)",
+    "Dark/Light mode toggle",
+    "Professional color scheme (Navy + Gold)",
+    "Timeline experience layout",
+    "Project showcase with visual cards",
+    "Skill level indicators with progress bars",
+    "Certifications display with icons",
+    "Publications & research section",
+    "Testimonials/recommendations section",
+    "Awards & honors grid",
+    "Volunteering & community involvement",
+    "Languages & interests display",
+    "Contact methods display",
+    "Fully responsive design",
+    "Print-optimized",
+    "Active navigation highlighting"
+  ],
+  "sections": [
+    "sidebar_navigation",
+    "profile",
+    "professional_summary",
+    "professional_experience",
+    "projects_achievements",
+    "skills_expertise",
+    "certifications",
+    "publications",
+    "education_credentials",
+    "volunteering",
+    "awards",
+    "testimonials",
+    "languages",
+    "interests",
+    "contact",
+    "footer"
+  ],
+  "colors": {
+    "primary": "#b7791f",
+    "secondary": "#d69e2e",
+    "background_dark": "#0f172a",
+    "background_medium": "#1e293b",
+    "background_light": "#334155",
+    "text_primary": "#ffffff",
+    "text_secondary": "#cbd5e1",
+    "text_muted": "#64748b",
+    "border": "#334155",
+    "accent_gold": "#d69e2e"
+  },
+  "color_themes": {
+    "corporate": {
+      "name": "Corporate Gold (Default)",
+      "primary": "#b7791f",
+      "accent": "#d69e2e"
+    },
+    "tech": {
+      "name": "Tech Blue",
+      "primary": "#3b82f6",
+      "accent": "#60a5fa"
+    },
+    "healthcare": {
+      "name": "Healthcare Teal",
+      "primary": "#14b8a6",
+      "accent": "#2dd4bf"
+    },
+    "creative": {
+      "name": "Creative Purple",
+      "primary": "#a855f7",
+      "accent": "#c084fc"
+    },
+    "education": {
+      "name": "Education Orange",
+      "primary": "#f97316",
+      "accent": "#fb923c"
+    }
+  },
+  "fonts": {
+    "heading": "Playfair Display",
+    "body": "Lato",
+    "fallback": "'Segoe UI', Tahoma, sans-serif"
+  },
+  "layout": {
+    "sidebar_width": "288px",
+    "max_width": "full",
+    "responsive": true,
+    "mobile_breakpoint": "768px",
+    "tablet_breakpoint": "1024px"
+  },
+  "animations": {
+    "scroll_reveal": true,
+    "hover_effects": true,
+    "smooth_scroll": true,
+    "fade_in_sections": true,
+    "stagger_animations": true
+  },
+  "price": {
+    "credits": 450,
+    "inr": 699
+  },
+  "tags": [
+    "professional",
+    "universal",
+    "dark-theme",
+    "sophisticated",
+    "sidebar",
+    "elegant",
+    "responsive",
+    "all-fields",
+    "customizable"
+  ],
+  "target_audience": [
+    "All Professionals",
+    "Business Executives",
+    "Software Developers",
+    "Healthcare Professionals",
+    "Educators & Researchers",
+    "Creative Professionals",
+    "Consultants",
+    "Project Managers",
+    "Entrepreneurs",
+    "Freelancers"
+  ],
+  "industries": [
+    "Technology",
+    "Healthcare",
+    "Finance",
+    "Education",
+    "Creative Arts",
+    "Engineering",
+    "Consulting",
+    "Marketing",
+    "Research",
+    "Non-profit"
+  ],
+  "preview_available": true,
+  "customizable": true,
+  "supports_all_sections": true
+}

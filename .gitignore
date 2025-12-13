@@ -1,3 +1,13 @@
+# ===================================
+# CRITICAL: DO NOT COMMIT THESE FILES
+# ===================================
+# - Firebase service account JSON files
+# - AWS credentials & Lambda functions
+# - Environment variables with API keys
+# - Razorpay/payment gateway secrets
+# - User uploaded files & generated PDFs
+# ===================================
+
 # Dependencies
 node_modules/
 __pycache__/
@@ -32,14 +42,31 @@ wheels/
 .env.test.local
 .env.production.local
 *.env
+.env.*
 
-# Firebase
+# Firebase & Service Accounts (CRITICAL - DO NOT COMMIT)
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
 .firebase/
 firebase-adminsdk-*.json
 service-account-*.json
+*service-account*.json
+secrets/
+backend/secrets/
+frontend/secrets/
+
+# AWS & Lambda
+lambda/
+*.pem
+*.key
+credentials/
+.aws/
+
+# API Keys & Tokens
+*key*.json
+*token*.json
+razorpay*.json
 
 # IDE
 .vscode/
@@ -61,6 +88,15 @@ lerna-debug.log*
 dist/
 dist-ssr/
 *.local
+.vercel
+.netlify
+
+# Frontend sensitive config
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+frontend/src/config/firebase.config.ts.local
+frontend/public/firebase-config.js
 
 # Testing
 coverage/
@@ -78,11 +114,22 @@ backend/fix_*.py
 backend/clear_*.py
 backend/remove_*.py
 backend/add_admin.py
+backend/set_admin_claim.py
 backend/setup_storage.py
 backend/seed_portfolio_templates.py
 backend/upload_portfolio_templates.py
 backend/cleanup_templates.py
 backend/test_*.py
+
+# Lambda deployment packages
+lambda_payments/*.zip
+backend/lambda_payments/*.zip
+*.zip
+
+# Config files with sensitive data
+config.local.json
+settings.local.json
+*_local.json
 
 # LaTeX temporary files
 *.aux
@@ -97,10 +144,33 @@ backend/test_*.py
 
 # Secrets
 secrets/
+backend/secrets/
+frontend/secrets/
 lambda/
 *.pem
 *.key
 credentials/
+*service-account*.json
+*key*.json
+*token*.json
+razorpay*.json
+
+# Database backups & exports
+*.sql
+*.dump
+*.backup
+backup/
+backups/
+
+# User uploaded files
+uploads/
+user_uploads/
+static/uploads/
+
+# Generated PDFs & outputs
+generated/
+output/
+exports/
 
 # Temporary files
 tmp/

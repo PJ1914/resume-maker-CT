@@ -112,7 +112,7 @@ export interface Language {
 }
 
 // Dynamic section type for flexible resume structure
-export type SectionType = 
+export type SectionType =
   | 'contact'
   | 'summary'
   | 'experience'
@@ -192,6 +192,7 @@ export interface ResumeData {
   customSections?: { [key: string]: any[] };
   createdAt?: Date;
   updatedAt?: Date;
+  originalFileUrl?: string; // URL to the originally uploaded file
 }
 
 export const createEmptyResume = (): ResumeData => ({

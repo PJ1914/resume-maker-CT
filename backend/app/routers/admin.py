@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from app.dependencies import admin_only
 from app.schemas.admin import DashboardStats
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/admin",
@@ -251,75 +251,281 @@ async def delete_resume(resume_id: str):
 @router.get("/templates", response_model=List[dict])
 async def list_templates(type: str = None):
     """
-    List all templates (resume/portfolio).
+    List all templates (resume/portfolio) from Firestore.
     """
-    # Mock data
-    templates = [
-        {
-            "id": "modern_classic",
-            "name": "Modern Classic",
-            "description": "A clean, professional design suitable for all industries.",
-            "type": "resume",
-            "thumbnail_url": "https://via.placeholder.com/300x400",
-            "is_premium": False,
-            "price": 0,
-            "active": True,
-            "created_at": "2025-01-01T00:00:00Z",
-            "tags": ["professional", "clean", "ats-friendly"]
-        },
-        {
-            "id": "creative_pro",
-            "name": "Creative Pro",
-            "description": "Stand out with a bold, colorful design.",
-            "type": "resume",
-            "thumbnail_url": "https://via.placeholder.com/300x400",
-            "is_premium": True,
-            "price": 50,
-            "active": True,
-            "created_at": "2025-02-01T00:00:00Z",
-            "tags": ["creative", "design", "colorful"]
-        },
-        {
-            "id": "dev_portfolio_v1",
-            "name": "Dev Portfolio V1",
-            "description": "Minimalist portfolio for developers.",
-            "type": "portfolio",
-            "thumbnail_url": "https://via.placeholder.com/400x300",
-            "is_premium": True,
-            "price": 100,
-            "active": True,
-            "created_at": "2025-03-01T00:00:00Z",
-            "tags": ["developer", "minimal", "dark-mode"]
-        }
-    ]
+    from firebase_admin import firestore
+    from app.firebase import resume_maker_app
     
-    if type:
-        return [t for t in templates if t["type"] == type]
-    return templates
+    try:
+        db = firestore.client(app=resume_maker_app)
+        
+        # Get portfolio templates from Firestore
+        portfolio_templates = []
+        portfolio_collection = db.collection('portfolio_templates').stream()
+        for doc in portfolio_collection:
+            template_data = doc.to_dict()
+            template_data['id'] = doc.id
+            template_data['type'] = 'portfolio'
+            portfolio_templates.append(template_data)
+        
+        # Mock resume templates (can be replaced with real data later)
+        resume_templates = [
+            {
+                "id": "classic",
+                "name": "Classic",
+                "description": "A clean, professional design suitable for all industries.",
+                "type": "resume",
+                "thumbnail_url": "/previews/classic-preview.png",
+                "is_premium": False,
+                "price": 0,
+                "active": True,
+                "tier": "free",
+                "features": ["ATS-friendly", "Clean layout", "Professional"]
+            },
+            {
+                "id": "modern",
+                "name": "Modern",
+                "description": "Contemporary design with subtle accents.",
+                "type": "resume",
+                "thumbnail_url": "/previews/modern-preview.png",
+                "is_premium": False,
+                "price": 0,
+                "active": True,
+                "tier": "free",
+                "features": ["Modern design", "Color accents", "Professional"]
+            },
+            {
+                "id": "minimalist",
+                "name": "Minimalist",
+                "description": "Ultra-clean layout with focus on content.",
+                "type": "resume",
+                "thumbnail_url": "/previews/minimalist-preview.png",
+                "is_premium": False,
+                "price": 0,
+                "active": True,
+                "tier": "free",
+                "features": ["Minimal design", "Content-focused", "Clean"]
+            }
+        ]
+        
+        all_templates = resume_templates + portfolio_templates
+        
+        if type:
+            return [t for t in all_templates if t.get("type") == type]
+        return all_templates
+        
+    except Exception as e:
+        print(f"Error fetching templates: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch templates: {str(e)}")
 
 @router.post("/templates")
 async def create_template(template: dict):
     """
-    Create a new template.
+    Create a new portfolio template in Firestore.
     """
-    # In a real app, save to Firestore
-    return {"status": "success", "message": "Template created", "id": "new_template_123"}
+    from firebase_admin import firestore
+    from app.firebase import resume_maker_app
+    
+    try:
+        if template.get('type') != 'portfolio':
+            raise HTTPException(status_code=400, detail="Only portfolio template creation is supported")
+        
+        db = firestore.client(app=resume_maker_app)
+        template_id = template.get('id')
+        
+        if not template_id:
+            raise HTTPException(status_code=400, detail="Template ID is required")
+        
+        # Check if template already exists
+        existing = db.collection('portfolio_templates').document(template_id).get()
+        if existing.exists:
+            raise HTTPException(status_code=409, detail=f"Template with ID '{template_id}' already exists")
+        
+        # Remove 'id' and 'type' from template data before saving
+        template_data = {k: v for k, v in template.items() if k not in ['id', 'type']}
+        
+        # Set created_at timestamp
+        template_data['created_at'] = firestore.SERVER_TIMESTAMP
+        template_data['updated_at'] = firestore.SERVER_TIMESTAMP
+        
+        # Save to Firestore
+        db.collection('portfolio_templates').document(template_id).set(template_data)
+        
+        return {
+            "status": "success",
+            "message": "Portfolio template created successfully",
+            "id": template_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating template: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create template: {str(e)}")
 
 @router.put("/templates/{template_id}")
 async def update_template(template_id: str, template: dict):
     """
-    Update an existing template.
+    Update an existing portfolio template in Firestore.
     """
-    # In a real app, update Firestore
-    return {"status": "success", "message": f"Template {template_id} updated"}
+    from firebase_admin import firestore
+    from app.firebase import resume_maker_app
+    
+    try:
+        db = firestore.client(app=resume_maker_app)
+        
+        # Check if template exists
+        doc_ref = db.collection('portfolio_templates').document(template_id)
+        existing = doc_ref.get()
+        
+        if not existing.exists:
+            raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
+        
+        # Remove 'id' and 'type' from template data before updating
+        template_data = {k: v for k, v in template.items() if k not in ['id', 'type']}
+        
+        # Update timestamp
+        template_data['updated_at'] = firestore.SERVER_TIMESTAMP
+        
+        # Update in Firestore
+        doc_ref.update(template_data)
+        
+        return {
+            "status": "success",
+            "message": f"Template '{template_id}' updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating template: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update template: {str(e)}")
 
 @router.delete("/templates/{template_id}")
 async def delete_template(template_id: str):
     """
-    Delete (or deactivate) a template.
+    Delete a portfolio template from Firestore and Firebase Storage.
     """
-    # In a real app, delete from Firestore
-    return {"status": "success", "message": f"Template {template_id} deleted"}
+    from firebase_admin import firestore, storage
+    from app.firebase import resume_maker_app
+    
+    try:
+        db = firestore.client(app=resume_maker_app)
+        
+        # Check if template exists
+        doc_ref = db.collection('portfolio_templates').document(template_id)
+        existing = doc_ref.get()
+        
+        if not existing.exists:
+            raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
+        
+        template_data = existing.to_dict()
+        tier = template_data.get('tier', 'basic')
+        
+        # Delete from Firebase Storage
+        try:
+            bucket = storage.bucket(app=resume_maker_app)
+            # Delete all files in the template folder
+            blobs = bucket.list_blobs(prefix=f"templates/portfolio/{tier}/{template_id}/")
+            for blob in blobs:
+                blob.delete()
+                print(f"Deleted: {blob.name}")
+        except Exception as e:
+            print(f"Warning: Could not delete files from Storage: {e}")
+        
+        # Delete from Firestore
+        doc_ref.delete()
+        
+        return {
+            "status": "success",
+            "message": f"Template '{template_id}' deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting template: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete template: {str(e)}")
+
+@router.post("/templates/{template_id}/upload")
+async def upload_template_files(
+    template_id: str,
+    index_html: Optional[UploadFile] = File(None),
+    styles_css: Optional[UploadFile] = File(None),
+    script_js: Optional[UploadFile] = File(None),
+    metadata_json: Optional[UploadFile] = File(None),
+    preview_html: Optional[UploadFile] = File(None),
+    readme_md: Optional[UploadFile] = File(None)
+):
+    """
+    Upload template files to Firebase Storage.
+    Files are uploaded to: templates/portfolio/{tier}/{template-id}/
+    """
+    from firebase_admin import firestore, storage
+    from app.firebase import resume_maker_app
+    
+    try:
+        db = firestore.client(app=resume_maker_app)
+        
+        # Get template metadata to determine tier
+        doc_ref = db.collection('portfolio_templates').document(template_id)
+        template_doc = doc_ref.get()
+        
+        if not template_doc.exists:
+            raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found. Create template metadata first.")
+        
+        template_data = template_doc.to_dict()
+        tier = template_data.get('tier', 'basic')
+        
+        # Get Firebase Storage bucket
+        bucket = storage.bucket(app=resume_maker_app)
+        base_path = f"templates/portfolio/{tier}/{template_id}-portfolio"
+        
+        uploaded_files = []
+        
+        # Upload each file if provided
+        files_to_upload = {
+            'index.html': index_html,
+            'styles.css': styles_css,
+            'script.js': script_js,
+            'metadata.json': metadata_json,
+            'preview.html': preview_html,
+            'README.md': readme_md
+        }
+        
+        for filename, file in files_to_upload.items():
+            if file:
+                # Read file content
+                content = await file.read()
+                
+                # Upload to Firebase Storage
+                blob = bucket.blob(f"{base_path}/{filename}")
+                blob.upload_from_string(
+                    content,
+                    content_type=file.content_type or 'text/plain'
+                )
+                
+                # Make publicly accessible (optional)
+                # blob.make_public()
+                
+                uploaded_files.append(filename)
+                print(f"Uploaded: {base_path}/{filename}")
+        
+        if not uploaded_files:
+            raise HTTPException(status_code=400, detail="No files provided for upload")
+        
+        return {
+            "status": "success",
+            "message": f"Uploaded {len(uploaded_files)} file(s) for template '{template_id}'",
+            "uploaded_files": uploaded_files,
+            "storage_path": base_path
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error uploading template files: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload files: {str(e)}")
 
 
 # --- Portfolio Management ---

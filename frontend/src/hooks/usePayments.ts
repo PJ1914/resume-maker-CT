@@ -43,17 +43,19 @@ export function useVerifyPayment() {
       orderId,
       paymentId,
       signature,
+      quantity,
     }: {
       orderId: string;
       paymentId: string;
       signature: string;
-    }) => paymentService.verifyPayment(orderId, paymentId, signature),
+      quantity: number;
+    }) => paymentService.verifyPayment(orderId, paymentId, signature, quantity),
     onSuccess: (data) => {
       // Invalidate credits query to refresh balance
       queryClient.invalidateQueries({ queryKey: ['credits'] });
       
       toast.success(
-        `Payment successful! ${data.credits_added} credits added to your account.`,
+        `Payment successful! ${data.credits_added} credits added. New balance: ${data.new_balance}`,
         { duration: 5000 }
       );
     },
@@ -83,11 +85,12 @@ export function usePaymentFlow() {
         user?.displayName || 'User',
         // On success callback
         async (response: any) => {
-          // Step 3: Verify payment
+          // Step 3: Verify payment with backend (atomic transaction)
           await verifyPayment.mutateAsync({
             orderId: response.razorpay_order_id,
             paymentId: response.razorpay_payment_id,
             signature: response.razorpay_signature,
+            quantity: quantity, // Pass quantity for credit addition
           });
         },
         // On failure callback

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ArrowRight, Save, Sparkles } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import WizardProgress, { type WizardStep } from '../components/wizard/WizardProgress'
@@ -15,6 +16,7 @@ import LanguagesStepForm from '../components/wizard/LanguagesStepForm'
 import AchievementsStepForm from '../components/wizard/AchievementsStepForm'
 import ReviewStep from '../components/wizard/ReviewStep'
 import toast from 'react-hot-toast'
+import { creditKeys } from '../hooks/useCredits'
 import { apiClient } from '../services/api.ts'
 import { Confetti } from '../components/ui/confetti'
 import ResumeStrengthMeter from '../components/wizard/ResumeStrengthMeter'
@@ -36,6 +38,7 @@ const WIZARD_STEPS: WizardStep[] = [
 export default function ResumeWizardPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
   const [currentStep, setCurrentStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -125,6 +128,9 @@ export default function ResumeWizardPage() {
       if (response && response.resume_id) {
         setShowConfetti(true)
         toast.success('Resume created successfully!')
+        
+        // Invalidate credits to show updated balance
+        queryClient.invalidateQueries({ queryKey: creditKeys.balance() })
 
         // Delay navigation to show confetti
         setTimeout(() => {

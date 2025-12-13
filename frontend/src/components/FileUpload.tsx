@@ -1,8 +1,10 @@
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react'
 import { Upload, FileText, X, AlertCircle, CheckCircle } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { resumeService } from '@/services/resume.service'
 import toast from 'react-hot-toast'
 import { useLoader } from '@/context/LoaderContext'
+import { creditKeys } from '@/hooks/useCredits'
 
 interface FileUploadProps {
   onUploadComplete?: (resumeId: string, pdfUrl: string) => void
@@ -25,6 +27,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [uploadedResumeId, setUploadedResumeId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { showLoader, hideLoader } = useLoader()
+  const queryClient = useQueryClient()
 
   const validateFile = (file: File): string | null => {
     // Check file type
@@ -96,6 +99,9 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       setUploadedResumeId(result.resume_id)
       setUploadedPdfUrl(result.storage_path)
       toast.success('Resume uploaded successfully!')
+      
+      // Invalidate credits to show updated balance
+      queryClient.invalidateQueries({ queryKey: creditKeys.balance() })
 
       // Call callback with both resumeId and pdfUrl
       if (onUploadComplete && result.storage_path) {

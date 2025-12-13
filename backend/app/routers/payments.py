@@ -58,21 +58,32 @@ async def verify_payment(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Verify Razorpay payment and add credits to user account
+    Verify Razorpay payment and add credits to user account (ATOMIC TRANSACTION)
+    
+    This is the NEW recommended approach:
+    - Verifies payment signature in backend (secure)
+    - Adds credits to Firestore atomically
+    - Stores payment record for audit trail
+    - Prevents duplicate processing (idempotent)
+    - No Lambda dependency for verification
     
     - **razorpay_order_id**: Razorpay order ID
     - **razorpay_payment_id**: Razorpay payment ID
     - **razorpay_signature**: Razorpay signature for verification
+    - **quantity**: Number of credits purchased
     
-    Returns verification status and credits added
+    Returns verification status, credits added, and new balance
     """
     try:
-        # Verify payment via Lambda
-        verification_result = await payment_service.verify_payment(
+        logger.info(f"Verifying payment for user {current_user['uid']}: order={request.razorpay_order_id}, payment={request.razorpay_payment_id}")
+        
+        # Verify payment and add credits atomically
+        verification_result = await payment_service.verify_payment_and_add_credits(
             razorpay_order_id=request.razorpay_order_id,
             razorpay_payment_id=request.razorpay_payment_id,
             razorpay_signature=request.razorpay_signature,
-            user_id=current_user["uid"]
+            user_id=current_user["uid"],
+            quantity=request.quantity
         )
         
         if not verification_result.get("success"):
@@ -81,22 +92,23 @@ async def verify_payment(
                 detail=verification_result.get("message", "Payment verification failed")
             )
         
-        # Credits are added by Lambda to DynamoDB and synced to Firestore
         credits_added = verification_result.get("credits_added", 0)
+        new_balance = verification_result.get("new_balance", 0)
         
-        logger.info(f"Payment verified for user {current_user['uid']}, credits added: {credits_added}")
+        logger.info(f"Payment verified for user {current_user['uid']}, credits added: {credits_added}, new balance: {new_balance}")
         
         return VerifyPaymentResponse(
             success=True,
-            message="Payment verified successfully",
+            message=verification_result.get("message", "Payment verified successfully"),
             credits_added=credits_added,
+            new_balance=new_balance,
             user_id=current_user["uid"]
         )
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to verify payment: {str(e)}")
+        logger.error(f"Failed to verify payment: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

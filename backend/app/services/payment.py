@@ -4,13 +4,16 @@ import hashlib
 import httpx
 from typing import Dict, Any, Optional
 from app.config import settings
+from app.firebase import resume_maker_app
+from firebase_admin import firestore
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class PaymentService:
-    """Service for handling payments via Lambda and Razorpay"""
+    """Service for handling payments via Lambda (order creation) and Backend (verification)"""
     
     def __init__(self):
         self.lambda_endpoint = os.getenv("PAYMENT_LAMBDA_ENDPOINT", "https://bm9kndx62m.execute-api.us-east-1.amazonaws.com/dev")
@@ -54,6 +57,126 @@ class PaymentService:
             logger.error(f"Error creating order: {str(e)}")
             raise Exception(f"Failed to create order: {str(e)}")
     
+    async def verify_payment_and_add_credits(
+        self,
+        razorpay_order_id: str,
+        razorpay_payment_id: str,
+        razorpay_signature: str,
+        user_id: str,
+        quantity: int
+    ) -> Dict[str, Any]:
+        """
+        Verify Razorpay payment signature and atomically add credits to user account
+        This is the RECOMMENDED approach - all verification + credit addition in one transaction
+        
+        Args:
+            razorpay_order_id: Razorpay order ID
+            razorpay_payment_id: Razorpay payment ID  
+            razorpay_signature: Razorpay signature
+            user_id: User ID for credit addition
+            quantity: Number of credits to add
+            
+        Returns:
+            Dict containing success status, message, credits_added, new_balance
+        """
+        if not resume_maker_app:
+            raise Exception("Firebase not configured")
+            
+        try:
+            # Step 1: Verify signature
+            if not self._verify_signature(razorpay_order_id, razorpay_payment_id, razorpay_signature):
+                logger.warning(f"Invalid payment signature for order {razorpay_order_id}")
+                return {
+                    "success": False,
+                    "message": "Invalid payment signature",
+                    "credits_added": 0,
+                    "new_balance": 0
+                }
+            
+            logger.info(f"Payment signature verified for order {razorpay_order_id}")
+            
+            # Step 2: Atomic transaction - Add credits and store payment record
+            db = firestore.client(app=resume_maker_app)
+            
+            # Check if payment already processed (idempotency)
+            payment_doc = db.collection('payments').document(razorpay_payment_id).get()
+            if payment_doc.exists:
+                logger.warning(f"Payment {razorpay_payment_id} already processed")
+                payment_data = payment_doc.to_dict()
+                return {
+                    "success": True,
+                    "message": "Payment already processed",
+                    "credits_added": payment_data.get('credits_added', 0),
+                    "new_balance": payment_data.get('new_balance', 0)
+                }
+            
+            # Get user's current balance from the correct subcollection
+            balance_ref = db.collection('users').document(user_id).collection('credits').document('balance')
+            balance_doc = balance_ref.get()
+            
+            if not balance_doc.exists:
+                # Create balance document if it doesn't exist
+                balance_ref.set({
+                    'balance': quantity,
+                    'total_earned': quantity,
+                    'total_spent': 0,
+                    'subscription_tier': 'free',
+                    'created_at': datetime.utcnow(),
+                    'updated_at': datetime.utcnow()
+                })
+                new_balance = quantity
+                total_earned = quantity
+            else:
+                # Update existing balance
+                current_data = balance_doc.to_dict()
+                current_balance = current_data.get('balance', 0)
+                current_earned = current_data.get('total_earned', 0)
+                new_balance = current_balance + quantity
+                total_earned = current_earned + quantity
+                balance_ref.update({
+                    'balance': new_balance,
+                    'total_earned': total_earned,
+                    'updated_at': datetime.utcnow()
+                })
+            
+            # Store payment record
+            payment_record = {
+                'payment_id': razorpay_payment_id,
+                'order_id': razorpay_order_id,
+                'user_id': user_id,
+                'credits_added': quantity,
+                'new_balance': new_balance,
+                'status': 'success',
+                'verified_at': datetime.utcnow(),
+                'created_at': datetime.utcnow()
+            }
+            db.collection('payments').document(razorpay_payment_id).set(payment_record)
+            
+            # Store transaction history in user's subcollection
+            transaction_record = {
+                'type': 'PURCHASE',
+                'amount': quantity,
+                'payment_id': razorpay_payment_id,
+                'order_id': razorpay_order_id,
+                'description': f'Credit purchase via Razorpay',
+                'balance_after': new_balance,
+                'timestamp': datetime.utcnow()
+            }
+            db.collection('users').document(user_id).collection('credit_transactions').add(transaction_record)
+            
+            logger.info(f"Payment verified and {quantity} credits added to user {user_id}. New balance: {new_balance}")
+            
+            return {
+                "success": True,
+                "message": "Payment verified and credits added successfully",
+                "credits_added": quantity,
+                "new_balance": new_balance
+            }
+                
+        except Exception as e:
+            logger.error(f"Error verifying payment: {str(e)}", exc_info=True)
+            raise Exception(f"Failed to verify payment: {str(e)}")
+    
     async def verify_payment(
         self,
         razorpay_order_id: str,
@@ -62,16 +185,8 @@ class PaymentService:
         user_id: str
     ) -> Dict[str, Any]:
         """
-        Verify payment signature and process via Lambda
-        
-        Args:
-            razorpay_order_id: Razorpay order ID
-            razorpay_payment_id: Razorpay payment ID
-            razorpay_signature: Razorpay signature
-            user_id: User ID for credit addition
-            
-        Returns:
-            Dict containing success status, message, credits_added
+        DEPRECATED: Old method that calls Lambda for verification
+        Use verify_payment_and_add_credits() instead for atomic transactions
         """
         try:
             # Verify signature locally first

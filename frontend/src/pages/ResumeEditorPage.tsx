@@ -380,6 +380,11 @@ export const ResumeEditorPage: React.FC = () => {
   >(null);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [fitToWidth, setFitToWidth] = useState(true);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [reparsing, setReparsing] = useState(false);
 
@@ -437,9 +442,63 @@ export const ResumeEditorPage: React.FC = () => {
     }
   };
 
+  // Auto-fit to width logic
+  useEffect(() => {
+    if (!fitToWidth || !showPreview || !containerRef.current) return;
+
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        // 8.5in * 96dpi = 816px + padding (2rem = 32px)
+        const contentWidth = 816 + 48;
+        const scale = Math.min(1, (containerWidth - 32) / 816);
+        setZoomLevel(scale);
+      }
+    };
+
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(containerRef.current);
+    updateScale();
+
+    return () => observer.disconnect();
+  }, [fitToWidth, showPreview]);
+
+  // Handle wheel zoom (Ctrl + Scroll)
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY * -0.01;
+      setFitToWidth(false);
+      setZoomLevel(prev => Math.min(3, Math.max(0.2, prev + delta)));
+    }
+  };
+
+  // Handle keyboard zoom
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+' || e.key === '-')) {
+        e.preventDefault();
+        setFitToWidth(false);
+        if (e.key === '=' || e.key === '+') {
+          setZoomLevel(prev => Math.min(3, prev + 0.1));
+        } else {
+          setZoomLevel(prev => Math.max(0.2, prev - 0.1));
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Helper function to process API response into ResumeData
   const processApiResponse = async (resumeDetail: any): Promise<ResumeData> => {
     const newResume = createEmptyResume();
+
+    // Save original file URL if available
+    if (resumeDetail.storage_url) {
+      newResume.originalFileUrl = resumeDetail.storage_url;
+    }
 
     // Populate contact info
     if (resumeDetail.contact_info) {
@@ -910,7 +969,7 @@ export const ResumeEditorPage: React.FC = () => {
             </div>
             <div className="h-10 w-full max-w-md bg-secondary-300 dark:bg-secondary-800 rounded-lg"></div>
           </div>
-          
+
           {/* Editor Skeleton */}
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Left Panel */}
@@ -926,7 +985,7 @@ export const ResumeEditorPage: React.FC = () => {
                 </div>
               ))}
             </div>
-            
+
             {/* Right Panel - Preview */}
             <div className="bg-white dark:bg-secondary-900 rounded-xl p-6 animate-pulse">
               <div className="h-6 w-24 bg-secondary-300 dark:bg-secondary-800 rounded mb-4"></div>
@@ -1238,15 +1297,78 @@ export const ResumeEditorPage: React.FC = () => {
           {/* Preview Panel */}
           {showPreview && (
             <div className="w-full lg:w-1/2 lg:sticky lg:top-24 h-fit">
-              <div className="bg-white dark:bg-secondary-900 rounded-lg shadow-sm border border-secondary-200 dark:border-secondary-800 overflow-hidden">
-                <div className="p-4 border-b border-secondary-200 dark:border-secondary-800 bg-secondary-50 dark:bg-secondary-950 flex justify-between items-center lg:hidden">
-                  <h3 className="font-semibold text-secondary-900 dark:text-secondary-50">Live Preview</h3>
-                  <button onClick={() => setShowPreview(false)} className="text-secondary-500">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
+              <div className="bg-white dark:bg-secondary-900 rounded-lg shadow-sm border border-secondary-200 dark:border-800 overflow-hidden">
+                <div className="p-4 border-b border-secondary-200 dark:border-secondary-800 bg-secondary-50 dark:bg-secondary-950 flex justify-between items-center">
+                  <h3 className="font-semibold text-secondary-900 dark:text-secondary-50 hidden lg:block">Live Preview</h3>
+                  <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end">
+                    <div className="flex bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-1">
+                      <button
+                        onClick={() => { setFitToWidth(false); setZoomLevel(prev => Math.max(0.2, prev - 0.1)); }}
+                        className="p-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded text-secondary-600 dark:text-secondary-400"
+                        title="Zoom Out (Ctrl -)"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
+                      </button>
+                      <button
+                        onClick={() => setFitToWidth(!fitToWidth)}
+                        className={`px-2 text-xs font-mono flex items-center min-w-[3rem] justify-center hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded cursor-pointer ${fitToWidth ? 'text-blue-600 font-bold' : ''}`}
+                        title="Toggle Fit to Width"
+                      >
+                        {fitToWidth ? 'Auto' : `${Math.round(zoomLevel * 100)}%`}
+                      </button>
+                      <button
+                        onClick={() => { setFitToWidth(false); setZoomLevel(prev => Math.min(3, prev + 0.1)); }}
+                        className="p-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded text-secondary-600 dark:text-secondary-400"
+                        title="Zoom In (Ctrl +)"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                      </button>
+                    </div>
+
+                    {resumeData.originalFileUrl && (
+                      <button
+                        onClick={() => setShowOriginal(!showOriginal)}
+                        className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${showOriginal
+                          ? 'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300'
+                          : 'bg-white border-secondary-200 text-secondary-600 hover:bg-secondary-50 dark:bg-secondary-900 dark:border-secondary-700 dark:text-secondary-300'}`}
+                      >
+                        {showOriginal ? 'Show Editor' : 'Original PDF'}
+                      </button>
+                    )}
+
+                    <button onClick={() => setShowPreview(false)} className="text-secondary-500 lg:hidden">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
                 </div>
-                <div className="overflow-auto max-h-[60vh] lg:max-h-[calc(100vh-8rem)]">
-                  <ResumePreview data={resumeData} />
+
+                <div
+                  ref={containerRef}
+                  onWheel={handleWheel}
+                  className="overflow-auto max-h-[60vh] lg:max-h-[calc(100vh-8rem)] bg-secondary-100 dark:bg-secondary-900/50 p-4 relative"
+                >
+                  {showOriginal && resumeData.originalFileUrl ? (
+                    <div className="w-full h-[600px] bg-white rounded shadow-lg overflow-hidden">
+                      <iframe
+                        src={resumeData.originalFileUrl}
+                        className="w-full h-full border-0"
+                        title="Original Resume"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      ref={contentRef}
+                      style={{
+                        transform: `scale(${zoomLevel})`,
+                        transformOrigin: 'top center',
+                        transition: fitToWidth ? 'transform 0.3s ease' : 'none',
+                        textAlign: 'center'
+                      }}
+                      className="flex justify-center"
+                    >
+                      <ResumePreview data={resumeData} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

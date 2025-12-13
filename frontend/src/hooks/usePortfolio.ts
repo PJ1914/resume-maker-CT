@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getPortfolioTemplates,
@@ -11,6 +11,9 @@ import {
   GeneratePortfolioRequest,
   DeployPortfolioRequest
 } from '../services/portfolio.service';
+import { onSnapshot, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Hook to fetch portfolio templates
@@ -24,9 +27,36 @@ export const usePortfolioTemplates = () => {
 };
 
 /**
- * Hook to fetch unlocked templates
+ * Hook to fetch unlocked templates with real-time updates
  */
 export const useUnlockedTemplates = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    // Set up real-time listener for user's unlocked templates
+    const unsubscribe = onSnapshot(
+      doc(db, 'users', user.uid),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.data();
+          const unlockedTemplates = userData?.unlocked_templates || [];
+          
+          // Update the query cache with real-time data
+          queryClient.setQueryData(['unlocked-templates'], unlockedTemplates);
+          console.log('[Real-time] Unlocked templates updated:', unlockedTemplates);
+        }
+      },
+      (error) => {
+        console.error('[Real-time] Error listening to unlocked templates:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user?.uid, queryClient]);
+
   return useQuery({
     queryKey: ['unlocked-templates'],
     queryFn: getUnlockedTemplates,

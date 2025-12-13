@@ -1,5 +1,6 @@
 /* ============================================
    Minimalist Portfolio Template - Styles
+   Responsive Design with JavaScript Interactions
    ============================================ */
 
 /* ============================================
@@ -16,6 +17,7 @@ html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
 }
 
 body {
@@ -24,7 +26,13 @@ body {
     line-height: 1.8;
     color: #1a1a1a;
     background-color: #ffffff;
-    padding: 4rem 2rem;
+    padding: 3rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+    body {
+        padding: 4rem 2rem;
+    }
 }
 
 /* ============================================
@@ -34,6 +42,7 @@ body {
 .container {
     max-width: 1100px;
     margin: 0 auto;
+    width: 100%;
 }
 
 /* ============================================
@@ -47,20 +56,38 @@ h1, h2, h3 {
 }
 
 h1 {
-    font-size: 3rem;
+    font-size: 2rem;
     letter-spacing: -0.02em;
 }
 
+@media (min-width: 768px) {
+    h1 {
+        font-size: 3rem;
+    }
+}
+
 h2 {
-    font-size: 1.125rem;
+    font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 0.15em;
     font-weight: 600;
 }
 
+@media (min-width: 768px) {
+    h2 {
+        font-size: 1.125rem;
+    }
+}
+
 h3 {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 600;
+}
+
+@media (min-width: 768px) {
+    h3 {
+        font-size: 1.25rem;
+    }
 }
 
 p {
@@ -71,7 +98,6 @@ a {
     color: #1a1a1a;
     text-decoration: none;
     border-bottom: 1px solid #d0d0d0;
-    transition: border-color 0.2s ease;
 }
 
 a:hover {
@@ -94,7 +120,30 @@ a:hover {
    ============================================ */
 
 .section {
-    margin-bottom: 5rem;
+    margin-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+    .section {
+        margin-bottom: 5rem;
+    }
+}
+
+/* Fade-in animation for sections */
+.fade-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.fade-in {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .section-title {
@@ -107,7 +156,13 @@ a:hover {
    ============================================ */
 
 .header {
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
+}
+
+@media (min-width: 768px) {
+    .header {
+        margin-bottom: 3rem;
+    }
 }
 
 .name {
@@ -115,9 +170,15 @@ a:hover {
 }
 
 .tagline {
-    font-size: 1.125rem;
+    font-size: 1rem;
     color: #666666;
     font-weight: 400;
+}
+
+@media (min-width: 768px) {
+    .tagline {
+        font-size: 1.125rem;
+    }
 }
 
 /* ============================================
@@ -125,13 +186,26 @@ a:hover {
    ============================================ */
 
 .contact-section {
-    margin-bottom: 5rem;
+    margin-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+    .contact-section {
+        margin-bottom: 5rem;
+    }
 }
 
 .contact-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem 3rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .contact-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem 3rem;
+    }
 }
 
 .contact-item {
@@ -159,10 +233,16 @@ a:hover {
    ============================================ */
 
 .summary-text {
-    font-size: 1.125rem;
+    font-size: 1rem;
     line-height: 1.9;
     color: #4a4a4a;
     max-width: 900px;
+}
+
+@media (min-width: 768px) {
+    .summary-text {
+        font-size: 1.125rem;
+    }
 }
 
 /* ============================================
@@ -170,7 +250,13 @@ a:hover {
    ============================================ */
 
 .experience-item {
-    margin-bottom: 3.5rem;
+    margin-bottom: 3rem;
+}
+
+@media (min-width: 768px) {
+    .experience-item {
+        margin-bottom: 3.5rem;
+    }
 }
 
 .experience-item:last-child {
@@ -182,7 +268,15 @@ a:hover {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 1rem;
-    gap: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+    .experience-header {
+        gap: 2rem;
+        flex-wrap: nowrap;
+    }
 }
 
 .job-title {
@@ -190,17 +284,27 @@ a:hover {
 }
 
 .company-name {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #666666;
     margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+    .company-name {
+        font-size: 1rem;
+    }
 }
 
 .job-meta {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 0.25rem;
-    flex-shrink: 0;
+    align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+    .job-meta {
+        align-items: flex-end;
+    }
 }
 
 .job-date {
@@ -245,7 +349,13 @@ a:hover {
    ============================================ */
 
 .project-item {
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
+}
+
+@media (min-width: 768px) {
+    .project-item {
+        margin-bottom: 3rem;
+    }
 }
 
 .project-item:last-child {
@@ -258,6 +368,7 @@ a:hover {
     align-items: baseline;
     margin-bottom: 0.75rem;
     gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .project-title {
@@ -322,7 +433,13 @@ a:hover {
    ============================================ */
 
 .education-item {
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .education-item {
+        margin-bottom: 2.5rem;
+    }
 }
 
 .education-item:last-child {
@@ -334,7 +451,15 @@ a:hover {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 0.5rem;
-    gap: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+    .education-header {
+        flex-wrap: nowrap;
+        gap: 2rem;
+    }
 }
 
 .degree {
@@ -364,8 +489,15 @@ a:hover {
 
 .certifications-list {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem 3rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .certifications-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem 3rem;
+    }
 }
 
 .certification-item {
@@ -375,13 +507,25 @@ a:hover {
 }
 
 .certification-name {
-    font-size: 1.125rem;
+    font-size: 1rem;
     margin-bottom: 0.25rem;
 }
 
+@media (min-width: 768px) {
+    .certification-name {
+        font-size: 1.125rem;
+    }
+}
+
 .certification-issuer {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: #666666;
+}
+
+@media (min-width: 768px) {
+    .certification-issuer {
+        font-size: 0.95rem;
+    }
 }
 
 .certification-date {
@@ -395,7 +539,13 @@ a:hover {
    ============================================ */
 
 .footer {
-    margin-top: 5rem;
+    margin-top: 4rem;
+}
+
+@media (min-width: 768px) {
+    .footer {
+        margin-top: 5rem;
+    }
 }
 
 .footer-text {

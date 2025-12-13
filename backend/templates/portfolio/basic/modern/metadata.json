@@ -1,22 +1,24 @@
 {
   "id": "modern",
   "name": "Modern Portfolio",
-  "description": "Clean, elegant design with good typography. Fixed width layout optimized for desktop viewing.",
+  "description": "Clean, elegant responsive design with good typography and improved visual styling. Mobile-friendly layout for all devices.",
   "tier": "basic",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "tech_stack": {
     "framework": "html",
     "styling": "css",
     "animations": "none",
-    "responsive": false,
+    "responsive": true,
     "dark_mode": false,
     "javascript": false
   },
   "features": [
     "Pure HTML + CSS",
-    "Fixed width (1200px)",
+    "Fully responsive design",
+    "Mobile-friendly layout",
     "Clean typography with Inter font",
     "Gradient header background",
+    "Card shadows and depth",
     "Elegant hover effects",
     "Timeline layout for experience",
     "Grid layout for projects and skills",
@@ -46,9 +48,9 @@
     "fallback": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   },
   "layout": {
-    "width": "1200px",
-    "padding": "40px",
-    "type": "fixed"
+    "max_width": "1200px",
+    "padding": "20px",
+    "type": "responsive"
   },
   "files": [
     "index.html",
@@ -74,10 +76,11 @@
     "layout": false
   },
   "notes": [
-    "This is a basic template with no responsive design",
-    "Best viewed on desktop screens (1920x1080 or larger)",
+    "This is a basic responsive template",
+    "Works on all devices - mobile, tablet, and desktop",
     "Uses Google Fonts CDN for Inter font family",
     "Gradient header can be customized by editing CSS",
-    "All sections are optional and will hide if no data"
+    "All sections are optional and will hide if no data",
+    "No animations included - simple and clean"
   ]
 }

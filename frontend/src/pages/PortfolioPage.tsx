@@ -282,7 +282,8 @@ export default function PortfolioPage() {
             await paymentService.verifyPayment(
               response.razorpay_order_id,
               response.razorpay_payment_id,
-              response.razorpay_signature
+              response.razorpay_signature,
+              1 // quantity - template unlock is always 1
             );
 
             // Now unlock the template

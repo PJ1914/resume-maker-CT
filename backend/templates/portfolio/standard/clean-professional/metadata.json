@@ -1,0 +1,122 @@
+{
+  "id": "clean-professional",
+  "name": "Clean Professional",
+  "description": "Modern portfolio with comprehensive sections, skill progress bars, smooth animations, and professional layout. Perfect for all professionals showcasing complete career profiles.",
+  "tier": "standard",
+  "version": "2.0.0",
+  "tech_stack": {
+    "framework": "html",
+    "styling": "tailwind-css",
+    "animations": "aos + javascript",
+    "responsive": true,
+    "dark_mode": true,
+    "javascript": true
+  },
+  "features": [
+    "Fully responsive mobile-first design",
+    "Fixed navigation with smooth scrolling",
+    "Dark/Light mode toggle with system preference detection",
+    "Smooth AOS scroll animations",
+    "Hero section with gradient background and stats",
+    "Download Resume button (print functionality)",
+    "Timeline layout for experience with visual dots",
+    "Project cards with hover effects and links",
+    "Skill progress bars with visual indicators",
+    "Comprehensive certifications section with verification links",
+    "Education cards with institution logos",
+    "Awards & Recognition showcase",
+    "Publications section for research papers",
+    "Testimonials with quote cards",
+    "Social media icons integration",
+    "Professional typography (Inter)",
+    "Gradient accents throughout",
+    "SEO-friendly structure",
+    "Print-optimized styles",
+    "All sections included"
+  ],
+  "sections": [
+    "navigation",
+    "hero",
+    "about",
+    "experience",
+    "projects",
+    "skills",
+    "certifications",
+    "education",
+    "awards",
+    "publications",
+    "testimonials",
+    "contact",
+    "footer"
+  ],
+  "colors": {
+    "primary": "#2563eb",
+    "secondary": "#1e40af",
+    "accent": "#4f46e5",
+    "text_dark": "#1f2937",
+    "text_light": "#6b7280",
+    "background": "#ffffff",
+    "background_alt": "#f9fafb",
+    "border": "#e5e7eb",
+    "gradient_from": "#6366f1",
+    "gradient_to": "#3b82f6"
+  },
+  "fonts": {
+    "primary": "Inter",
+    "fallback": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  },
+  "layout": {
+    "max_width": "1280px",
+    "responsive": true,
+    "mobile_breakpoint": "768px",
+    "tablet_breakpoint": "1024px"
+  },
+  "animations": {
+    "scroll_reveal": true,
+    "hover_effects": true,
+    "smooth_scroll": true,
+    "stagger_animations": true,
+    "progress_bars": true
+  },
+  "price": {
+    "credits": 250,
+    "inr": 399
+  },
+  "tags": [
+    "professional",
+    "modern",
+    "comprehensive",
+    "responsive",
+    "animated",
+    "all-sections",
+    "blue-gradient",
+    "clean"
+  ],
+  "target_audience": [
+    "All Professionals",
+    "Software Developers",
+    "Engineers",
+    "IT Professionals",
+    "Researchers",
+    "Academics",
+    "Consultants",
+    "Executives",
+    "Project Managers",
+    "Data Scientists"
+  ],
+  "industries": [
+    "Technology",
+    "Engineering",
+    "Research",
+    "Academia",
+    "Consulting",
+    "Finance",
+    "Healthcare",
+    "Business",
+    "Startup",
+    "Corporate"
+  ],
+  "preview_available": true,
+  "customizable": true,
+  "all_sections_included": true
+}

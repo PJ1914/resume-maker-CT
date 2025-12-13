@@ -18,22 +18,32 @@ class CreditTransactionType(str, Enum):
 
 class FeatureType(str, Enum):
     """Features that require credits"""
+    CREATE_RESUME = "create_resume"
+    UPLOAD_RESUME = "upload_resume"
     ATS_SCORING = "ats_scoring"
     AI_REWRITE = "ai_rewrite"
     AI_SUGGESTION = "ai_suggestion"
     PDF_EXPORT = "pdf_export"
     PORTFOLIO_GENERATE = "portfolio_generate"
     PORTFOLIO_DEPLOY = "portfolio_deploy"
+    DEPLOY_GHPAGES = "deploy_ghpages"
+    DEPLOY_VERCEL = "deploy_vercel"
+    DEPLOY_NETLIFY = "deploy_netlify"
     PORTFOLIO_TEMPLATE_UNLOCK = "portfolio_template_unlock"
 
 # Credit costs for each feature
 FEATURE_COSTS = {
+    FeatureType.CREATE_RESUME: 5,
+    FeatureType.UPLOAD_RESUME: 1,
     FeatureType.ATS_SCORING: 5,
     FeatureType.AI_REWRITE: 1,  # 1 credit for content enhancement/improvement
     FeatureType.AI_SUGGESTION: 3,  # 3 credits per AI summary generation
-    FeatureType.PDF_EXPORT: 2,
+    FeatureType.PDF_EXPORT: 3,  # Updated from 2 to 3
     FeatureType.PORTFOLIO_GENERATE: 3,  # 3 credits to generate portfolio
-    FeatureType.PORTFOLIO_DEPLOY: 1,  # 1 credit to deploy to GitHub Pages
+    FeatureType.PORTFOLIO_DEPLOY: 1,  # Deprecated - use specific platform
+    FeatureType.DEPLOY_GHPAGES: 3,
+    FeatureType.DEPLOY_VERCEL: 7,
+    FeatureType.DEPLOY_NETLIFY: 5,
     FeatureType.PORTFOLIO_TEMPLATE_UNLOCK: 0,  # Variable cost, set dynamically
 }
 

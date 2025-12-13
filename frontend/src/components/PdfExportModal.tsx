@@ -6,9 +6,11 @@
 import { useState, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { useQueryClient } from '@tanstack/react-query';
 import { exportAndDownloadPDF } from '../services/pdf-export.service';
 import { API_URL } from '@/config/firebase';
 import InsufficientCreditsModal from './InsufficientCreditsModal';
+import { creditKeys } from '@/hooks/useCredits';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -36,6 +38,7 @@ export default function PdfExportModal({
   const [previewLoading, setPreviewLoading] = useState(true);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [creditsInfo, setCreditsInfo] = useState({ required: 1, current: 0 });
+  const queryClient = useQueryClient();
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -45,6 +48,9 @@ export default function PdfExportModal({
     try {
       await exportAndDownloadPDF(resumeId, template);
       setSuccess(true);
+      
+      // Invalidate credits to show updated balance
+      queryClient.invalidateQueries({ queryKey: creditKeys.balance() });
 
       // Auto-close after success
       setTimeout(() => {

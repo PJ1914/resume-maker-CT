@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ personal.name }} - Professional Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                fontFamily: {
+                    sans: ['Lato', 'sans-serif'],
+                    serif: ['Playfair Display', 'serif'],
+                },
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            800: '#243b53',
+                            900: '#102a43',
+                        },
+                        gold: {
+                            400: '{{ theme.accent if theme and theme.accent else "#d69e2e" }}',
+                            500: '{{ theme.primary if theme and theme.primary else "#b7791f" }}',
+                            600: '{{ theme.primary if theme and theme.primary else "#975a16" }}',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+
+    <!-- Mobile Header & Nav -->
+    <div class="md:hidden fixed w-full z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-200 dark:border-slate-800">
+        <div class="flex justify-between items-center px-6 py-4">
+            <div>
+                <h1 class="font-serif text-xl font-bold text-navy-900 dark:text-white">{{ personal.name }}</h1>
+                <p class="text-xs text-gold-500 uppercase tracking-widest">{{ personal.title or 'Professional' }}</p>
+            </div>
+            <button id="mobile-menu-btn" class="p-2 text-slate-600 dark:text-slate-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+        <!-- Mobile Dropdown -->
+        <div id="mobile-menu" class="hidden bg-white dark:bg-slate-900 border-b border-t dark:border-slate-800">
+            <nav class="flex flex-col p-4 space-y-3">
+                <a href="#about" class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">About</a>
+                {% if experience and experience|length > 0 %}<a href="#experience" class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">Experience</a>{% endif %}
+                {% if projects and projects|length > 0 %}<a href="#achievements" class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">Achievements</a>{% endif %}
+                {% if skills and skills|length > 0 %}<a href="#expertise" class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">Expertise</a>{% endif %}
+                {% if certifications and certifications|length > 0 %}<a href="#certifications" class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">Certifications</a>{% endif %}
+                {% if publications and publications|length > 0 %}<a href="#publications" class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">Publications</a>{% endif %}
+                {% if references and references|length > 0 %}<a href="#testimonials" class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">Testimonials</a>{% endif %}
+                <a href="#contact" class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">Contact</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Desktop Sidebar -->
+    <aside class="hidden md:flex fixed top-0 left-0 w-72 h-screen flex-col bg-navy-900 text-white z-40 overflow-y-auto">
+        <div class="p-8 flex flex-col items-center text-center border-b border-navy-800 bg-navy-950/50">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-3xl font-serif font-bold text-white mb-6 shadow-xl">
+                {{ personal.name[0] if personal.name else 'E' }}
+            </div>
+            <h2 class="font-serif text-2xl font-bold mb-2">{{ personal.name }}</h2>
+            <p class="text-xs text-gold-400 uppercase tracking-widest font-semibold">{{ personal.title or 'Professional' }}</p>
+            
+            <div class="flex gap-4 mt-6">
+                {% if personal.linkedin %}
+                <a href="{{ personal.linkedin }}" target="_blank" class="p-2 bg-white/10 rounded-full hover:bg-gold-500 transition-colors" aria-label="LinkedIn">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </a>
+                {% endif %}
+                {% if personal.email %}
+                <a href="mailto:{{ personal.email }}" class="p-2 bg-white/10 rounded-full hover:bg-gold-500 transition-colors" aria-label="Email">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <nav class="flex-1 py-8 px-6 space-y-2">
+            <a href="#about" class="block px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 group">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                Professional Summary
+            </a>
+            {% if experience and experience|length > 0 %}
+            <a href="#experience" class="block px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 group">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                Experience
+            </a>
+            {% endif %}
+            {% if projects and projects|length > 0 %}
+            <a href="#achievements" class="block px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 group">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                Projects & Achievements
+            </a>
+            {% endif %}
+            {% if skills and skills|length > 0 %}
+            <a href="#expertise" class="block px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 group">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                Skills & Expertise
+            </a>
+            {% endif %}
+            {% if certifications and certifications|length > 0 %}
+            <a href="#certifications" class="block px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 group">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                Certifications
+            </a>
+            {% endif %}
+            {% if publications and publications|length > 0 %}
+            <a href="#publications" class="block px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 group">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                Publications
+            </a>
+            {% endif %}
+            {% if references and references|length > 0 %}
+            <a href="#testimonials" class="block px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 group">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                Testimonials
+            </a>
+            {% endif %}
+            <a href="#contact" class="block px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 group">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                Contact
+            </a>
+        </nav>
+
+        <div class="p-6 border-t border-navy-800">
+            <button id="theme-toggle-desktop" class="w-full py-3 px-4 rounded-lg bg-navy-800 hover:bg-navy-700 text-xs font-bold uppercase tracking-wider text-slate-300 transition-colors flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                Toggle Theme
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="md:ml-72 min-h-screen">
+        
+        <!-- About / Summary Section -->
+        <section id="about" class="pt-24 pb-16 px-6 md:px-16 md:pt-32 max-w-5xl">
+            <div data-aos="fade-up">
+                <h6 class="text-gold-600 dark:text-gold-400 font-bold tracking-widest uppercase text-sm mb-4">Professional Profile</h6>
+                <h1 class="font-serif text-3xl md:text-5xl lg:text-6xl font-bold text-navy-900 dark:text-white mb-6 md:mb-8 leading-tight">
+                    {{ summary[:100] if summary else 'Experienced professional driving innovation and excellence.' }}...
+                </h1>
+                <div class="prose prose-base md:prose-lg dark:prose-invert text-slate-600 dark:text-slate-300 max-w-none">
+                    <p class="leading-relaxed text-sm md:text-base">{{ summary }}</p>
+                </div>
+                
+                {% if personal.location %}
+                <div class="flex items-center gap-2 mt-8 text-slate-500 dark:text-slate-400 font-medium">
+                    <svg class="w-5 h-5 text-gold-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span>Based in {{ personal.location }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <hr class="border-gray-200 dark:border-slate-800 mx-6 md:mx-16" />
+
+        <!-- Experience Section -->
+        {% if experience and experience|length > 0 %}
+        <section id="experience" class="py-16 px-6 md:px-16 max-w-5xl">
+            <h2 class="font-serif text-3xl md:text-4xl text-navy-900 dark:text-white mb-12" data-aos="fade-up">Professional Experience</h2>
+            
+            <div class="space-y-12">
+                {% for job in experience %}
+                <div class="group relative pl-8 border-l-2 border-gray-200 dark:border-slate-700 hover:border-gold-500 transition-colors duration-300" data-aos="fade-up">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-600 group-hover:border-gold-500 rounded-full transition-colors"></div>
+                    
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-navy-900 dark:text-white">{{ job.position or job.title }}</h3>
+                            <div class="text-xl text-gold-600 dark:text-gold-400 font-serif mt-1">{{ job.company }}</div>
+                        </div>
+                        <div class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-2 md:mt-0">
+                            {{ job.startDate }} — {{ job.endDate or 'Present' }}
+                        </div>
+                    </div>
+                    
+                    <p class="text-slate-600 dark:text-slate-300 mb-4 leading-relaxed max-w-3xl">
+                        {{ job.description }}
+                    </p>
+
+                    {% if job.achievements %}
+                    <ul class="space-y-2 mt-4">
+                        {% for achievement in job.achievements %}
+                        <li class="flex items-start gap-3 text-slate-600 dark:text-slate-400">
+                            <span class="mt-2 w-1.5 h-1.5 rounded-full bg-navy-400 dark:bg-slate-500 flex-shrink-0"></span>
+                            <span class="leading-relaxed">{{ achievement }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        <hr class="border-gray-200 dark:border-slate-800 mx-6 md:mx-16" />
+        {% endif %}
+
+        <!-- Projects & Achievements Grid -->
+        {% if projects and projects|length > 0 %}
+        <section id="achievements" class="py-16 px-6 md:px-16">
+            <h2 class="font-serif text-3xl md:text-4xl text-navy-900 dark:text-white mb-12" data-aos="fade-up">Projects & Key Achievements</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                {% for project in projects %}
+                <div class="bg-white dark:bg-slate-800 p-8 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 group" data-aos="fade-up" data-aos-delay="{{loop.index * 100}}">
+                    <div class="mb-6 text-gold-600 dark:text-gold-400">
+                        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-navy-900 dark:text-white mb-3 group-hover:text-gold-600 transition-colors">
+                        {{ project.name or project.title }}
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                        {{ project.description }}
+                    </p>
+                    {% if project.technologies %}
+                    <div class="flex flex-wrap gap-2 pt-4 border-t border-gray-100 dark:border-slate-700">
+                        {% for tech in project.technologies[:3] %}
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            {{ tech }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        <hr class="border-gray-200 dark:border-slate-800 mx-6 md:mx-16" />
+        {% endif %}
+
+        <!-- Expertise & Skills -->
+        {% if skills and skills|length > 0 %}
+        <section id="expertise" class="py-16 px-6 md:px-16 max-w-6xl">
+            <h2 class="font-serif text-3xl md:text-4xl text-navy-900 dark:text-white mb-12" data-aos="fade-up">Skills & Expertise</h2>
+            
+            {% if skills.technical is defined or skills.soft is defined %}
+                <div class="grid md:grid-cols-2 gap-12 lg:gap-24">
+                    {% if skills.technical %}
+                    <div data-aos="fade-right">
+                        <h3 class="text-lg font-bold text-navy-900 dark:text-white mb-6 flex items-center gap-3">
+                            <span class="w-8 h-px bg-gold-500"></span>
+                            Technical Skills
+                        </h3>
+                        <div class="space-y-5">
+                            {% for skill in skills.technical %}
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-slate-700 dark:text-slate-300 font-medium">{{ skill }}</span>
+                                    <span class="text-xs font-bold text-gold-600 dark:text-gold-400">Expert</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-gold-500 to-gold-600 h-2 rounded-full" style="width: {{ range(85, 99)|random }}%"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if skills.soft %}
+                    <div data-aos="fade-left">
+                        <h3 class="text-lg font-bold text-navy-900 dark:text-white mb-6 flex items-center gap-3">
+                            <span class="w-8 h-px bg-gold-500"></span>
+                            Professional Skills
+                        </h3>
+                        <div class="flex flex-wrap gap-3">
+                            {% for skill in skills.soft %}
+                            <span class="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:border-gold-500 hover:text-gold-600 transition-all cursor-default text-sm">
+                                {{ skill }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-aos="fade-up">
+                    {% for skill in skills %}
+                    <div class="group flex items-center p-4 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg shadow-sm hover:shadow-md hover:border-gold-500/30 transition-all duration-300">
+                        <div class="w-2 h-2 rounded-full bg-gold-500 mr-4 group-hover:scale-125 transition-transform"></div>
+                        <span class="text-slate-700 dark:text-slate-200 font-medium tracking-wide">{{ skill }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <!-- Certifications Section -->
+        {% if certifications and certifications|length > 0 %}
+        <section id="certifications" class="py-16 px-6 md:px-16 max-w-6xl">
+            <h2 class="font-serif text-3xl md:text-4xl text-navy-900 dark:text-white mb-12" data-aos="fade-up">Certifications & Credentials</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for cert in certifications %}
+                <div class="bg-white dark:bg-slate-800 p-6 border-l-4 border-gold-500 shadow-sm hover:shadow-lg transition-all duration-300" data-aos="fade-up" data-aos-delay="{{loop.index * 50}}">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-gold-100 dark:bg-navy-800 rounded-lg flex items-center justify-center text-gold-600 shrink-0">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-navy-900 dark:text-white mb-1">{{ cert.name }}</h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">{{ cert.issuer }}</p>
+                            {% if cert.date %}
+                            <p class="text-xs text-gold-600 dark:text-gold-400 font-semibold">{{ cert.date }}</p>
+                            {% endif %}
+                            {% if cert.url %}
+                            <a href="{{ cert.url }}" target="_blank" class="text-xs text-gold-600 hover:text-gold-700 dark:text-gold-400 dark:hover:text-gold-300 font-medium mt-2 inline-flex items-center gap-1">
+                                View Certificate
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        <hr class="border-gray-200 dark:border-slate-800 mx-6 md:mx-16" />
+        {% endif %}
+
+        <!-- Publications Section -->
+        {% if publications and publications|length > 0 %}
+        <section id="publications" class="py-16 px-6 md:px-16 max-w-5xl">
+            <h2 class="font-serif text-3xl md:text-4xl text-navy-900 dark:text-white mb-12" data-aos="fade-up">Publications & Research</h2>
+            <div class="space-y-8">
+                {% for pub in publications %}
+                <div class="bg-white dark:bg-slate-800 p-6 border border-gray-100 dark:border-slate-700 hover:border-gold-500/50 transition-all duration-300 group" data-aos="fade-up">
+                    <div class="flex items-start gap-4">
+                        <div class="text-gold-600 dark:text-gold-400 mt-1">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-navy-900 dark:text-white mb-2 group-hover:text-gold-600 transition-colors">{{ pub.name or pub.title }}</h3>
+                            {% if pub.publisher %}
+                            <p class="text-slate-600 dark:text-slate-400 font-medium mb-2">{{ pub.publisher }}</p>
+                            {% endif %}
+                            {% if pub.releaseDate %}
+                            <p class="text-sm text-slate-500 mb-3">Published: {{ pub.releaseDate }}</p>
+                            {% endif %}
+                            {% if pub.summary %}
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-3">{{ pub.summary }}</p>
+                            {% endif %}
+                            {% if pub.url %}
+                            <a href="{{ pub.url }}" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold text-gold-600 hover:text-gold-700 dark:text-gold-400 dark:hover:text-gold-300 transition-colors">
+                                Read Publication
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        <hr class="border-gray-200 dark:border-slate-800 mx-6 md:mx-16" />
+        {% endif %}
+
+        <!-- Education -->
+        {% if education and education|length > 0 %}
+        <section class="py-16 px-6 md:px-16 bg-gray-50 dark:bg-slate-800/50">
+             <h2 class="font-serif text-3xl md:text-4xl text-navy-900 dark:text-white mb-12">Education & Credentials</h2>
+             <div class="grid md:grid-cols-2 gap-8">
+                 {% for edu in education %}
+                 <div class="flex gap-4">
+                     <div class="w-12 h-12 flex-shrink-0 bg-white dark:bg-slate-800 rounded-lg shadow-sm flex items-center justify-center text-navy-800 dark:text-white font-serif font-bold text-xl border border-gray-100 dark:border-slate-700">
+                         {{ edu.institution[0] if edu.institution else 'U' }}
+                     </div>
+                     <div>
+                         <h4 class="text-lg font-bold text-navy-900 dark:text-white">{{ edu.degree }}</h4>
+                         <p class="text-slate-600 dark:text-slate-400">{{ edu.institution or edu.school }}</p>
+                         <p class="text-sm text-slate-500 mt-1">{{ edu.startDate }} - {{ edu.endDate or 'Present' }}</p>
+                     </div>
+                 </div>
+                 {% endfor %}
+             </div>
+        </section>
+        {% endif %}
+
+        <!-- Volunteering Section -->
+        {% if volunteer and volunteer|length > 0 %}
+        <section id="volunteering" class="py-12 md:py-16 px-6 md:px-16 max-w-5xl">
+            <h2 class="font-serif text-2xl md:text-4xl text-navy-900 dark:text-white mb-8 md:mb-12" data-aos="fade-up">Leadership & Community</h2>
+            <div class="space-y-8">
+                {% for vol in volunteer %}
+                <div class="flex gap-6 group flex-col md:flex-row" data-aos="fade-up">
+                    <div class="md:w-32 pt-1 md:pt-2 md:text-right text-xs md:text-sm font-bold text-slate-500 uppercase tracking-widest shrink-0">
+                        {{ vol.startDate }} - {{ vol.endDate or 'Present' }}
+                    </div>
+                    <div class="border-l-2 border-gold-200 dark:border-navy-700 pl-6 pb-2 group-last:border-0 relative">
+                        <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-gold-500 border-4 border-white dark:border-slate-900"></div>
+                        <h3 class="text-lg md:text-xl font-bold text-navy-900 dark:text-white">{{ vol.role or vol.position }}</h3>
+                        <div class="text-base md:text-lg text-slate-600 dark:text-slate-400 mb-2">{{ vol.organization }}</div>
+                        <p class="text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed">{{ vol.summary or vol.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        <hr class="border-gray-200 dark:border-slate-800 mx-6 md:mx-16" />
+        {% endif %}
+
+        <!-- Awards Section -->
+        {% if awards and awards|length > 0 %}
+        <section id="awards" class="py-12 md:py-16 px-6 md:px-16 max-w-5xl">
+            <h2 class="font-serif text-2xl md:text-4xl text-navy-900 dark:text-white mb-8 md:mb-12" data-aos="fade-up">Honors & Awards</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                {% for award in awards %}
+                <div class="flex gap-4 items-start" data-aos="fade-up">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-gold-100 dark:bg-navy-800 rounded-full flex items-center justify-center text-gold-600 shrink-0">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" /></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-navy-900 dark:text-white">{{ award.title }}</h3>
+                        <div class="text-xs md:text-sm text-slate-500 uppercase tracking-wider mb-1">{{ award.date }} • {{ award.awarder }}</div>
+                        <p class="text-slate-600 dark:text-slate-300 text-xs md:text-sm leading-relaxed">{{ award.summary }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Testimonials / References Section -->
+        {% if references %}
+        <section id="testimonials" class="py-16 px-6 md:px-16 bg-gray-50 dark:bg-slate-800/50">
+            <h2 class="font-serif text-3xl md:text-4xl text-navy-900 dark:text-white mb-12 text-center" data-aos="fade-up">What People Say</h2>
+            <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                {% for ref in references %}
+                <div class="bg-white dark:bg-slate-800 p-8 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 relative" data-aos="fade-up" data-aos-delay="{{loop.index * 100}}">
+                    <div class="absolute top-6 left-6 text-gold-500/20 dark:text-gold-400/20">
+                        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-6 italic text-base">
+                            "{{ ref.reference }}"
+                        </p>
+                        <div class="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+                            <div class="w-12 h-12 bg-gradient-to-br from-gold-400 to-gold-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                {{ ref.name[0] if ref.name else 'R' }}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-navy-900 dark:text-white">{{ ref.name }}</h4>
+                                <p class="text-sm text-slate-500">{{ ref.company or ref.position or 'Client' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Quick Info: Languages & Interests -->
+        {% if languages or interests %}
+        <section class="py-12 md:py-16 px-6 md:px-16 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800">
+            <div class="grid md:grid-cols-2 gap-8 md:gap-12 max-w-5xl">
+                {% if languages %}
+                <div>
+                    <h3 class="font-serif text-xl md:text-2xl text-navy-900 dark:text-white mb-6">Languages</h3>
+                    <div class="space-y-3">
+                        {% for lang in languages %}
+                        <div class="flex justify-between items-center bg-gray-50 dark:bg-slate-800 px-4 py-3 rounded-lg">
+                            <span class="font-bold text-slate-700 dark:text-slate-200 text-sm md:text-base">{{ lang.language }}</span>
+                            <span class="text-xs md:text-sm text-gold-600 dark:text-gold-400 capitalize">{{ lang.fluency }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if interests %}
+                <div>
+                    <h3 class="font-serif text-xl md:text-2xl text-navy-900 dark:text-white mb-6">Interests</h3>
+                    <div class="flex flex-wrap gap-3">
+                        {% for interest in interests %}
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 border border-slate-200 dark:border-slate-700 rounded-full text-xs md:text-sm text-slate-600 dark:text-slate-300">
+                            {{ interest.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <section id="contact" class="py-20 px-6 md:px-16 bg-navy-900 text-white mt-0 md:mt-12">
+            <div class="max-w-4xl">
+                <h2 class="font-serif text-4xl mb-8">Ready for the next strategic conversation?</h2>
+                <div class="flex flex-col md:flex-row gap-8 mb-12">
+                    {% if personal.email %}
+                    <div>
+                        <div class="text-gold-500 text-sm uppercase tracking-wider mb-2">Email</div>
+                        <a href="mailto:{{ personal.email }}" class="text-2xl font-serif font-bold hover:text-gold-400 transition-colors">{{ personal.email }}</a>
+                    </div>
+                    {% endif %}
+                    {% if personal.phone %}
+                    <div>
+                        <div class="text-gold-500 text-sm uppercase tracking-wider mb-2">Phone</div>
+                        <a href="tel:{{ personal.phone }}" class="text-2xl font-serif font-bold hover:text-gold-400 transition-colors">{{ personal.phone }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="pt-8 border-t border-navy-800 flex justify-between items-center text-slate-400 text-sm">
+                    <p>&copy; {{ personal.name }}. All Rights Reserved.</p>
+                    <div class="flex gap-4">
+                        {% if personal.linkedin %}<a href="{{ personal.linkedin }}" class="hover:text-white">LinkedIn</a>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        // Theme Toggle
+        const themeToggles = [document.getElementById('theme-toggle-desktop')];
+        const html = document.documentElement;
+
+        // Check local storage or system preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        }
+
+        themeToggles.forEach(btn => {
+            if(btn) {
+                btn.addEventListener('click', () => {
+                    html.classList.toggle('dark');
+                    localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+                });
+            }
+        });
+
+        // Mobile Menu
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if(mobileBtn) {
+            mobileBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+</body>
+</html>

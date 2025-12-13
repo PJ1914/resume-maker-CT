@@ -18,12 +18,14 @@ class VerifyPaymentRequest(BaseModel):
     razorpay_order_id: str = Field(..., description="Razorpay order ID")
     razorpay_payment_id: str = Field(..., description="Razorpay payment ID")
     razorpay_signature: str = Field(..., description="Razorpay signature for verification")
+    quantity: int = Field(..., description="Number of credits purchased", ge=1)
 
 
 class VerifyPaymentResponse(BaseModel):
     success: bool = Field(..., description="Payment verification status")
     message: str = Field(..., description="Response message")
-    credits_added: Optional[int] = Field(None, description="Number of credits added to user account")
+    credits_added: int = Field(..., description="Number of credits added to user account")
+    new_balance: int = Field(..., description="User's new credit balance")
     user_id: Optional[str] = Field(None, description="User ID for whom credits were added")
 
 

@@ -64,6 +64,8 @@ async def verify_firebase_token(id_token: str) -> Optional[dict]:
             id_token,
             app=codetapasya_app
         )
+        # Check if admin custom claim exists
+        logging.info(f"Decoded token for user {decoded_token.get('uid')}: admin={decoded_token.get('admin', False)}")
         return decoded_token
     except Exception as e:
         logging.exception("Token verification error")

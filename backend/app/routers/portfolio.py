@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 
 from app.dependencies import get_current_user
-from app.services.credits import get_user_credits, deduct_credits_custom
+from app.services.credits import get_user_credits, deduct_credits_custom, has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS
 from app.services.portfolio_generator import PortfolioGeneratorService
 from app.services.github_deploy import GitHubDeployService
 from app.services.vercel_deploy import VercelDeployService
@@ -416,7 +416,35 @@ async def deploy_portfolio(
         )
     
     user_id = current_user["uid"]
+    user_email = current_user.get("email", "")
     db = firestore.client(app=resume_maker_app)
+    
+    # Determine which feature type based on platform
+    platform_feature_map = {
+        "github": FeatureType.DEPLOY_GHPAGES,
+        "vercel": FeatureType.DEPLOY_VERCEL,
+        "netlify": FeatureType.DEPLOY_NETLIFY
+    }
+    
+    if request.platform not in platform_feature_map:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid platform. Supported: github, vercel, netlify"
+        )
+    
+    feature_type = platform_feature_map[request.platform]
+    
+    # Check if user has sufficient credits
+    if not has_sufficient_credits(user_id, feature_type, user_email):
+        user_credits = get_user_credits(user_id, user_email)
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "message": f"Insufficient credits to deploy to {request.platform}",
+                "current_balance": user_credits["balance"],
+                "required": FEATURE_COSTS[feature_type]
+            }
+        )
     
     try:
         # Get session details
@@ -525,6 +553,9 @@ async def deploy_portfolio(
                     user_unlocked.remove(template_id)
                     user_doc_ref.update({'unlocked_templates': user_unlocked})
                     logger.info(f"✅ Template {template_id} consumed after deployment. User must repurchase for next use.")
+        
+        # Deduct credits after successful deployment
+        deduct_credits(user_id, feature_type, f"Deployed portfolio to {request.platform}", user_email)
         
         return {
             "success": True,

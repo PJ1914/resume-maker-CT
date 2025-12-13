@@ -120,6 +120,33 @@ export const adminService = {
         return response.data
     },
 
+    uploadTemplateFiles: async (templateId: string, files: {
+        indexHtml?: File
+        stylesCss?: File
+        scriptJs?: File
+        metadataJson?: File
+        previewHtml?: File
+        readmeMd?: File
+    }) => {
+        const token = localStorage.getItem('authToken')
+        const formData = new FormData()
+        
+        if (files.indexHtml) formData.append('index_html', files.indexHtml)
+        if (files.stylesCss) formData.append('styles_css', files.stylesCss)
+        if (files.scriptJs) formData.append('script_js', files.scriptJs)
+        if (files.metadataJson) formData.append('metadata_json', files.metadataJson)
+        if (files.previewHtml) formData.append('preview_html', files.previewHtml)
+        if (files.readmeMd) formData.append('readme_md', files.readmeMd)
+        
+        const response = await axios.post(`${API_URL}/api/admin/templates/${templateId}/upload`, formData, {
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+        return response.data
+    },
+
     getPortfolios: async () => {
         const token = localStorage.getItem('authToken')
         const response = await axios.get(`${API_URL}/api/admin/portfolios`, {

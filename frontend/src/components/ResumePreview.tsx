@@ -19,7 +19,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
   };
 
   return (
-    <div className="resume-preview bg-white shadow-lg" id="resume-preview">
+    <div className="resume-preview bg-white text-black shadow-lg" id="resume-preview">
       <style>{`
         .resume-preview {
           width: 8.5in;

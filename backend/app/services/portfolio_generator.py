@@ -92,10 +92,14 @@ class PortfolioGeneratorService:
             resume_data = await self._enhance_with_ai(resume_data, template_data)
         
         # Download template files from Firebase Storage
-        
-        # Download template files from Firebase Storage
         template_html = self._download_template_file(template_id, template_data, 'index.html')
-        template_css = self._download_template_file(template_id, template_data, 'styles.css')
+        
+        # Try to download styles.css, use empty string if not found (Tailwind templates may not need it)
+        try:
+            template_css = self._download_template_file(template_id, template_data, 'styles.css')
+        except Exception as e:
+            logger.warning(f"styles.css not found for template {template_id}, using empty CSS (template may use Tailwind CDN): {e}")
+            template_css = "/* Styles handled by Tailwind CDN in HTML */\n"
         
         # Inject resume data into template
         html_content = self._inject_resume_data(
@@ -446,6 +450,12 @@ Return ONLY the enhanced description."""
             'projects': projects,
             'certifications': resume_data.get('certifications', []),
             'achievements': resume_data.get('achievements', []),
+            'languages': resume_data.get('languages', []),
+            'interests': resume_data.get('interests', []),
+            'volunteer': resume_data.get('volunteer', resume_data.get('volunteering', [])),
+            'publications': resume_data.get('publications', []),
+            'awards': resume_data.get('awards', []),
+            'references': resume_data.get('references', []),
             'theme': theme
         }
         

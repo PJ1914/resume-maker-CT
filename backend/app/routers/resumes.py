@@ -15,6 +15,7 @@ from app.schemas.resume import (
     ResumeFileType,
     CreateResumeRequest,
 )
+from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
 from app.services.storage import (
     generate_resume_id,
     get_storage_path,
@@ -195,6 +196,20 @@ async def upload_direct(
     
     # Generate resume ID and storage path
     user_id = current_user["uid"]
+    user_email = current_user.get("email", "")
+    
+    # Check if user has sufficient credits
+    if not has_sufficient_credits(user_id, FeatureType.UPLOAD_RESUME, user_email):
+        user_credits = get_user_credits(user_id, user_email)
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "message": "Insufficient credits to upload resume",
+                "current_balance": user_credits["balance"],
+                "required": FEATURE_COSTS[FeatureType.UPLOAD_RESUME]
+            }
+        )
+    
     resume_id = generate_resume_id()
     storage_path = get_storage_path(user_id, resume_id, file.filename or "resume.pdf")
     
@@ -248,6 +263,9 @@ async def upload_direct(
     )
     logging.info("Background task added for resume %s", resume_id)
     
+    # Deduct credits after successful upload
+    deduct_credits(user_id, FeatureType.UPLOAD_RESUME, f"Uploaded resume {resume_id}", user_email)
+    
     return {
         "message": "File uploaded successfully",
         "resume_id": resume_id,
@@ -267,6 +285,20 @@ async def create_resume(
     directly to Firestore without file upload. Includes template selection.
     """
     user_id = current_user["uid"]
+    user_email = current_user.get("email", "")
+    
+    # Check if user has sufficient credits
+    if not has_sufficient_credits(user_id, FeatureType.CREATE_RESUME, user_email):
+        user_credits = get_user_credits(user_id, user_email)
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "message": "Insufficient credits to create resume",
+                "current_balance": user_credits["balance"],
+                "required": FEATURE_COSTS[FeatureType.CREATE_RESUME]
+            }
+        )
+    
     resume_id = generate_resume_id()
     
     try:
@@ -451,6 +483,9 @@ async def create_resume(
             )
         
         logging.info("Resume saved successfully: %s", resume_id)
+        
+        # Deduct credits after successful creation
+        deduct_credits(user_id, FeatureType.CREATE_RESUME, f"Created resume {resume_id}", user_email)
         
         return {
             "status": "success",
