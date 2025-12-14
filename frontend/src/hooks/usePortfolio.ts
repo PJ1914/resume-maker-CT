@@ -6,6 +6,7 @@ import {
   unlockTemplate,
   generatePortfolio,
   deployPortfolio,
+  redeployPortfolio,
   getPortfolioSessions,
   deletePortfolioSession,
   GeneratePortfolioRequest,
@@ -108,9 +109,16 @@ export const usePortfolioGeneration = () => {
       setPreviewHtml(data.html_preview);
       setZipUrl(data.zip_url);
       setSessionId(data.session_id);
+      
+      // Show appropriate message based on whether existing session was reused
+      if (data.reused_existing) {
+        console.log('[usePortfolioGeneration] Reused existing portfolio session');
+      }
+      
       // Invalidate credits and sessions
       queryClient.invalidateQueries({ queryKey: ['credits', 'balance'] });
       queryClient.invalidateQueries({ queryKey: ['portfolio-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['unlocked-templates'] });
     },
     onError: (error) => {
       console.error('[usePortfolioGeneration] Generation failed:', error);
@@ -139,6 +147,7 @@ export const usePortfolioGeneration = () => {
     isDeploying: deployMutation.isPending,
     generateError: generateMutation.error,
     deployError: deployMutation.error,
+    generateResult: generateMutation.data,
     deployResult: deployMutation.data,
     previewHtml,
     zipUrl,
@@ -166,6 +175,30 @@ export const useDeletePortfolioSession = () => {
 
   return useMutation({
     mutationFn: (sessionId: string) => deletePortfolioSession(sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio-sessions'] });
+    },
+  });
+};
+
+/**
+ * Hook to redeploy an existing portfolio session to any platform
+ */
+export const useRedeployPortfolio = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ 
+      sessionId, 
+      platform, 
+      repoName,
+      customDomain 
+    }: { 
+      sessionId: string; 
+      platform: 'github' | 'vercel' | 'netlify'; 
+      repoName: string;
+      customDomain?: string 
+    }) => redeployPortfolio(sessionId, platform, repoName, customDomain),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio-sessions'] });
     },

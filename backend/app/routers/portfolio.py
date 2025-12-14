@@ -1,8 +1,8 @@
 """
 Portfolio generation and deployment endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 import logging
@@ -14,7 +14,8 @@ from app.services.github_deploy import GitHubDeployService
 from app.services.vercel_deploy import VercelDeployService
 from app.services.netlify_deploy import NetlifyDeployService
 from app.firebase import resume_maker_app
-from firebase_admin import firestore
+from firebase_admin import firestore, storage
+from google.cloud.firestore import FieldFilter
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
@@ -48,6 +49,7 @@ class GeneratePortfolioRequest(BaseModel):
     accent_color: str | None = None
     font_style: str | None = None
     use_ai_enhancement: bool = True
+    force_new: bool = False  # Force creating a new session even if existing one found
 
 
 class DeployPortfolioRequest(BaseModel):
@@ -55,6 +57,7 @@ class DeployPortfolioRequest(BaseModel):
     repo_name: str
     zip_url: str
     platform: str = "github"  # github, vercel, netlify
+    custom_domain: Optional[str] = None
 
 
 class LinkPlatformTokenRequest(BaseModel):
@@ -73,13 +76,19 @@ class PortfolioSession(BaseModel):
     id: str
     resume_id: str
     template_id: str
+    template_name: str | None = None
     html_preview: str = ""
     zip_url: str = ""
     created_at: datetime | None = None
     deployed: bool = False
-    repo_url: str | None = None
-    pages_url: str | None = None
+    deployments: List[Dict[str, Any]] = []  # Array of all deployments
+    repo_url: str | None = None  # Legacy - kept for backwards compatibility
+    pages_url: str | None = None  # Legacy - kept for backwards compatibility
     deployed_at: datetime | None = None
+    last_deployed_at: datetime | None = None
+    last_deployment_platform: str | None = None
+    last_deployment_url: str | None = None
+    deployment_count: int = 0
     theme: str | None = None
     accent_color: str | None = None
     font_style: str | None = None
@@ -353,33 +362,83 @@ async def generate_portfolio(
         user_data = user_doc.to_dict() if user_doc.exists else {}
         unlocked = user_data.get('unlocked_templates', [])
         
-        # BASIC tier templates require purchase (₹99-199)
-        if template_data['tier'] != 'free' and request.template_id not in unlocked:
+        # Check if template requires purchase (price > 0)
+        requires_purchase = template_data.get('price_credits', 0) > 0
+        if requires_purchase and request.template_id not in unlocked:
             raise HTTPException(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail=f"Template not unlocked. Purchase it first for ₹{template_data['price_inr']} or {template_data['price_credits']} credits."
             )
         
-        # Generate portfolio with AI enhancement
-        generator = PortfolioGeneratorService()
-        result = await generator.generate(
-            user_id=user_id,
-            resume_id=request.resume_id,
-            template_id=request.template_id,
-            theme=request.theme,
-            accent_color=request.accent_color,
-            font_style=request.font_style,
-            use_ai_enhancement=request.use_ai_enhancement
-        )
+        # Check if user already has a session for this resume+template combination
+        # Only reuse if force_new is False
+        existing_session = None
+        if not request.force_new:
+            existing_sessions = db.collection('portfolio_sessions').where(
+                filter=FieldFilter('user_id', '==', user_id)
+            ).where(
+                filter=FieldFilter('resume_id', '==', request.resume_id)
+            ).where(
+                filter=FieldFilter('template_id', '==', request.template_id)
+            ).stream()
+            
+            for session_doc in existing_sessions:
+                session_data = session_doc.to_dict()
+                # Check if session exists
+                if session_data:
+                    # Regenerate signed URL (old one may have expired - 24h validity)
+                    try:
+                        from datetime import timedelta
+                        bucket = storage.bucket(app=resume_maker_app)
+                        blob = bucket.blob(f"portfolios/{user_id}/{session_doc.id}.zip")
+                        
+                        # Check if blob exists
+                        if blob.exists():
+                            # Generate new signed URL valid for 24 hours
+                            fresh_zip_url = blob.generate_signed_url(
+                                expiration=timedelta(hours=24),
+                                method='GET',
+                                version='v4'
+                            )
+                            
+                            # Update session with fresh URL
+                            session_doc.reference.update({'zip_url': fresh_zip_url})
+                            
+                            existing_session = {
+                                'session_id': session_doc.id,
+                                'html_preview': session_data.get('html_preview', ''),
+                                'zip_url': fresh_zip_url,
+                                'ai_enhanced': session_data.get('ai_enhanced', False)
+                            }
+                            logger.info(f"♻️ Reusing existing portfolio session with fresh URL: {session_doc.id}")
+                            break
+                    except Exception as e:
+                        logger.warning(f"⚠️ Failed to regenerate ZIP URL for session {session_doc.id}: {e}")
+                        continue
         
-        # CONSUME TEMPLATE: Remove from unlocked list after generation
-        # User must purchase again for next use (consumable model)
-        if template_data['tier'] != 'free' and request.template_id in unlocked:
-            unlocked.remove(request.template_id)
-            db.collection('users').document(user_id).update({
-                'unlocked_templates': unlocked
-            })
-            logger.info(f"✅ Template {request.template_id} consumed after generation. User must repurchase for next use.")
+        # If no existing session, generate new portfolio
+        if not existing_session:
+            generator = PortfolioGeneratorService()
+            result = await generator.generate(
+                user_id=user_id,
+                resume_id=request.resume_id,
+                template_id=request.template_id,
+                theme=request.theme,
+                accent_color=request.accent_color,
+                font_style=request.font_style,
+                use_ai_enhancement=request.use_ai_enhancement
+            )
+            
+            # LOCK TEMPLATE: Remove from unlocked list after first use
+            # Template is consumed on first portfolio generation (only for paid templates)
+            requires_purchase = template_data.get('price_credits', 0) > 0
+            if requires_purchase and request.template_id in unlocked:
+                unlocked.remove(request.template_id)
+                user_doc.reference.update({'unlocked_templates': unlocked})
+                logger.info(f"🔒 Template {request.template_id} locked after use")
+        else:
+            # Use existing session
+            result = existing_session
         
         return {
             "success": True,
@@ -388,7 +447,8 @@ async def generate_portfolio(
             "zip_url": result['zip_url'],
             "ai_enhanced": result.get('ai_enhanced', False),
             "template_name": template_data['name'],
-            "credits_remaining": get_user_credits(user_id).get('balance', 0)
+            "credits_remaining": get_user_credits(user_id).get('balance', 0),
+            "reused_existing": existing_session is not None
         }
         
     except HTTPException:
@@ -509,7 +569,8 @@ async def deploy_portfolio(
                 session_id=request.session_id,
                 repo_name=repo_name,
                 zip_url=request.zip_url,
-                github_token=deployment_token
+                github_token=deployment_token,
+                custom_domain=request.custom_domain
             )
         elif request.platform == "vercel":
             deploy_service = VercelDeployService()
@@ -518,7 +579,8 @@ async def deploy_portfolio(
                 session_id=request.session_id,
                 project_name=repo_name,
                 zip_url=request.zip_url,
-                vercel_token=deployment_token
+                vercel_token=deployment_token,
+                custom_domain=request.custom_domain
             )
         elif request.platform == "netlify":
             deploy_service = NetlifyDeployService()
@@ -527,37 +589,66 @@ async def deploy_portfolio(
                 session_id=request.session_id,
                 site_name=repo_name,
                 zip_url=request.zip_url,
-                netlify_token=deployment_token
+                netlify_token=deployment_token,
+                custom_domain=request.custom_domain
             )
+        
+        # Get current session data for deployments array
+        session_doc = db.collection('portfolio_sessions').document(request.session_id).get()
+        session_data = session_doc.to_dict() if session_doc.exists else {}
+        current_deployments = session_data.get('deployments', [])
+        
+        # Calculate credits cost based on platform
+        credits_cost = {
+            'github': 3,
+            'netlify': 5,
+            'vercel': 7
+        }.get(request.platform, 3)
+        
+        # Keep old deployments for history (don't remove)
+        # Mark old deployments for same platform as 'replaced'
+        for d in current_deployments:
+            if d.get('platform') == request.platform and d.get('status') == 'active':
+                d['status'] = 'replaced'
+                d['replaced_at'] = datetime.utcnow()
+        
+        # Add new deployment (use datetime instead of SERVER_TIMESTAMP for array items)
+        new_deployment = {
+            'platform': request.platform,
+            'repo_name': repo_name,
+            'repo_url': result.get('repo_url'),
+            'live_url': result.get('url'),
+            'deployed_at': datetime.utcnow(),
+            'credits_spent': credits_cost,
+            'status': 'active'
+        }
+        
+        if request.custom_domain:
+            new_deployment['custom_domain'] = request.custom_domain
+        
+        current_deployments.append(new_deployment)
         
         # Update session with deployment results
         session_doc.reference.update({
             'deployed': True,
             'deployed_at': firestore.SERVER_TIMESTAMP,
-            'deployment_result': result,
+            'deployments': current_deployments,
             'deployment_platform': request.platform,
-            'repo_url': result.get('repo_url'),
-            'pages_url': result.get('url'),
-            'repo_name': repo_name
+            'repo_url': result.get('repo_url'),  # Legacy field
+            'pages_url': result.get('url'),  # Legacy field
+            'repo_name': repo_name,
+            'last_deployed_at': firestore.SERVER_TIMESTAMP,
+            'last_deployment_platform': request.platform
         })
         
-        # CONSUME TEMPLATE: Remove from unlocked list after deployment
-        # User must purchase again for next deployment (consumable model)
-        template_id = session_data.get('template_id')
-        if template_id:
-            user_doc_ref = db.collection('users').document(user_id)
-            user_doc_data = user_doc_ref.get()
-            if user_doc_data.exists:
-                user_unlocked = user_doc_data.to_dict().get('unlocked_templates', [])
-                if template_id in user_unlocked:
-                    user_unlocked.remove(template_id)
-                    user_doc_ref.update({'unlocked_templates': user_unlocked})
-                    logger.info(f"✅ Template {template_id} consumed after deployment. User must repurchase for next use.")
+        # NO CONSUMPTION: Template stays unlocked for future deployments
+        # Users can re-deploy to multiple platforms unlimited times
+        # Only deployment credits are charged per platform
         
         # Deduct credits after successful deployment
         deduct_credits(user_id, feature_type, f"Deployed portfolio to {request.platform}", user_email)
         
-        return {
+        response = {
             "success": True,
             "platform": request.platform,
             "repo_url": result.get('repo_url'),
@@ -567,6 +658,14 @@ async def deploy_portfolio(
             "message": result.get('message', f"✅ Successfully deployed to {request.platform.title()}!"),
             "credits_remaining": get_user_credits(user_id).get('balance', 0)
         }
+        
+        # Include custom domain and DNS instructions if present (GitHub Pages)
+        if result.get('custom_domain'):
+            response['custom_domain'] = result['custom_domain']
+        if result.get('dns_instructions'):
+            response['dns_instructions'] = result['dns_instructions']
+        
+        return response
         
     except HTTPException:
         raise
@@ -595,6 +694,28 @@ async def get_portfolio_sessions(
         for doc in sessions_ref:
             data = doc.to_dict()
             data['id'] = doc.id
+            
+            # MIGRATION: Convert old single deployment to new deployments array format
+            if data.get('deployed') and not data.get('deployments'):
+                deployments = []
+                
+                # Check if there's a deployment_platform (single deployment)
+                platform = data.get('deployment_platform') or data.get('last_deployment_platform') or 'github'
+                repo_url = data.get('repo_url')
+                pages_url = data.get('pages_url')
+                repo_name = data.get('repo_name')
+                
+                if repo_url or pages_url:
+                    deployments.append({
+                        'platform': platform,
+                        'repo_name': repo_name or 'portfolio',
+                        'repo_url': repo_url,
+                        'live_url': pages_url,
+                        'deployed_at': data.get('deployed_at') or data.get('created_at')
+                    })
+                    
+                data['deployments'] = deployments
+            
             try:
                 sessions.append(PortfolioSession(**data))
             except Exception as e:
@@ -728,6 +849,77 @@ async def check_platform_linked(
         return {"linked": False, "platform": platform}
 
 
+@router.patch("/sessions/{session_id}/deployment-domain")
+async def update_deployment_domain(
+    session_id: str,
+    platform: str = Query(..., description="Platform to update domain for"),
+    custom_domain: str = Query(..., description="New custom domain"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update custom domain for a specific deployment"""
+    if not resume_maker_app:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Firebase not configured"
+        )
+    
+    user_id = current_user["uid"]
+    
+    try:
+        db = firestore.client(app=resume_maker_app)
+        session_ref = db.collection('portfolio_sessions').document(session_id)
+        session_doc = session_ref.get()
+        
+        if not session_doc.exists:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found"
+            )
+        
+        session_data = session_doc.to_dict()
+        
+        if session_data.get('user_id') != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this session"
+            )
+        
+        # Update the custom_domain for the active deployment on specified platform
+        deployments = session_data.get('deployments', [])
+        updated = False
+        
+        for deployment in deployments:
+            if deployment.get('platform') == platform and deployment.get('status') == 'active':
+                deployment['custom_domain'] = custom_domain
+                deployment['domain_updated_at'] = datetime.utcnow()
+                updated = True
+                break
+        
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No active deployment found for platform: {platform}"
+            )
+        
+        # Save updated deployments
+        session_ref.update({'deployments': deployments})
+        
+        return {
+            "success": True,
+            "message": f"Custom domain updated for {platform}",
+            "custom_domain": custom_domain
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Failed to update custom domain for session {session_id}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update custom domain: {str(e)}"
+        )
+
+
 @router.delete("/unlink-platform/{platform}")
 async def unlink_platform(
     platform: str,
@@ -802,59 +994,109 @@ async def delete_portfolio_session(
                 detail="Not authorized to delete this session"
             )
             
-        # Remote Deletion Logic
-        platform = session_data.get('deployment_platform')
+        # Remote Deletion Logic - Delete from ALL deployed platforms
+        deployments = session_data.get('deployments', [])
         is_deployed = session_data.get('deployed', False)
+        deletion_errors = []
         
-        if is_deployed and platform:
+        logger.info(f"🔍 DELETE SESSION - ID: {session_id}")
+        logger.info(f"   - deployed: {is_deployed}")
+        logger.info(f"   - deployments array: {deployments}")
+        logger.info(f"   - repo_url: {session_data.get('repo_url')}")
+        logger.info(f"   - pages_url: {session_data.get('pages_url')}")
+        
+        if is_deployed and deployments:
             try:
                 user_doc = db.collection('users').document(user_id).get()
                 user_data = user_doc.to_dict() if user_doc.exists else {}
                 
-                if platform == "github":
-                    token = None
-                    if user_data.get('github') and isinstance(user_data['github'], dict):
-                        token = user_data['github'].get('accessToken')
-                    if not token:
-                        token = user_data.get('github_token') or user_data.get('githubToken')
+                # Delete from each platform
+                for deployment in deployments:
+                    platform = deployment.get('platform')
                     
-                    repo_name = session_data.get('repo_name')
-                    repo_url = session_data.get('repo_url')
-                    if not repo_name and repo_url:
-                        parts = repo_url.split('/')
-                        if len(parts) >= 5: repo_name = f"{parts[-2]}/{parts[-1]}"
+                    try:
+                        if platform == "github":
+                            token = None
+                            if user_data.get('github') and isinstance(user_data['github'], dict):
+                                token = user_data['github'].get('accessToken')
+                            if not token:
+                                token = user_data.get('github_token') or user_data.get('githubToken')
+                            
+                            repo_name = deployment.get('repo_name')
+                            repo_url = deployment.get('repo_url')
+                            
+                            logger.info(f"🔍 Attempting GitHub deletion - repo_name: {repo_name}, repo_url: {repo_url}")
+                            
+                            # Extract owner/repo from URL if repo_name is just the repo name
+                            if repo_url and 'github.com' in repo_url:
+                                parts = repo_url.rstrip('/').split('/')
+                                if len(parts) >= 2:
+                                    # Extract owner/repo from https://github.com/owner/repo
+                                    owner_repo = f"{parts[-2]}/{parts[-1]}"
+                                    repo_name = owner_repo
+                                    logger.info(f"📝 Extracted from URL: {repo_name}")
+                            
+                            if not token:
+                                logger.warning("⚠️ No GitHub token found, skipping deletion")
+                                deletion_errors.append(f"GitHub: No token found")
+                            elif not repo_name:
+                                logger.warning("⚠️ No repo name found, skipping deletion")
+                                deletion_errors.append(f"GitHub: No repo name found")
+                            else:
+                                logger.info(f"🗑️ Deleting GitHub repository: {repo_name}")
+                                service = GitHubDeployService()
+                                service.delete_repository(repo_name, token)
+                                logger.info(f"✅ Successfully deleted GitHub repository: {repo_name}")
+                            
+                        elif platform == "vercel":
+                            token = user_data.get('vercel', {}).get('token')
+                            project_name = deployment.get('repo_name')
+                            if token and project_name:
+                                service = VercelDeployService()
+                                service.delete_project(project_name, token)
+                                logger.info(f"✅ Deleted Vercel project: {project_name}")
+                            
+                        elif platform == "netlify":
+                            token = user_data.get('netlify', {}).get('token')
+                            # For Netlify, we need to extract site_id from live_url or store it separately
+                            live_url = deployment.get('live_url', '')
+                            if token and live_url:
+                                # Try to get site_id from URL or deployment result
+                                site_id = None
+                                dep_res = session_data.get('deployment_result', {})
+                                if dep_res.get('site_id'):
+                                    site_id = dep_res.get('site_id')
+                                
+                                if site_id:
+                                    service = NetlifyDeployService()
+                                    service.delete_site(site_id, token)
+                                    logger.info(f"✅ Deleted Netlify site: {site_id}")
                     
-                    if token and repo_name:
-                        service = GitHubDeployService()
-                        service.delete_repository(repo_name, token)
-                        
-                elif platform == "vercel":
-                    token = user_data.get('vercel', {}).get('token')
-                    project_name = session_data.get('repo_name')
-                    if token and project_name:
-                        service = VercelDeployService()
-                        service.delete_project(project_name, token)
-                        
-                elif platform == "netlify":
-                    token = user_data.get('netlify', {}).get('token')
-                    dep_res = session_data.get('deployment_result', {})
-                    site_id = dep_res.get('site_id')
-                    if token and site_id:
-                         service = NetlifyDeployService()
-                         service.delete_site(site_id, token)
+                    except Exception as platform_error:
+                        error_msg = f"Failed to delete {platform}: {str(platform_error)}"
+                        logger.error(error_msg)
+                        deletion_errors.append(error_msg)
 
             except Exception as e:
                 logger.error(f"Failed to delete remote resources: {e}")
-                # We return this as a success but with a warning message
-                session_ref.delete()
-                return {
-                    "success": True, 
-                    "message": f"Session deleted from history, but failed to delete remote {platform} repo: {str(e)}"
-                }
+                deletion_errors.append(str(e))
 
+        # Delete session from Firestore
         session_ref.delete()
         
-        return {"success": True, "message": "Session and deployment deleted successfully"}
+        # Return appropriate message
+        if deletion_errors:
+            return {
+                "success": True, 
+                "message": f"Session deleted from history. Some remote deletions failed: {'; '.join(deletion_errors)}"
+            }
+        elif deployments:
+            return {
+                "success": True, 
+                "message": f"Session and all {len(deployments)} deployment(s) deleted successfully"
+            }
+        else:
+            return {"success": True, "message": "Session deleted successfully"}
         
     except HTTPException:
         raise
@@ -862,4 +1104,233 @@ async def delete_portfolio_session(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete session: {str(e)}"
+        )
+
+
+@router.post("/redeploy/{session_id}")
+async def redeploy_portfolio(
+    session_id: str,
+    platform: str,
+    repo_name: str,
+    custom_domain: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Re-deploy an existing portfolio session to any platform without regenerating.
+    This allows users to deploy the same portfolio to multiple platforms or re-deploy after changes.
+    
+    Costs: Deployment credits only (3-7 credits depending on platform)
+    No template purchase required - user already owns the template
+    """
+    if not resume_maker_app:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Firebase not configured"
+        )
+    
+    user_id = current_user["uid"]
+    user_email = current_user.get("email", "")
+    db = firestore.client(app=resume_maker_app)
+    
+    # Validate platform
+    platform_feature_map = {
+        "github": FeatureType.DEPLOY_GHPAGES,
+        "vercel": FeatureType.DEPLOY_VERCEL,
+        "netlify": FeatureType.DEPLOY_NETLIFY
+    }
+    
+    if platform not in platform_feature_map:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid platform. Supported: github, vercel, netlify"
+        )
+    
+    feature_type = platform_feature_map[platform]
+    
+    # Check if user has sufficient credits for deployment
+    if not has_sufficient_credits(user_id, feature_type, user_email):
+        user_credits = get_user_credits(user_id, user_email)
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "message": f"Insufficient credits to deploy to {platform}",
+                "current_balance": user_credits["balance"],
+                "required": FEATURE_COSTS[feature_type]
+            }
+        )
+    
+    try:
+        # Get session details
+        session_doc = db.collection('portfolio_sessions').document(session_id).get()
+        
+        if not session_doc.exists:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Portfolio session not found"
+            )
+        
+        session_data = session_doc.to_dict()
+        
+        # Verify session belongs to user
+        if session_data.get('user_id') != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to deploy this session"
+            )
+        
+        # Get ZIP URL from session
+        zip_url = session_data.get('zip_url')
+        if not zip_url:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Session has no ZIP file for deployment"
+            )
+        
+        # Get user's platform tokens
+        user_doc = db.collection('users').document(user_id).get()
+        user_data = user_doc.to_dict() if user_doc.exists else {}
+        
+        # Execute deployment based on platform
+        result = {}
+        
+        if platform == "github":
+            # Get GitHub token
+            github_token = None
+            if user_data.get('github') and isinstance(user_data['github'], dict):
+                github_token = user_data['github'].get('accessToken')
+            if not github_token:
+                github_token = user_data.get('github_token') or user_data.get('githubToken')
+            
+            if not github_token:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="GitHub not linked. Please authenticate with GitHub first."
+                )
+            
+            service = GitHubDeployService()
+            result = await service.deploy(
+                user_id=user_id,
+                session_id=session_id,
+                repo_name=repo_name,
+                zip_url=zip_url,
+                github_token=github_token,
+                custom_domain=custom_domain
+            )
+            
+        elif platform == "vercel":
+            vercel_token = user_data.get('vercel', {}).get('token')
+            if not vercel_token:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Vercel not linked. Please add your Vercel token first."
+                )
+            
+            service = VercelDeployService()
+            result = await service.deploy(
+                user_id=user_id,
+                session_id=session_id,
+                project_name=repo_name,
+                zip_url=zip_url,
+                vercel_token=vercel_token,
+                custom_domain=custom_domain
+            )
+            
+        elif platform == "netlify":
+            netlify_token = user_data.get('netlify', {}).get('token')
+            if not netlify_token:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Netlify not linked. Please add your Netlify token first."
+                )
+            
+            service = NetlifyDeployService()
+            result = await service.deploy(
+                user_id=user_id,
+                session_id=session_id,
+                site_name=repo_name,
+                zip_url=zip_url,
+                netlify_token=netlify_token,
+                custom_domain=custom_domain
+            )
+        
+        # Create a deployment record (keep history of all deployments)
+        deployment_record = {
+            'platform': platform,
+            'repo_name': repo_name,
+            'repo_url': result.get('repo_url'),
+            'live_url': result.get('url'),
+            'deployed_at': firestore.SERVER_TIMESTAMP,
+            'status': result.get('status')
+        }
+        
+        # Calculate credits cost based on platform
+        credits_cost = {
+            'github': 3,
+            'netlify': 5,
+            'vercel': 7
+        }.get(platform, 3)
+        
+        # Get current deployments array from session
+        current_deployments = session_data.get('deployments', [])
+        
+        # Keep old deployments for history (don't remove)
+        # Mark old deployments for same platform as 'replaced'
+        for d in current_deployments:
+            if d.get('platform') == platform and d.get('status') == 'active':
+                d['status'] = 'replaced'
+                d['replaced_at'] = datetime.utcnow()
+        
+        # Add new deployment (use datetime instead of SERVER_TIMESTAMP for array items)
+        new_deployment = {
+            'platform': platform,
+            'repo_name': repo_name,
+            'repo_url': result.get('repo_url'),
+            'live_url': result.get('url'),
+            'deployed_at': datetime.utcnow(),
+            'credits_spent': credits_cost,
+            'status': 'active'
+        }
+        
+        if custom_domain:
+            new_deployment['custom_domain'] = custom_domain
+        
+        current_deployments.append(new_deployment)
+        
+        # Update main session with deployments array and set deployed flag
+        session_doc.reference.update({
+            'deployed': True,
+            'deployments': current_deployments,
+            'last_deployed_at': firestore.SERVER_TIMESTAMP,
+            'last_deployment_platform': platform
+        })
+        
+        # Deduct credits after successful deployment
+        deduct_credits(user_id, feature_type, f"Re-deployed portfolio to {platform}", user_email)
+        
+        response = {
+            "success": True,
+            "platform": platform,
+            "repo_url": result.get('repo_url'),
+            "live_url": result.get('url'),
+            "status": result.get('status'),
+            "repo_name": repo_name,
+            "message": result.get('message', f"✅ Successfully re-deployed to {platform.title()}!"),
+            "credits_remaining": get_user_credits(user_id, user_email).get('balance', 0)
+        }
+        
+        # Include custom domain and DNS instructions if present (GitHub Pages)
+        if result.get('custom_domain'):
+            response['custom_domain'] = result['custom_domain']
+        if result.get('dns_instructions'):
+            response['dns_instructions'] = result['dns_instructions']
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Failed to re-deploy session {session_id}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to re-deploy portfolio: {str(e)}"
         )
