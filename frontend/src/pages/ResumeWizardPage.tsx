@@ -123,12 +123,12 @@ export default function ResumeWizardPage() {
       }
 
       // Call API to create resume with template
-      const response: any = await apiClient.post('/api/create', resumeData)
+      const response: any = await apiClient.post('/api/resumes/create', resumeData)
 
       if (response && response.resume_id) {
         setShowConfetti(true)
         toast.success('Resume created successfully!')
-        
+
         // Invalidate credits to show updated balance
         queryClient.invalidateQueries({ queryKey: creditKeys.balance() })
 
