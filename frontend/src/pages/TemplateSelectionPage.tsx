@@ -93,7 +93,7 @@ const DEFAULT_TEMPLATES: Template[] = [
 export default function TemplateSelectionPage() {
   const navigate = useNavigate()
   const { isAdmin } = useAuth()
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('modern')
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('resume_1')
   const [templates, setTemplates] = useState<Template[]>(DEFAULT_TEMPLATES)
 
   useEffect(() => {

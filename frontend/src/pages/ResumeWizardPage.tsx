@@ -46,7 +46,7 @@ export default function ResumeWizardPage() {
   const [showConfetti, setShowConfetti] = useState(false)
 
   // Get selected template from route state
-  const templateId = (location.state as any)?.templateId || 'modern'
+  const templateId = (location.state as any)?.templateId || 'resume_1'
 
   const [resumeData, setResumeData] = useState({
     template: templateId,
