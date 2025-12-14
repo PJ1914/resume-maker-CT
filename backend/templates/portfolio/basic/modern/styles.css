@@ -92,6 +92,8 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 @media (min-width: 768px) {
@@ -104,6 +106,8 @@ body {
 .contact-link {
     color: #ffffff;
     text-decoration: none;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .contact-link:hover {
@@ -113,6 +117,8 @@ body {
 
 .contact-text {
     color: #ffffff;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .separator {

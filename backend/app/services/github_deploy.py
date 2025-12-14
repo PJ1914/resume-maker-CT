@@ -27,7 +27,8 @@ class GitHubDeployService:
         session_id: str,
         repo_name: str,
         zip_url: str,
-        github_token: str
+        github_token: str,
+        custom_domain: str = None
     ) -> Dict[str, Any]:
         """
         Deploy portfolio to GitHub Pages
@@ -74,12 +75,29 @@ class GitHubDeployService:
             )
             logger.info(f"🌐 GitHub Pages enabled: {pages_url}")
             
-            return {
+            # Create CNAME file if custom domain provided
+            dns_instructions = None
+            if custom_domain:
+                try:
+                    self._create_cname_file(repo_full_name, custom_domain, github_token)
+                    logger.info(f"✅ CNAME file created for: {custom_domain}")
+                    dns_instructions = self._get_dns_instructions(custom_domain, username, repo_name)
+                except Exception as cname_error:
+                    logger.warning(f"⚠️ Failed to create CNAME: {cname_error}")
+            
+            result = {
                 "repo_url": f"https://github.com/{repo_full_name}",
                 "url": pages_url,
                 "status": "deployed",
                 "message": f"Portfolio deployed successfully! GitHub Pages may take 1-2 minutes to become available."
             }
+            
+            if dns_instructions:
+                result["custom_domain"] = custom_domain
+                result["dns_instructions"] = dns_instructions
+                result["message"] += f" CNAME file created for {custom_domain}. Please configure DNS settings."
+            
+            return result
             
         except Exception as e:
             logger.error(f"❌ Deployment failed: {str(e)}")
@@ -251,6 +269,57 @@ class GitHubDeployService:
         username = repo_full_name.split('/')[0]
         repo_name = repo_full_name.split('/')[1]
         return f"https://{username}.github.io/{repo_name}/"
+    
+    def _create_cname_file(self, repo_full_name: str, custom_domain: str, github_token: str):
+        """Create CNAME file in repository for custom domain"""
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        # Encode CNAME content
+        content = base64.b64encode(custom_domain.encode()).decode()
+        
+        data = {
+            "message": "Add CNAME for custom domain",
+            "content": content
+        }
+        
+        response = requests.put(
+            f"{self.GITHUB_API_BASE}/repos/{repo_full_name}/contents/CNAME",
+            headers=headers,
+            json=data
+        )
+        
+        if response.status_code not in [200, 201]:
+            raise Exception(f"Failed to create CNAME: {response.json().get('message', 'Unknown error')}")
+    
+    def _get_dns_instructions(self, custom_domain: str, username: str, repo_name: str) -> Dict[str, Any]:
+        """Generate DNS configuration instructions"""
+        is_apex_domain = custom_domain.count('.') == 1
+        
+        if is_apex_domain:
+            # Apex domain (example.com)
+            return {
+                "type": "A",
+                "records": [
+                    {"type": "A", "host": "@", "value": "185.199.108.153"},
+                    {"type": "A", "host": "@", "value": "185.199.109.153"},
+                    {"type": "A", "host": "@", "value": "185.199.110.153"},
+                    {"type": "A", "host": "@", "value": "185.199.111.153"}
+                ],
+                "instructions": f"Add these A records to your DNS provider for {custom_domain}"
+            }
+        else:
+            # Subdomain (www.example.com or portfolio.example.com)
+            subdomain = custom_domain.split('.')[0]
+            return {
+                "type": "CNAME",
+                "records": [
+                    {"type": "CNAME", "host": subdomain, "value": f"{username}.github.io"}
+                ],
+                "instructions": f"Add this CNAME record to your DNS provider for {custom_domain}"
+            }
 
     def delete_repository(self, repo_name: str, github_token: str) -> bool:
         """

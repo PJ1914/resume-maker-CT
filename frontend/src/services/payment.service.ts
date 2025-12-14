@@ -3,8 +3,11 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export interface PaymentPlan {
+  name?: string;
   price: number;
   quantity: number;
+  popular?: boolean;
+  savings?: string | null;
 }
 
 export interface CreateOrderRequest {
@@ -116,7 +119,7 @@ class PaymentService {
     onFailure: (error: any) => void
   ): Promise<void> {
     const isLoaded = await this.loadRazorpayScript();
-    
+
     if (!isLoaded) {
       onFailure(new Error('Failed to load Razorpay SDK'));
       return;

@@ -6,6 +6,7 @@ import requests
 import zipfile
 import tempfile
 import os
+import re
 from typing import Dict, Any
 import logging
 
@@ -20,13 +21,48 @@ class VercelDeployService:
     def __init__(self):
         pass
     
+    def _sanitize_project_name(self, name: str) -> str:
+        """
+        Sanitize project name to meet Vercel requirements:
+        - Lowercase only
+        - Max 100 characters
+        - Only letters, digits, '.', '_', '-'
+        - Cannot contain '---' sequence
+        """
+        # Convert to lowercase
+        sanitized = name.lower()
+        
+        # Replace spaces and invalid characters with hyphens
+        sanitized = re.sub(r'[^a-z0-9._-]', '-', sanitized)
+        
+        # Replace multiple consecutive hyphens with single hyphen
+        sanitized = re.sub(r'-+', '-', sanitized)
+        
+        # Remove '---' sequences (replace with '-')
+        while '---' in sanitized:
+            sanitized = sanitized.replace('---', '-')
+        
+        # Remove leading/trailing hyphens or dots
+        sanitized = sanitized.strip('.-')
+        
+        # Ensure it's not empty
+        if not sanitized:
+            sanitized = 'portfolio'
+        
+        # Truncate to 100 characters
+        if len(sanitized) > 100:
+            sanitized = sanitized[:100].rstrip('.-')
+        
+        return sanitized
+    
     async def deploy(
         self,
         user_id: str,
         session_id: str,
         project_name: str,
         zip_url: str,
-        vercel_token: str
+        vercel_token: str,
+        custom_domain: str = None
     ) -> Dict[str, Any]:
         """
         Deploy portfolio to Vercel using PAT
@@ -42,6 +78,10 @@ class VercelDeployService:
             Dict with url, status, and deployment info
         """
         try:
+            # Sanitize project name for Vercel requirements
+            sanitized_project_name = self._sanitize_project_name(project_name)
+            logger.info(f"📝 Sanitized project name: {project_name} → {sanitized_project_name}")
+            
             # Verify token and get user info
             user_info = self._get_user_info(vercel_token)
             username = user_info.get('username') or user_info.get('name', 'user')
@@ -53,7 +93,7 @@ class VercelDeployService:
             
             # Prepare deployment payload
             deployment_payload = {
-                "name": project_name,
+                "name": sanitized_project_name,
                 "files": files_content,
                 "projectSettings": {
                     "framework": None,  # Static site
@@ -75,12 +115,28 @@ class VercelDeployService:
             
             logger.info(f"✅ Vercel deployment successful: {deployment_url}")
             
-            return {
+            # Configure custom domain if provided
+            domain_configured = False
+            if custom_domain:
+                try:
+                    self._add_domain(sanitized_project_name, custom_domain, vercel_token)
+                    domain_configured = True
+                    logger.info(f"✅ Custom domain configured: {custom_domain}")
+                except Exception as domain_error:
+                    logger.warning(f"⚠️ Failed to configure domain: {domain_error}")
+            
+            result = {
                 "url": deployment_url,
                 "status": "deployed",
                 "deployment_id": deployment_result.get('id'),
                 "message": f"Portfolio deployed successfully to Vercel! May take 1-2 minutes to become available."
             }
+            
+            if domain_configured:
+                result["custom_domain"] = custom_domain
+                result["message"] += f" Custom domain {custom_domain} has been configured."
+            
+            return result
             
         except Exception as e:
             logger.error(f"❌ Vercel deployment failed: {str(e)}")
@@ -163,6 +219,31 @@ class VercelDeployService:
         if response.status_code not in [200, 201]:
             error_msg = response.json().get('error', {}).get('message', 'Unknown error')
             raise Exception(f"Failed to create Vercel deployment: {error_msg}")
+        
+        return response.json()
+
+    def _add_domain(self, project_name: str, domain: str, vercel_token: str) -> Dict[str, Any]:
+        """Add a custom domain to Vercel project"""
+        headers = {
+            "Authorization": f"Bearer {vercel_token}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "name": domain
+        }
+        
+        response = requests.post(
+            f"{self.VERCEL_API_BASE}/v9/projects/{project_name}/domains",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code not in [200, 201]:
+            error_data = response.json()
+            error_msg = error_data.get('error', {}).get('message', 'Unknown error')
+            raise Exception(f"Failed to add domain: {error_msg}")
         
         return response.json()
 

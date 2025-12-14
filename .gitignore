@@ -183,6 +183,7 @@ temp/
 !README.md
 !backend/README.md
 !frontend/README.md
+!PROJECT_DOCUMENTATION.md
 
 # Batch files and scripts
 start.bat

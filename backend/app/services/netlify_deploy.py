@@ -26,7 +26,8 @@ class NetlifyDeployService:
         session_id: str,
         site_name: str,
         zip_url: str,
-        netlify_token: str
+        netlify_token: str,
+        custom_domain: str = None
     ) -> Dict[str, Any]:
         """
         Deploy portfolio to Netlify using PAT
@@ -70,15 +71,31 @@ class NetlifyDeployService:
             
             deploy_url = deployment.get('ssl_url') or deployment.get('deploy_ssl_url') or site_url
             
+            # Configure custom domain if provided
+            domain_configured = False
+            if custom_domain:
+                try:
+                    self._add_domain(site_id, custom_domain, netlify_token)
+                    domain_configured = True
+                    logger.info(f"✅ Custom domain configured: {custom_domain}")
+                except Exception as domain_error:
+                    logger.warning(f"⚠️ Failed to configure domain: {domain_error}")
+            
             logger.info(f"✅ Netlify deployment successful: {deploy_url}")
             
-            return {
+            result = {
                 "url": deploy_url,
                 "status": "deployed",
                 "site_id": site_id,
                 "deployment_id": deployment.get('id'),
                 "message": f"Portfolio deployed successfully to Netlify! May take 1-2 minutes to become available."
             }
+            
+            if domain_configured:
+                result["custom_domain"] = custom_domain
+                result["message"] += f" Custom domain {custom_domain} has been configured."
+            
+            return result
             
         except Exception as e:
             logger.error(f"❌ Netlify deployment failed: {str(e)}")
@@ -186,6 +203,29 @@ class NetlifyDeployService:
         
         if response.status_code not in [200, 201]:
             raise Exception(f"Failed to deploy to Netlify: {response.json().get('message', 'Unknown error')}")
+        
+        return response.json()
+    
+    def _add_domain(self, site_id: str, domain: str, netlify_token: str) -> Dict[str, Any]:
+        """Add a custom domain to Netlify site"""
+        headers = {
+            "Authorization": f"Bearer {netlify_token}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {"domain_name": domain}
+        
+        response = requests.post(
+            f"{self.NETLIFY_API_BASE}/sites/{site_id}/domains",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code not in [200, 201]:
+            error_data = response.json()
+            error_msg = error_data.get('message', 'Unknown error')
+            raise Exception(f"Failed to add domain: {error_msg}")
         
         return response.json()
 

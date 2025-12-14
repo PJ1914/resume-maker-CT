@@ -93,7 +93,7 @@ const CreditPurchasePage = () => {
           {/* Packages Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {packages.map((pkg, index) => {
-              const isPopular = index === 1; // Assuming second package is popular for now, logic can be adjusted
+              const isPopular = pkg.popular ?? index === 1;
               const pricePerCredit = (pkg.price / pkg.quantity).toFixed(2);
 
               return (
@@ -119,7 +119,7 @@ const CreditPurchasePage = () => {
                   <div className="p-6 sm:p-8 flex flex-col h-full">
                     <div className="mb-6">
                       <h3 className="text-lg font-medium text-secondary-500 dark:text-white/60 mb-2">
-                        {pkg.quantity === 100 ? 'Starter' : pkg.quantity === 500 ? 'Professional' : pkg.quantity >= 1000 ? 'Enterprise' : 'Basic'} Pack
+                        {pkg.name || (pkg.quantity === 50 ? 'Starter' : pkg.quantity === 100 ? 'Standard' : pkg.quantity === 200 ? 'Pro' : pkg.quantity >= 400 ? 'Ultimate' : 'Basic Pack')}
                       </h3>
                       <div className="flex items-baseline gap-1">
                         <span className="text-4xl font-bold text-secondary-900 dark:text-white">

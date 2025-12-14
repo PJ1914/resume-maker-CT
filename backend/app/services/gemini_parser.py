@@ -410,8 +410,13 @@ EXACT JSON STRUCTURE TO RETURN:
     "location": "City, Country",
     "linkedin": "linkedin.com/in/username",
     "github": "github.com/username",
+    "instagram": "instagram.com/username",
+    "twitter": "twitter.com/username",
+    "leetcode": "leetcode.com/username",
+    "codechef": "codechef.com/users/username",
+    "hackerrank": "hackerrank.com/username",
     "portfolio": "website.com",
-    "other_links": ["leetcode.com/username"]
+    "other_links": []
   }},
   "sections": [
     {{
@@ -621,7 +626,9 @@ FINAL CHECKLIST BEFORE RETURNING:
 ✅ Certifications (with issuers) → "certifications" section
 ✅ Awards/Honors (recognition) → "awards" section  
 ✅ Achievements (accomplishments) → "achievements" section
-✅ Extract ALL contact info: name, email, phone, location, linkedin, github, portfolio, leetcode, etc.
+✅ Extract ALL contact info: name, email, phone, location, linkedin, github, instagram, twitter, leetcode, codechef, hackerrank, portfolio
+✅ Extract GPA/CGPA from education (e.g., "8.41/10.0" or "9.28 CGPA")
+✅ Extract project links (GitHub repos, live demos, etc.) from project descriptions
 ✅ For skills, group by category (Languages, Frameworks, Tools, Databases, etc.)
 ✅ Languages spoken (English, Hindi, etc.) → "languages" section (NOT programming languages)
 ✅ Hobbies/Interests → "interests" section
@@ -707,6 +714,11 @@ Return ONLY valid JSON. No markdown, no explanations.'''
             'location': None,
             'linkedin': None,
             'github': None,
+            'instagram': None,
+            'twitter': None,
+            'leetcode': None,
+            'codechef': None,
+            'hackerrank': None,
             'portfolio': None,
         }
         
@@ -724,6 +736,26 @@ Return ONLY valid JSON. No markdown, no explanations.'''
                     match = re.search(r'github\.com/([A-Za-z0-9_-]+)', uri, re.IGNORECASE)
                     if match:
                         contact['github'] = f"github.com/{match.group(1)}"
+                elif 'instagram.com/' in uri.lower() and not contact['instagram']:
+                    match = re.search(r'instagram\.com/([A-Za-z0-9_.-]+)', uri, re.IGNORECASE)
+                    if match:
+                        contact['instagram'] = f"instagram.com/{match.group(1)}"
+                elif 'twitter.com/' in uri.lower() and not contact['twitter']:
+                    match = re.search(r'twitter\.com/([A-Za-z0-9_]+)', uri, re.IGNORECASE)
+                    if match:
+                        contact['twitter'] = f"twitter.com/{match.group(1)}"
+                elif 'leetcode.com/' in uri.lower() and not contact['leetcode']:
+                    match = re.search(r'leetcode\.com/([A-Za-z0-9_-]+)', uri, re.IGNORECASE)
+                    if match:
+                        contact['leetcode'] = f"leetcode.com/{match.group(1)}"
+                elif 'codechef.com/users/' in uri.lower() and not contact['codechef']:
+                    match = re.search(r'codechef\.com/users/([A-Za-z0-9_]+)', uri, re.IGNORECASE)
+                    if match:
+                        contact['codechef'] = f"codechef.com/users/{match.group(1)}"
+                elif 'hackerrank.com/' in uri.lower() and not contact['hackerrank']:
+                    match = re.search(r'hackerrank\.com/([A-Za-z0-9_]+)', uri, re.IGNORECASE)
+                    if match:
+                        contact['hackerrank'] = f"hackerrank.com/{match.group(1)}"
         
         # Extract name (first non-empty line that looks like a name)
         lines = text.split('\n')[:10]

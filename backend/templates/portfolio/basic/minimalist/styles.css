@@ -226,6 +226,9 @@ a:hover {
 .contact-value {
     font-size: 0.95rem;
     color: #1a1a1a;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
 }
 
 /* ============================================

@@ -14,7 +14,9 @@
     <header class="header">
         <div class="container">
             <h1 class="name">{{ personal.name }}</h1>
-            <p class="title">{{ personal.title or personal.position or 'Professional' }}</p>
+            {% if personal.title or personal.position %}
+            <p class="title">{{ personal.title or personal.position }}</p>
+            {% endif %}
             
             <div class="contact-info">
                 {% if personal.email %}
@@ -32,13 +34,28 @@
             
             <div class="social-links">
                 {% if personal.linkedin %}
-                <a href="{{ personal.linkedin }}" target="_blank" class="social-link">LinkedIn</a>
+                <a href="{{ personal.linkedin if personal.linkedin.startswith('http') else 'https://' + personal.linkedin }}" target="_blank" rel="noopener noreferrer" class="social-link">LinkedIn</a>
                 {% endif %}
                 {% if personal.github %}
-                <a href="{{ personal.github }}" target="_blank" class="social-link">GitHub</a>
+                <a href="{{ personal.github if personal.github.startswith('http') else 'https://' + personal.github }}" target="_blank" rel="noopener noreferrer" class="social-link">GitHub</a>
+                {% endif %}
+                {% if personal.instagram %}
+                <a href="{{ personal.instagram if personal.instagram.startswith('http') else 'https://' + personal.instagram }}" target="_blank" rel="noopener noreferrer" class="social-link">Instagram</a>
+                {% endif %}
+                {% if personal.twitter %}
+                <a href="{{ personal.twitter if personal.twitter.startswith('http') else 'https://' + personal.twitter }}" target="_blank" rel="noopener noreferrer" class="social-link">Twitter/X</a>
+                {% endif %}
+                {% if personal.leetcode %}
+                <a href="{{ personal.leetcode if personal.leetcode.startswith('http') else 'https://' + personal.leetcode }}" target="_blank" rel="noopener noreferrer" class="social-link">LeetCode</a>
+                {% endif %}
+                {% if personal.codechef %}
+                <a href="{{ personal.codechef if personal.codechef.startswith('http') else 'https://' + personal.codechef }}" target="_blank" rel="noopener noreferrer" class="social-link">CodeChef</a>
+                {% endif %}
+                {% if personal.hackerrank %}
+                <a href="{{ personal.hackerrank if personal.hackerrank.startswith('http') else 'https://' + personal.hackerrank }}" target="_blank" rel="noopener noreferrer" class="social-link">HackerRank</a>
                 {% endif %}
                 {% if personal.website %}
-                <a href="{{ personal.website }}" target="_blank" class="social-link">Website</a>
+                <a href="{{ personal.website if personal.website.startswith('http') else 'https://' + personal.website }}" target="_blank" rel="noopener noreferrer" class="social-link">Website</a>
                 {% endif %}
             </div>
         </div>
@@ -49,7 +66,7 @@
     <section class="section about-section">
         <div class="container">
             <h2 class="section-title">About</h2>
-            <p class="about-text">{{ summary }}</p>
+            <p class="about-text">{{ summary if summary else 'Professional with expertise in software development and technology solutions.' }}</p>
         </div>
     </section>
     {% endif %}
@@ -174,6 +191,50 @@
                 </div>
                 {% endfor %}
             </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Languages & Interests Section -->
+    {% if languages or interests %}
+    <section class="section languages-interests-section">
+        <div class="container">
+            {% if languages %}
+            <div class="languages-block">
+                <h2 class="section-title">Languages</h2>
+                <div class="skills-grid">
+                    {% for lang in languages %}
+                    <div class="skill-item">
+                        {% if lang is string %}
+                        {{ lang }}
+                        {% else %}
+                        {{ lang.name or lang.language }}
+                        {% if lang.level or lang.fluency %}
+                        <span class="language-level"> ({{ lang.level or lang.fluency }})</span>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if interests %}
+            <div class="interests-block" style="margin-top: 2rem;">
+                <h2 class="section-title">Interests</h2>
+                <div class="skills-grid">
+                    {% for interest in interests %}
+                    <div class="skill-item">
+                        {% if interest is string %}
+                        {{ interest }}
+                        {% else %}
+                        {{ interest.name or interest }}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </section>
     {% endif %}

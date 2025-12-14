@@ -20,12 +20,14 @@ export interface GeneratePortfolioRequest {
   accent_color?: string;
   font_style?: string;
   enable_animations?: boolean;
+  force_new?: boolean;  // Force creating a new session even if existing one found
 }
 
 export interface GeneratePortfolioResponse {
   zip_url: string;
   html_preview: string;
   session_id: string;
+  reused_existing?: boolean;
 }
 
 export interface DeployPortfolioRequest {
@@ -33,6 +35,7 @@ export interface DeployPortfolioRequest {
   repo_name: string;
   zip_url: string;
   platform?: 'github' | 'vercel' | 'netlify';  // Add platform parameter
+  custom_domain?: string;
 }
 
 export interface DeployPortfolioResponse {
@@ -42,6 +45,16 @@ export interface DeployPortfolioResponse {
   status: string;
   repo_name: string;
   message: string;
+  custom_domain?: string;
+  dns_instructions?: {
+    type: string;
+    records: Array<{
+      type: string;
+      host: string;
+      value: string;
+    }>;
+    instructions: string;
+  };
 }
 
 const getAuthHeaders = async () => {
@@ -315,6 +328,41 @@ export const saveGitHubToken = async (token: string): Promise<any> => {
     return await response.json();
   } catch (error) {
     console.error('Error saving GitHub token:', error);
+    throw error;
+  }
+};
+
+/**
+ * Re-deploy an existing portfolio session to any platform
+ */
+export const redeployPortfolio = async (
+  sessionId: string,
+  platform: 'github' | 'vercel' | 'netlify',
+  repoName: string,
+  customDomain?: string
+): Promise<DeployPortfolioResponse> => {
+  try {
+    const headers = await getAuthHeaders();
+    let url = `${API_URL}/api/portfolio/redeploy/${sessionId}?platform=${platform}&repo_name=${encodeURIComponent(repoName)}`;
+    if (customDomain) {
+      url += `&custom_domain=${encodeURIComponent(customDomain)}`;
+    }
+    const response = await fetch(
+      url,
+      {
+        method: 'POST',
+        headers
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail?.message || error.detail || 'Failed to redeploy portfolio');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error redeploying portfolio:', error);
     throw error;
   }
 };
