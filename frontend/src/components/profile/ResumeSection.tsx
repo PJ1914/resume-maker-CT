@@ -58,7 +58,7 @@ export default function ResumeSection() {
                 <div className="space-y-4">
                     {recentResumes.map((resume: any, index: number) => (
                         <div
-                            key={resume.id || `resume-${index}`}
+                            key={resume.resume_id || `resume-${index}`}
                             className="group flex items-center justify-between p-4 rounded-xl bg-secondary-50 dark:bg-[#0a0a0a] border border-secondary-200 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/30 transition-all"
                         >
                             <div className="flex items-center gap-4">
@@ -85,7 +85,7 @@ export default function ResumeSection() {
 
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => navigate(`/editor/${resume.id}`)}
+                                    onClick={() => navigate(`/editor/${resume.resume_id}`)}
                                     className="p-2 text-secondary-400 dark:text-gray-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-200 dark:hover:bg-white/10 rounded-lg transition-colors"
                                     title="Edit"
                                 >
@@ -111,7 +111,7 @@ export default function ResumeSection() {
                                                 <Menu.Item>
                                                     {({ active }) => (
                                                         <button
-                                                            onClick={() => navigate(`/resumes/${resume.id}`)}
+                                                            onClick={() => navigate(`/resumes/${resume.resume_id}`)}
                                                             className={`${active ? 'bg-secondary-100 dark:bg-white/10 text-secondary-900 dark:text-white' : 'text-secondary-700 dark:text-gray-300'
                                                                 } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                                                         >
