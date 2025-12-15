@@ -10,8 +10,14 @@ export default function ResumeSection() {
     const navigate = useNavigate()
     const { data: resumes, isLoading } = useResumes()
 
-    // Take only the last 3 resumes for the profile view
-    const recentResumes = resumes?.slice(0, 3) || []
+    // Sort by created_at descending and take top 3
+    const recentResumes = [...(resumes || [])]
+        .sort((a, b) => {
+            const dateA = new Date(a.created_at || 0).getTime()
+            const dateB = new Date(b.created_at || 0).getTime()
+            return dateB - dateA
+        })
+        .slice(0, 3)
 
     return (
         <motion.div
@@ -61,10 +67,10 @@ export default function ResumeSection() {
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-secondary-900 dark:text-white text-sm sm:text-base truncate max-w-[150px] sm:max-w-xs">
-                                        {resume.title || 'Untitled Resume'}
+                                        {resume.original_filename?.replace(/\.[^/.]+$/, "") || resume.filename?.replace(/\.[^/.]+$/, "") || 'Untitled Resume'}
                                     </h3>
                                     <div className="flex items-center gap-3 text-xs text-secondary-500 dark:text-gray-400">
-                                        <span>Edited {resume.updated_at ? format(new Date(resume.updated_at), 'MMM d, yyyy') : 'Unknown'}</span>
+                                        <span>Created {resume.created_at ? format(new Date(resume.created_at), 'MMM d, yyyy') : 'Unknown'}</span>
                                         {resume.latest_score > 0 && (
                                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${resume.latest_score >= 70 ? 'bg-green-500/10 text-green-400' :
                                                 resume.latest_score >= 50 ? 'bg-yellow-500/10 text-yellow-400' :
