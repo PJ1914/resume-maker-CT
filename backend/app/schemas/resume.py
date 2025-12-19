@@ -225,3 +225,20 @@ class ResumeDetailResponse(BaseModel):
         if isinstance(v, list):
             return v
         return []
+
+class CreateResumeVersionRequest(BaseModel):
+    """Request to create a new version of a resume"""
+    resume_id: str
+    job_role: Optional[str] = None
+    company: Optional[str] = None
+    resume_json: dict
+
+class ResumeVersionResponse(BaseModel):
+    """Response for created version"""
+    version_id: str
+    version_name: str
+    created_at: datetime
+
+class ResumeVersionDetailResponse(ResumeVersionResponse):
+    """Detailed response for a version including the full JSON"""
+    resume_json: dict

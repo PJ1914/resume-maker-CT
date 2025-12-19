@@ -14,6 +14,7 @@ import {
   ChevronDown,
   History,
   Globe,
+  MessageSquare,
 } from 'lucide-react'
 import CreditBalance from './CreditBalance'
 
@@ -33,6 +34,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { name: 'Upload Resume', href: '/upload', icon: Upload },
     { name: 'Create New', href: '/resume/create', icon: Sparkles },
     { name: 'Portfolio', href: '/portfolio', icon: Globe },
+    { name: 'Interview Prep', href: '/interview-prep', icon: MessageSquare },
+    { name: 'Version History', href: '/version-history', icon: History },
   ]
 
   const handleLogout = async () => {
@@ -201,15 +204,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Stats Card */}
-          <div className="mt-8 mx-3 p-4 bg-secondary-100 dark:bg-secondary-800 rounded-lg border border-secondary-300 dark:border-secondary-700">
-            <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-50 mb-2">
-              💡 Pro Tip
-            </h3>
-            <p className="text-xs text-secondary-700 dark:text-secondary-300">
-              Use AI features to enhance your resume and get better ATS scores!
-            </p>
-          </div>
+
         </div>
       </aside>
 

@@ -11,7 +11,7 @@ load_dotenv()
 from app.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("resume_maker")
-from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, credits, payments, admin, portfolio, contact
+from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, credits, payments, admin, portfolio, contact, interview
 
 # Print startup info
 logger.info("Resume Maker API - Starting...")
@@ -79,6 +79,7 @@ app.include_router(payments.router, prefix="/api", tags=["Payments"])
 app.include_router(admin.router, prefix="/api", tags=["Admin"])
 app.include_router(portfolio.router, prefix="/api", tags=["Portfolio"])
 app.include_router(contact.router, prefix="/api", tags=["Contact"])
+app.include_router(interview.router, tags=["Interview Prep"])
 
 @app.get("/")
 async def root():

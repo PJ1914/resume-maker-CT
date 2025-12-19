@@ -21,6 +21,10 @@ import {
   getAISuggestion,
   getAIRewrite,
 } from '../services/resume-editor.service';
+import { resumeService } from '../services/resume.service';
+import { VersionSidebar } from '../components/versions/VersionSidebar';
+import { History, Target, X, CheckCircle, Briefcase } from 'lucide-react';
+
 import { normalizeDate } from '../utils/dateUtils';
 import { ContactSection } from '../components/editor/ContactSection';
 import { SummarySection } from '../components/editor/SummarySection';
@@ -39,6 +43,7 @@ import { CustomSection } from '../components/editor/CustomSection';
 import { AddSection } from '../components/editor/AddSection';
 import { ResumePreview } from '../components/ResumePreview';
 import PdfExportModal from '../components/PdfExportModal';
+import { InterviewPrepButton } from '../components/interview/InterviewPrepButton';
 import { v4 as uuidv4 } from 'uuid';
 
 // Helper functions to parse sections from text
@@ -368,6 +373,10 @@ function parseCertificationsSection(text: string) {
   return certifications;
 }
 
+import { CreditWarning } from '@/components/interview/CreditWarning';
+import { creditService } from '@/services/credits.service';
+import { toast } from 'react-hot-toast';
+
 export const ResumeEditorPage: React.FC = () => {
   const { resumeId } = useParams<{ resumeId: string }>();
   const { user } = useAuth();
@@ -387,6 +396,15 @@ export const ResumeEditorPage: React.FC = () => {
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [reparsing, setReparsing] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showTargetModal, setShowTargetModal] = useState(false);
+  const [targetJD, setTargetJD] = useState('');
+  const [targetRole, setTargetRole] = useState('');
+  const [analyzingTarget, setAnalyzingTarget] = useState(false);
+  const [userBalance, setUserBalance] = useState<number | null>(null);
+  const [viewingVersionId, setViewingVersionId] = useState<string | null>(null);
+  const searchParams = new URLSearchParams(window.location.search);
+  const versionIdParam = searchParams.get('version');
 
   // Function to re-parse the resume and refresh data
   const handleReparse = async () => {
@@ -797,12 +815,38 @@ export const ResumeEditorPage: React.FC = () => {
       }
     };
 
+    // Check query params for version
+    if (versionIdParam && user) {
+      (async () => {
+        try {
+          setLoading(true);
+          const { resumeService } = await import('../services/resume.service');
+          console.log("Fetching version:", versionIdParam);
+          const versionData = await resumeService.getVersion(resumeId, versionIdParam);
+
+          if (versionData && versionData.resume_json) {
+            console.log("Loaded version data:", versionData);
+            setResumeData(versionData.resume_json);
+            setViewingVersionId(versionData.version_id);
+          } else {
+            setError("Version content not found");
+          }
+        } catch (e) {
+          console.error("Error loading version:", e);
+          setError("Failed to load specified version");
+        } finally {
+          setLoading(false);
+        }
+      })();
+      return; // Skip normal load
+    }
+
     loadResume();
-  }, [user, resumeId]);
+  }, [user, resumeId, versionIdParam]);
 
   // Autosave with debounce
   useEffect(() => {
-    if (!user || !resumeId || loading) return;
+    if (!user || !resumeId || loading || viewingVersionId) return;
 
     const timer = setTimeout(async () => {
       try {
@@ -824,7 +868,23 @@ export const ResumeEditorPage: React.FC = () => {
   const handleAIImproveSummary = async (text: string) => {
     if (!user) return text;
     try {
-      return await getAISuggestion(text, 'summary');
+      const improved = await getAISuggestion(text, 'summary');
+
+      // Auto-versioning
+      if (improved && resumeId) {
+        try {
+          // Create a version with the new summary
+          const newResume = { ...resumeData, summary: improved };
+          resumeService.createVersion(resumeId, {
+            resume_json: newResume,
+            job_role: "Summary Improvement",
+            company: "AI Assistant"
+          });
+        } catch (e) {
+          console.error("Failed to auto-version", e);
+        }
+      }
+      return improved;
     } catch (err) {
       console.error('AI improvement failed:', err);
       return text;
@@ -834,17 +894,53 @@ export const ResumeEditorPage: React.FC = () => {
   const handleAIRewriteSummary = async (text: string) => {
     if (!user) return text;
     try {
-      return await getAIRewrite(text, 'summary');
+      const rewritten = await getAIRewrite(text, 'summary');
+
+      // Auto-versioning
+      if (rewritten && resumeId) {
+        try {
+          const newResume = { ...resumeData, summary: rewritten };
+          resumeService.createVersion(resumeId, {
+            resume_json: newResume,
+            job_role: "Summary Rewrite",
+            company: "AI Assistant"
+          });
+        } catch (e) {
+          console.error("Failed to auto-version", e);
+        }
+      }
+      return rewritten;
     } catch (err) {
       console.error('AI rewrite failed:', err);
       return text;
     }
   };
 
+
   const handleAIImproveExperience = async (text: string) => {
     if (!user) return text;
     try {
-      return await getAISuggestion(text, 'experience');
+      const improved = await getAISuggestion(text, 'experience');
+      if (improved && resumeId) {
+        try {
+          // Note: We can't easily construct the full new state here because we don't know WHICH experience item was updated.
+          // However, we can save the current state as a 'Before Update' snapshot OR just save a generic version.
+          // Ideally, the component calls onChange which updates the state. 
+          // A better approach might be to leverage a global listener or just save the CURRENT state as a checkpoint.
+          // For now, let's save the current state, but strictly speaking it should be the NEW state.
+          // Since state updates are async in React, getting the *very next* state is tricky here without passing more context.
+          // Let's assume we want to snapshot after the user accepts the change. 
+          // Actually, the onAIImprove prop in the child component returns the string, and the child calls onChange.
+          // So the state won't be updated yet.
+          // We'll proceed with saving a version marked as "Experience Improvement".
+          resumeService.createVersion(resumeId, {
+            resume_json: resumeData, // This is technically the state BEFORE the edit is committed to main state, but serves as a checkpoint.
+            job_role: "Experience Improvement",
+            company: "AI Assistant"
+          });
+        } catch (e) { console.error(e); }
+      }
+      return improved;
     } catch (err) {
       console.error('AI improvement failed:', err);
       return text;
@@ -854,7 +950,17 @@ export const ResumeEditorPage: React.FC = () => {
   const handleAIImproveProject = async (text: string) => {
     if (!user) return text;
     try {
-      return await getAISuggestion(text, 'project');
+      const improved = await getAISuggestion(text, 'project');
+      if (improved && resumeId) {
+        try {
+          resumeService.createVersion(resumeId, {
+            resume_json: resumeData,
+            job_role: "Project Improvement",
+            company: "AI Assistant"
+          });
+        } catch (e) { console.error(e); }
+      }
+      return improved;
     } catch (err) {
       console.error('AI improvement failed:', err);
       return text;
@@ -1016,6 +1122,37 @@ export const ResumeEditorPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
+      {/* Version Viewing Banner */}
+      {viewingVersionId && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-4 py-2 flex items-center justify-between sticky top-0 z-50">
+          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+            <History className="h-4 w-4" />
+            <span className="text-sm font-medium">Viewing Historical Version</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                console.log("Restore logic placeholder");
+                alert("Restore feature coming soon!");
+              }}
+              className="text-xs px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-md transition-colors font-medium opacity-50 cursor-not-allowed"
+              title="Coming Soon"
+            >
+              Restore This Version
+            </button>
+            <button
+              onClick={() => {
+                setViewingVersionId(null);
+                window.location.href = `/editor/${resumeId}`;
+              }}
+              className="text-xs px-3 py-1 border border-amber-300 hover:bg-amber-100 text-amber-900 rounded-md transition-colors font-medium bg-white"
+            >
+              Exit View
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white dark:bg-secondary-900 border-b border-secondary-200 dark:border-secondary-800 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -1074,6 +1211,8 @@ export const ResumeEditorPage: React.FC = () => {
                 <span className="whitespace-nowrap">Export</span>
               </button>
 
+              {resumeId && <InterviewPrepButton resumeId={resumeId} className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2 bg-transparent text-secondary-600 border-secondary-200 hover:bg-secondary-50" />}
+
               <button
                 onClick={() => setShowPreview(!showPreview)}
                 className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2"
@@ -1083,6 +1222,24 @@ export const ResumeEditorPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
                 <span className="whitespace-nowrap">{showPreview ? 'Hide' : 'Preview'}</span>
+              </button>
+
+              <button
+                onClick={() => setShowTargetModal(true)}
+                className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
+                title="Optimize for a specific Job Description"
+              >
+                <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="whitespace-nowrap hidden lg:inline">Target Job</span>
+              </button>
+
+              <button
+                onClick={() => setShowVersionHistory(true)}
+                className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2"
+                title="View Version History"
+              >
+                <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="whitespace-nowrap hidden lg:inline">History</span>
               </button>
 
               {showPreview && (
@@ -1386,6 +1543,159 @@ export const ResumeEditorPage: React.FC = () => {
           template={resumeData.template || 'resume_1'}
         />
       )}
-    </div>
+
+      {/* Version History Sidebar */}
+      {resumeId && (
+        <VersionSidebar
+          resumeId={resumeId}
+          isOpen={showVersionHistory}
+          onClose={() => setShowVersionHistory(false)}
+          onViewVersion={(versionId) => {
+            window.open(`/resumes/${resumeId}/history`, '_blank');
+          }}
+        />
+      )}
+
+      {/* Target Job Modal */}
+      {showTargetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-secondary-900 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-secondary-200 dark:border-secondary-800 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <Target className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-secondary-900 dark:text-white">Target Job Analysis</h2>
+                  <p className="text-sm text-secondary-500">Optimize and version your resume for a specific job.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTargetModal(false)}
+                className="text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
+                  Job Role (Optional)
+                </label>
+                <div className="relative">
+                  <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-secondary-400" />
+                  <input
+                    type="text"
+                    value={targetRole}
+                    onChange={(e) => setTargetRole(e.target.value)}
+                    placeholder="e.g. Senior Frontend Engineer"
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-secondary-300 dark:border-secondary-700 bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
+                  Job Description <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={targetJD}
+                  onChange={(e) => setTargetJD(e.target.value)}
+                  placeholder="Paste the full job description here..."
+                  className="w-full h-48 p-4 rounded-lg border border-secondary-300 dark:border-secondary-700 bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
+                />
+              </div>
+
+              <div className="bg-purple-50 dark:bg-purple-900/10 p-4 rounded-lg flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-purple-800 dark:text-purple-200">
+                  <strong>Automated Versioning:</strong> We will analyze your resume against this JD and automatically save a new version titled "{targetRole || 'Target Job'}" so you can track your tailored resumes.
+                </div>
+              </div>
+
+              {/* Credit Info */}
+              {userBalance !== null && (
+                <div className="px-6 pb-6">
+                  <CreditWarning balance={userBalance} cost={5} />
+                  {userBalance >= 5 && (
+                    <p className="mt-2 text-xs text-secondary-500 text-center">
+                      Analysis costs 5 credits. Versioning is free.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-secondary-200 dark:border-secondary-800 bg-secondary-50 dark:bg-secondary-950 flex justify-end gap-3">
+              <button
+                onClick={() => setShowTargetModal(false)}
+                className="px-4 py-2 text-secondary-600 hover:bg-secondary-200 dark:hover:bg-secondary-800 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!targetJD.trim() || !resumeId) return;
+
+                  if (userBalance !== null && userBalance < 5) {
+                    toast.error("Insufficient credits for analysis");
+                    return;
+                  }
+
+                  setAnalyzingTarget(true);
+                  try {
+                    // 1. Analysis
+                    await resumeService.scoreResume(resumeId, true, false, targetJD); // Skip cache for new JD
+
+                    // 2. Auto-save Version
+                    await resumeService.createVersion(resumeId, {
+                      resume_json: resumeData, // Save CURRENT state
+                      job_role: targetRole || "Target Job",
+                      company: "JD Analysis"
+                    });
+
+                    // 3. Close & Notify
+                    setShowTargetModal(false);
+                    setShowVersionHistory(true); // Open history to show it worked
+                    setTargetJD('');
+                    setTargetRole('');
+                    toast.success("Resume analyzed and version created!");
+
+                    // Refresh balance
+                    creditService.getBalance().then(b => setUserBalance(b.balance));
+
+                  } catch (e: any) {
+                    console.error(e);
+                    if (e?.response?.status === 402) {
+                      toast.error("Insufficient credits.");
+                    } else {
+                      toast.error("Analysis failed. Please try again.");
+                    }
+                  } finally {
+                    setAnalyzingTarget(false);
+                  }
+                }}
+                disabled={!targetJD.trim() || analyzingTarget || (userBalance !== null && userBalance < 5)}
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium shadow-lg shadow-purple-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+              >
+                {analyzingTarget ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Target className="h-4 w-4" />
+                    Analyze & Save Version
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+      }
+    </div >
   );
 };

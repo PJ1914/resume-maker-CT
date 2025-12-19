@@ -23,6 +23,9 @@ import CreditPurchasePage from '../pages/CreditPurchasePage'
 import CreditHistoryPage from '../pages/CreditHistoryPage'
 import ProfilePage from '../pages/ProfilePage'
 import PortfolioPage from '../pages/PortfolioPage'
+import InterviewPrepPage from '../pages/InterviewPrepPage'
+import ResumeVersionsPage from '../pages/ResumeVersionsPage'
+import { VersionHistory } from '../components/versions/VersionHistory'
 import { useAuth } from '../context/AuthContext'
 
 // Admin Components
@@ -172,6 +175,39 @@ export default function AppRoutes() {
           <ProtectedRoute>
             <AppLayout>
               <PortfolioPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/interview-prep"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <InterviewPrepPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/version-history"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <ResumeVersionsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/resumes/:resumeId/history"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <VersionHistory />
             </AppLayout>
           </ProtectedRoute>
         }

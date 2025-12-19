@@ -30,6 +30,11 @@ class FeatureType(str, Enum):
     DEPLOY_VERCEL = "deploy_vercel"
     DEPLOY_NETLIFY = "deploy_netlify"
     PORTFOLIO_TEMPLATE_UNLOCK = "portfolio_template_unlock"
+    # Interview Prep Features
+    INTERVIEW_GENERATE_SESSION = "interview_generate_session"
+    INTERVIEW_REGENERATE_ANSWER = "interview_regenerate_answer"
+    INTERVIEW_REGENERATE_SESSION = "interview_regenerate_session"
+    INTERVIEW_EXPORT_PDF = "interview_export_pdf"
 
 # Credit costs for each feature
 FEATURE_COSTS = {
@@ -45,6 +50,11 @@ FEATURE_COSTS = {
     FeatureType.DEPLOY_VERCEL: 7,
     FeatureType.DEPLOY_NETLIFY: 5,
     FeatureType.PORTFOLIO_TEMPLATE_UNLOCK: 0,  # Variable cost, set dynamically
+    # Interview Prep Costs
+    FeatureType.INTERVIEW_GENERATE_SESSION: 3,
+    FeatureType.INTERVIEW_REGENERATE_ANSWER: 1,
+    FeatureType.INTERVIEW_REGENERATE_SESSION: 3,
+    FeatureType.INTERVIEW_EXPORT_PDF: 1,
 }
 
 # Free tier monthly credits

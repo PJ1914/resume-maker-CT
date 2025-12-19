@@ -34,7 +34,9 @@ class PortfolioGeneratorService:
         theme: str = 'light',
         accent_color: str = None,
         font_style: str = None,
-        use_ai_enhancement: bool = True
+        use_ai_enhancement: bool = True,
+        profile_photo: str = None,
+        project_images: Dict[str, str] = None
     ) -> Dict[str, Any]:
         """
         Generate portfolio HTML from resume JSON with AI enhancement
@@ -47,6 +49,8 @@ class PortfolioGeneratorService:
             accent_color: Custom accent color
             font_style: Font style choice
             use_ai_enhancement: Enable AI content enhancement (default: True)
+            profile_photo: URL to uploaded profile photo
+            project_images: Dict mapping project IDs to image URLs
         
         Returns:
             Dict with session_id, html_preview, zip_url, and ai_enhanced flag
@@ -109,7 +113,9 @@ class PortfolioGeneratorService:
         html_content = self._inject_resume_data(
             template_html=template_html,
             resume_data=resume_data,
-            theme=theme
+            theme=theme,
+            profile_photo=profile_photo,
+            project_images=project_images or {}
         )
         
         # Apply custom CSS settings
@@ -742,7 +748,9 @@ Rules:
         self,
         template_html: str,
         resume_data: Dict[str, Any],
-        theme: str
+        theme: str,
+        profile_photo: str = None,
+        project_images: Dict[str, str] = None
     ) -> str:
         """
         Inject resume data into HTML template using Jinja2
@@ -753,8 +761,9 @@ Rules:
         - experience: List of work experiences
         - education: List of education entries
         - skills: List of skills
-        - projects: List of projects
+        - projects: List of projects (with optional images)
         - certifications: List of certifications
+        - profile_photo: URL to profile photo
         - theme: Color theme setting
         """
         template = Template(template_html)
@@ -764,8 +773,15 @@ Rules:
         
         # Parse projects to ensure technologies is an array and normalize URLs
         projects = resume_data.get('projects', [])
-        for project in projects:
+        project_images = project_images or {}
+        
+        for i, project in enumerate(projects):
             if isinstance(project, dict):
+                # Add image URL if available
+                project_id = project.get('id', f'project-{i}')
+                if project_id in project_images:
+                    project['image'] = project_images[project_id]
+                
                 # Parse technologies from string to array if needed
                 techs = project.get('technologies', project.get('tech_stack', []))
                 if isinstance(techs, str):
@@ -901,10 +917,12 @@ Rules:
             'publications': publications if publications else [],
             'awards': awards if awards else [],
             'references': references if references else [],
+            'profile_photo': profile_photo,  # Add profile photo URL
+            'current_year': datetime.now().year,  # Dynamic year for copyright
             'theme': theme
         }
         
-        logger.info(f"✅ Context prepared: {context['personal']['name']} with {len(context['experience'])} jobs, {len(context['projects'])} projects, {len(context['skills'])} skills")
+        logger.info(f"✅ Context prepared: {context['personal']['name']} with {len(context['experience'])} jobs, {len(context['projects'])} projects, {len(context['skills'])} skills, profile_photo={bool(profile_photo)}")
         
         return template.render(**context)
     

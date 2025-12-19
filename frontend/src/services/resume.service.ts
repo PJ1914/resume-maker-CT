@@ -16,6 +16,7 @@ export interface ResumeListItem {
   status: string
   created_at: string
   latest_score: number | null
+  projects?: any[] | null
 }
 
 export interface ResumeDetail {
@@ -94,7 +95,7 @@ export const resumeService = {
 
     // Use apiClient but override for multipart/form-data
     const token = await import('./auth.service').then(m => m.getAuthToken())
-    
+
     const response = await fetch(`${API_URL}/api/resumes/upload-direct`, {
       method: 'POST',
       headers: {
@@ -164,10 +165,11 @@ export const resumeService = {
   /**
    * Trigger ATS scoring for a resume
    */
-  async scoreResume(resumeId: string, preferGemini: boolean = true, useCache: boolean = true): Promise<any> {
-    return apiClient.post(`/api/scoring/${resumeId}`, { 
+  async scoreResume(resumeId: string, preferGemini: boolean = true, useCache: boolean = true, jobDescription?: string): Promise<any> {
+    return apiClient.post(`/api/scoring/${resumeId}`, {
       prefer_gemini: preferGemini,
-      use_cache: useCache 
+      use_cache: useCache,
+      job_description: jobDescription
     })
   },
 
@@ -176,5 +178,36 @@ export const resumeService = {
    */
   async getScore(resumeId: string): Promise<any> {
     return apiClient.get(`/api/scoring/${resumeId}`)
+  },
+
+  /**
+   * Create a new version of the resume
+   */
+  async createVersion(resumeId: string, data: { job_role?: string; company?: string; resume_json: any }): Promise<any> {
+    return apiClient.post(`/api/resumes/${resumeId}/versions`, {
+      resume_id: resumeId,
+      ...data
+    })
+  },
+
+  /**
+   * Get all versions of a resume
+   */
+  async getVersions(resumeId: string): Promise<any[]> {
+    return apiClient.get(`/api/resumes/${resumeId}/versions`);
+  },
+
+  /**
+   * Get specific version detail
+   */
+  async getVersion(resumeId: string, versionId: string): Promise<any> {
+    return apiClient.get(`/api/resumes/${resumeId}/versions/${versionId}`);
+  },
+
+  /**
+   * Delete a resume version
+   */
+  async deleteVersion(resumeId: string, versionId: string): Promise<void> {
+    return apiClient.delete(`/api/resumes/${resumeId}/versions/${versionId}`);
   },
 }

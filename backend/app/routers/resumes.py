@@ -3,6 +3,7 @@ Resume upload and management endpoints.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, UploadFile, File
 from datetime import datetime
+from typing import List
 from app.dependencies import get_current_user
 from app.schemas.resume import (
     UploadUrlRequest,
@@ -14,6 +15,9 @@ from app.schemas.resume import (
     ResumeStatus,
     ResumeFileType,
     CreateResumeRequest,
+    CreateResumeVersionRequest,
+    ResumeVersionResponse,
+    ResumeVersionDetailResponse,
 )
 from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
 from app.services.storage import (
@@ -28,7 +32,13 @@ from app.services.firestore import (
     get_resume_metadata,
     list_user_resumes,
     update_resume_status,
+
     delete_resume_metadata,
+    save_resume_version,
+    save_resume_version,
+    list_resume_versions,
+    get_resume_version,
+    delete_resume_version,
 )
 from app.services.tasks import process_resume_parsing
 from app.config import settings
@@ -649,3 +659,128 @@ async def reparse_resume(
     }
 
 
+
+@router.post("/{resume_id}/versions", response_model=ResumeVersionResponse)
+async def create_version(
+    resume_id: str,
+    request: CreateResumeVersionRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create a new version of the resume.
+    """
+    user_id = current_user["uid"]
+    
+    # Check if resume exists/belongs to user first?
+    # get_resume_metadata verifies ownership
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+
+    version = save_resume_version(
+        user_id, 
+        resume_id, 
+        request.resume_json, 
+        request.job_role, 
+        request.company
+    )
+    
+    if not version:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save resume version"
+        )
+        
+    return ResumeVersionResponse(
+        version_id=version['version_id'],
+        version_name=version['version_name'],
+        created_at=version['created_at']
+    )
+
+@router.get("/{resume_id}/versions", response_model=List[ResumeVersionResponse])
+async def get_resume_versions(
+    resume_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get all versions of a resume.
+    """
+    user_id = current_user["uid"]
+    
+    # Check existence
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+        
+    versions = list_resume_versions(user_id, resume_id)
+    
+    return [
+        ResumeVersionResponse(
+            version_id=v['version_id'],
+            version_name=v['version_name'],
+            created_at=v['created_at']
+        )
+        for v in versions
+    ]
+
+@router.get("/{resume_id}/versions/{version_id}", response_model=ResumeVersionDetailResponse)
+async def get_resume_version_detail(
+    resume_id: str,
+    version_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get a specific version of a resume including full content.
+    """
+    user_id = current_user["uid"]
+    
+    # Check existence of call to verify ownership
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+        
+    version = get_resume_version(user_id, resume_id, version_id)
+    
+    if not version:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Version not found"
+        )
+    
+@router.delete("/{resume_id}/versions/{version_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_version(
+    resume_id: str,
+    version_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a specific resume version.
+    """
+    user_id = current_user["uid"]
+    
+    # Check existence
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+        
+    success = delete_resume_version(user_id, resume_id, version_id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete version"
+        )
+    
+    return None

@@ -2,27 +2,46 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileUp, Lock, Zap, CheckCircle } from 'lucide-react'
 import FileUpload from '@/components/FileUpload'
 import { useLoader } from '@/context/LoaderContext'
+import { resumeService } from '@/services/resume.service'
+import { getResume } from '@/services/resume-editor.service'
+import { useAuth } from '@/context/AuthContext'
 
 export default function UploadPage() {
   const navigate = useNavigate()
   const { showLoader, hideLoader } = useLoader()
 
-  const handleUploadComplete = (resumeId: string) => {
+  const { user } = useAuth();
+
+  const handleUploadComplete = async (resumeId: string) => {
     // Show loader during transition to detail page
     showLoader()
+
+    // Create initial version
+    try {
+      if (user) {
+        // Need to fetch data first or just rely on backend? 
+        // The upload creates the resume document. 
+        // We can create a baseline version here.
+        // Since we might not have the JSON yet (parsing happens async), 
+        // we'll just create a placeholder version or fetch what we have.
+        // Actually, best to do this after parsing is done, but "Upload" is a good checkpoint.
+        // Let's try to fetch what exists (metadata).
+        const data = await getResume(user.uid, resumeId);
+        if (data) {
+          await resumeService.createVersion(resumeId, {
+            resume_json: data,
+            job_role: "Original File",
+            company: "Upload"
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to create upload version", e);
+    }
 
     // Redirect to resume detail page after successful upload
     setTimeout(() => {
       navigate(`/resumes/${resumeId}`)
-      // Note: hideLoader() should be called by the destination page 
-      // or we can rely on the fact that the destination page might 
-      // show its own loader or just render content.
-      // If we want to hide it after navigation, we might need to do it there.
-      // However, for a smooth transition, keeping it on is fine if the next page loads data.
-      // But if the next page doesn't turn it off, it will stay on forever.
-      // Let's hide it after a safety timeout or let the next page handle it.
-      // Actually, if I hide it here, it might flash.
-      // Let's assume the next page will handle its own loading state or we hide it after a delay.
       setTimeout(() => hideLoader(), 2000)
     }, 1500)
   }

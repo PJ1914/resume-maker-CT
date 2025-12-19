@@ -25,6 +25,7 @@ import {
   Eye,
   Filter
 } from 'lucide-react';
+import PortfolioImageUploadModal from '../components/PortfolioImageUploadModal';
 import { Skeleton } from '../components/ui/skeleton';
 import { DNSInstructionsModal } from '../components/DNSInstructionsModal';
 import {
@@ -102,6 +103,10 @@ export default function PortfolioPage() {
   // Add state for reuse existing portfolio confirmation modal
   const [showReuseConfirmModal, setShowReuseConfirmModal] = useState(false);
   const [pendingGenerateParams, setPendingGenerateParams] = useState<any>(null);
+  
+  // Add state for image upload modal
+  const [showImageUploadModal, setShowImageUploadModal] = useState(false);
+  const [selectedResumeProjects, setSelectedResumeProjects] = useState<any[]>([]);
 
   // Favorites state
   const [favoriteTemplates, setFavoriteTemplates] = useState<string[]>([]);
@@ -228,10 +233,14 @@ export default function PortfolioPage() {
       toast.error('Please select both a resume and a template');
       return;
     }
+    
+    // Check if template is premium (supports images)
     const template = templates?.find((t: any) => t.id === selectedTemplate);
-    const templateName = template?.name || 'Portfolio';
-
-    toast.loading(`Generating ${templateName}...`);
+    const isPremiumOrUltra = template?.tier === 'premium' || template?.tier === 'ultra';
+    
+    // Get selected resume's projects
+    const selectedResumeData = resumes?.find((r: any) => r.id === selectedResume);
+    const projects = selectedResumeData?.projects || [];
     
     // CRITICAL: Reset zipDownloaded to false for new generation
     setZipDownloaded(false);
@@ -248,8 +257,17 @@ export default function PortfolioPage() {
     // Store params for potential regeneration
     setPendingGenerateParams(params);
     
-    generate(params);
-    setShowPreview(true);
+    // If premium/ultra template, show image upload modal
+    if (isPremiumOrUltra) {
+      setSelectedResumeProjects(projects);
+      setShowImageUploadModal(true);
+    } else {
+      // Generate without images
+      const templateName = template?.name || 'Portfolio';
+      toast.loading(`Generating ${templateName}...`);
+      generate(params);
+      setShowPreview(true);
+    }
   };
 
   const handleDeploy = () => {
@@ -2263,6 +2281,30 @@ export default function PortfolioPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Image Upload Modal */}
+        <PortfolioImageUploadModal
+          isOpen={showImageUploadModal}
+          onClose={() => setShowImageUploadModal(false)}
+          onComplete={(images) => {
+            setShowImageUploadModal(false);
+            const template = templates?.find((t: any) => t.id === selectedTemplate);
+            const templateName = template?.name || 'Portfolio';
+            toast.loading(`Generating ${templateName}...`);
+            
+            const params = {
+              resume_id: selectedResume,
+              template_id: selectedTemplate,
+              theme: 'light' as const,
+              profile_photo: images.profilePhoto,
+              project_images: images.projectImages
+            };
+            
+            generate(params);
+            setShowPreview(true);
+          }}
+          projects={selectedResumeProjects}
+        />
 
       </div>
     </div>

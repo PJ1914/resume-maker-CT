@@ -1,11 +1,12 @@
 """
 Portfolio generation and deployment endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile, Form
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 import logging
+import uuid
 
 from app.dependencies import get_current_user
 from app.services.credits import get_user_credits, deduct_credits_custom, has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS
@@ -50,6 +51,8 @@ class GeneratePortfolioRequest(BaseModel):
     font_style: str | None = None
     use_ai_enhancement: bool = True
     force_new: bool = False  # Force creating a new session even if existing one found
+    profile_photo: str | None = None  # URL to uploaded profile photo
+    project_images: Dict[str, str] = {}  # Map of project_id -> image_url
 
 
 class DeployPortfolioRequest(BaseModel):
@@ -426,7 +429,9 @@ async def generate_portfolio(
                 theme=request.theme,
                 accent_color=request.accent_color,
                 font_style=request.font_style,
-                use_ai_enhancement=request.use_ai_enhancement
+                use_ai_enhancement=request.use_ai_enhancement,
+                profile_photo=request.profile_photo,
+                project_images=request.project_images
             )
             
             # LOCK TEMPLATE: Remove from unlocked list after first use
@@ -1333,4 +1338,77 @@ async def redeploy_portfolio(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to re-deploy portfolio: {str(e)}"
+        )
+
+
+@router.post("/upload-image")
+async def upload_portfolio_image(
+    file: UploadFile = File(...),
+    type: str = Form(...),  # 'profile' or 'project'
+    project_id: Optional[str] = Form(None),
+    user_data: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Upload images for portfolio (profile photo or project images)
+    """
+    try:
+        user_id = user_data['uid']
+        
+        # Validate file type
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only image files are allowed"
+            )
+        
+        # Validate file size (5MB max)
+        file_content = await file.read()
+        if len(file_content) > 5 * 1024 * 1024:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Image size must be less than 5MB"
+            )
+        
+        # Generate unique filename
+        file_extension = file.filename.split('.')[-1] if file.filename else 'jpg'
+        unique_filename = f"{uuid.uuid4()}.{file_extension}"
+        
+        # Determine storage path based on type
+        if type == 'profile':
+            storage_path = f"portfolio_images/{user_id}/profile/{unique_filename}"
+        elif type == 'project':
+            storage_path = f"portfolio_images/{user_id}/projects/{project_id or 'default'}/{unique_filename}"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid image type. Must be 'profile' or 'project'"
+            )
+        
+        # Upload to Firebase Storage
+        bucket = storage.bucket(app=resume_maker_app)
+        blob = bucket.blob(storage_path)
+        blob.upload_from_string(file_content, content_type=file.content_type)
+        
+        # Make the blob publicly accessible
+        blob.make_public()
+        
+        # Get public URL
+        image_url = blob.public_url
+        
+        logger.info(f"✅ Uploaded {type} image for user {user_id}: {storage_path}")
+        
+        return {
+            "success": True,
+            "url": image_url,
+            "type": type,
+            "message": f"{type.title()} image uploaded successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Failed to upload image")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload image: {str(e)}"
         )

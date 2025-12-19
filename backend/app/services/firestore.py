@@ -807,3 +807,162 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
         result['summary'] = result['professional_summary']
     
     return result
+
+def save_resume_version(
+    user_id: str,
+    resume_id: str,
+    version_data: dict,
+    job_role: Optional[str] = None,
+    company: Optional[str] = None
+) -> Optional[dict]:
+    """
+    Save a new version of the resume.
+    Returns the created version metadata.
+    """
+    from app.firebase import resume_maker_app
+    import uuid
+    
+    # Logic to generate name
+    # Default name
+    version_name = f"Prativeda – {datetime.now().strftime('%Y-%m-%d %H:%M')} Version"
+    
+    if company and job_role:
+        version_name = f"Prativeda – {company} {job_role} Version"
+    elif job_role:
+        version_name = f"Prativeda – {job_role} Version"
+    elif company:
+        version_name = f"Prativeda – {company} Version"
+    
+    version_id = str(uuid.uuid4())
+    created_at = datetime.utcnow()
+    
+    doc_data = {
+        "version_id": version_id,
+        "version_name": version_name,
+        "job_role": job_role,
+        "company": company,
+        "json": version_data,
+        "created_at": created_at
+    }
+
+    if not resume_maker_app:
+        print(f"[DEV] Would save version {version_id} for resume {resume_id}")
+        return doc_data
+
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        # Save to subcollection
+        # users/{userId}/resumes/{resumeId}/versions/{versionId}
+        db.collection('users').document(user_id)\
+          .collection('resumes').document(resume_id)\
+          .collection('versions').document(version_id)\
+          .set(doc_data)
+          
+        # Update latest_version in main document
+        try:
+            db.collection('users').document(user_id)\
+              .collection('resumes').document(resume_id)\
+              .update({"latest_version": version_id})
+        except Exception:
+            # Main doc might not exist or other issue, logs warning but don't fail version creation
+            print(f"Warning: Could not update latest_version on main resume document")
+          
+        return doc_data
+    except Exception as e:
+        print(f"Error saving resume version: {e}")
+        return None
+
+def list_resume_versions(user_id: str, resume_id: str) -> List[dict]:
+    """
+    List all versions of a resume from Firestore.
+    """
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        return []
+        
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        # Query subcollection
+        docs = db.collection('users').document(user_id)\
+          .collection('resumes').document(resume_id)\
+          .collection('versions')\
+          .order_by('created_at', direction=firestore.Query.DESCENDING)\
+          .stream()
+          
+        versions = []
+        for doc in docs:
+            data = doc.to_dict()
+            # Convert timestamp
+            if 'created_at' in data and data['created_at']:
+                ts = data['created_at']
+                if hasattr(ts, 'timestamp'):
+                    data['created_at'] = datetime.utcfromtimestamp(ts.timestamp())
+            versions.append(data)
+            
+        return versions
+    except Exception as e:
+        print(f"Error listing resume versions: {e}")
+        return []
+
+def get_resume_version(user_id: str, resume_id: str, version_id: str) -> Optional[dict]:
+    """
+    Get a specific version of a resume.
+    """
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        return None
+        
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        doc_ref = db.collection('users').document(user_id)\
+          .collection('resumes').document(resume_id)\
+          .collection('versions').document(version_id)
+          
+        doc_snap = doc_ref.get()
+        
+        if not doc_snap.exists:
+            return None
+            
+        data = doc_snap.to_dict()
+        
+        # Convert timestamp
+        if 'created_at' in data and data['created_at']:
+            ts = data['created_at']
+            if hasattr(ts, 'timestamp'):
+                data['created_at'] = datetime.utcfromtimestamp(ts.timestamp())
+                
+        return data
+    except Exception as e:
+        print(f"Error getting resume version: {e}")
+        return None
+
+def delete_resume_version(user_id: str, resume_id: str, version_id: str) -> bool:
+    """
+    Delete a specific version of a resume.
+    """
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        return False
+        
+    try:
+        from firebase_admin import firestore
+        db = firestore.client(app=resume_maker_app)
+        
+        doc_ref = db.collection('users').document(user_id)\
+          .collection('resumes').document(resume_id)\
+          .collection('versions').document(version_id)
+          
+        doc_ref.delete()
+        return True
+    except Exception as e:
+        print(f"Error deleting resume version: {e}")
+        return False
