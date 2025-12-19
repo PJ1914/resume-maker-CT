@@ -728,16 +728,6 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
     # Start with metadata converted to dict
     result = metadata.model_dump()
     
-    # Debug logging
-    print(f"🔍 get_merged_resume_data for {resume_id}:")
-    print(f"   metadata.experience: {len(metadata.experience or [])} items")
-    print(f"   metadata.projects: {len(metadata.projects or [])} items")
-    print(f"   metadata.sections: {len(metadata.sections or [])} items")
-    print(f"   edited_data: {'exists' if edited_data else 'None'}")
-    if edited_data:
-        print(f"   edited_data.experience: {len(edited_data.get('experience', []))} items")
-        print(f"   edited_data.projects: {len(edited_data.get('projects', []))} items")
-    
     # Helper to check if a value has actual content
     def has_content(value):
         if value is None:
@@ -799,6 +789,22 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
                     'technical': technical,
                     'soft': soft
                 }
+        
+        # Handle certifications from edited data
+        if has_content(edited_data.get('certifications')):
+            result['certifications'] = edited_data['certifications']
+        
+        # Handle languages from edited data
+        if has_content(edited_data.get('languages')):
+            result['languages'] = edited_data['languages']
+        
+        # Handle achievements from edited data
+        if has_content(edited_data.get('achievements')):
+            result['achievements'] = edited_data['achievements']
+        
+        # Preserve template from edited data if available
+        if has_content(edited_data.get('template')):
+            result['template'] = edited_data['template']
     
     # Ensure 'contact' and 'summary' keys exist for templates (even if not edited)
     if 'contact' not in result and 'contact_info' in result:

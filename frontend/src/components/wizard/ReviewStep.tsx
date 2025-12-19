@@ -47,7 +47,7 @@ export default function ReviewStep({ data, onThemeChange, onJumpToStep }: Review
   const certifications = Array.isArray(data?.certifications) ? data.certifications : []
   const languages = Array.isArray(data?.languages) ? data.languages : []
   const achievements = Array.isArray(data?.achievements) ? data.achievements : []
-  const template = data?.template || 'modern'
+  const template = data?.template || 'resume_1'
   const theme = data?.theme || { primary_color: '00008B', secondary_color: '4B4B4B' }
 
   const sections = [

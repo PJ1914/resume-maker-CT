@@ -10,12 +10,12 @@ export default function AIHistorySection() {
         queryFn: () => creditService.getHistory(20),
     })
 
-    // Filter for AI related transactions
-    const aiHistory = transactions?.filter(t =>
+    // Filter for AI related transactions and show only last 5
+    const aiHistory = (transactions?.filter(t =>
         t.feature === 'AI_REWRITE' ||
         t.feature === 'AI_SUGGESTION' ||
         t.description.toLowerCase().includes('ai')
-    ) || []
+    ) || []).slice(0, 5)
 
     const getIcon = (type: string) => {
         if (type.includes('interview')) return <MessageSquare className="h-4 w-4 text-blue-500" />

@@ -25,7 +25,7 @@ router = APIRouter(tags=["PDF Export"])
 
 class ExportRequest(BaseModel):
     """PDF export request"""
-    template: TemplateType = "modern"
+    template: TemplateType = "resume_1"
     save_to_storage: bool = True
 
 
@@ -197,7 +197,7 @@ async def export_resume_pdf(
 @router.get("/{resume_id}/export/download")
 async def download_resume_pdf(
     resume_id: str,
-    template: TemplateType = "modern",
+    template: TemplateType = "resume_1",
     current_user: dict = Depends(get_current_user)
 ):
     """

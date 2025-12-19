@@ -111,7 +111,7 @@ class AchievementEntry(BaseModel):
 
 class CreateResumeRequest(BaseModel):
     """Request to create resume from wizard data"""
-    template: Optional[str] = "modern"  # Template ID: modern, classic, minimalist, or custom_xxxxx
+    template: Optional[str] = "resume_1"  # Template ID: resume_1, resume_2, etc.
     contact: ContactInfo
     summary: str
     experience: List[ExperienceEntry] = []
@@ -135,7 +135,7 @@ class ResumeMetadata(BaseModel):
     status: ResumeStatus = ResumeStatus.UPLOADED
     created_at: datetime
     updated_at: datetime
-    template: Optional[str] = "modern"  # Template ID used for this resume
+    template: Optional[str] = "resume_1"  # Template ID used for this resume
     
     # Parsing results (populated after parsing)
     parsed_text: Optional[str] = None
@@ -210,7 +210,7 @@ class ResumeDetailResponse(BaseModel):
     layout_type: Optional[str] = None
     parsed_at: Optional[datetime] = None
     latest_score: Optional[float] = None
-    template: Optional[str] = "modern"
+    template: Optional[str] = "resume_1"
     error_message: Optional[str] = None
     
     @field_validator('sections', mode='before')

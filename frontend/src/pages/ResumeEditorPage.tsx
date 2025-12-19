@@ -42,6 +42,7 @@ import { LanguagesSection } from '../components/editor/LanguagesSection';
 import { CustomSection } from '../components/editor/CustomSection';
 import { AddSection } from '../components/editor/AddSection';
 import { ResumePreview } from '../components/ResumePreview';
+import { TemplatedResumePreview } from '../components/TemplatedResumePreview';
 import PdfExportModal from '../components/PdfExportModal';
 import { InterviewPrepButton } from '../components/interview/InterviewPrepButton';
 import { v4 as uuidv4 } from 'uuid';
@@ -396,6 +397,10 @@ export const ResumeEditorPage: React.FC = () => {
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [reparsing, setReparsing] = useState(false);
+  const [useTemplatePreview, setUseTemplatePreview] = useState(true); // Use template preview by default
+  const [lastSaved, setLastSaved] = useState<number>(Date.now()); // For triggering preview refresh
+
+  // Versioning & JD Analysis State
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showTargetModal, setShowTargetModal] = useState(false);
   const [targetJD, setTargetJD] = useState('');
@@ -403,6 +408,7 @@ export const ResumeEditorPage: React.FC = () => {
   const [analyzingTarget, setAnalyzingTarget] = useState(false);
   const [userBalance, setUserBalance] = useState<number | null>(null);
   const [viewingVersionId, setViewingVersionId] = useState<string | null>(null);
+
   const searchParams = new URLSearchParams(window.location.search);
   const versionIdParam = searchParams.get('version');
 
@@ -518,6 +524,11 @@ export const ResumeEditorPage: React.FC = () => {
       newResume.originalFileUrl = resumeDetail.storage_url;
     }
 
+    // Preserve the template from the API response (important for wizard-created resumes)
+    if (resumeDetail.template) {
+      newResume.template = resumeDetail.template;
+    }
+
     // Populate contact info
     if (resumeDetail.contact_info) {
       const contactInfo = resumeDetail.contact_info;
@@ -540,9 +551,12 @@ export const ResumeEditorPage: React.FC = () => {
       }
     }
 
-    // Professional summary
+    // Professional summary - check multiple possible locations
     if (resumeDetail.professional_summary) {
       newResume.summary = resumeDetail.professional_summary;
+    } else if (resumeDetail.parsed_text && resumeDetail.content_type === 'application/json') {
+      // For wizard-created resumes, parsed_text contains the summary
+      newResume.summary = resumeDetail.parsed_text;
     }
 
     // Check for dynamic sections array first
@@ -705,6 +719,38 @@ export const ResumeEditorPage: React.FC = () => {
           }));
         }
       }
+
+      // Certifications
+      if (resumeDetail.certifications && Array.isArray(resumeDetail.certifications)) {
+        newResume.certifications = resumeDetail.certifications.map((c: any) => ({
+          id: crypto.randomUUID(),
+          name: c.name || '',
+          issuer: c.issuer || '',
+          date: c.date || '',
+          credentialId: c.credentialId || c.credential_id || '',
+          url: c.url || '',
+        }));
+      }
+
+      // Languages
+      if (resumeDetail.languages && Array.isArray(resumeDetail.languages)) {
+        newResume.languages = resumeDetail.languages.map((l: any) => ({
+          id: crypto.randomUUID(),
+          language: l.language || l.name || '',
+          proficiency: l.proficiency || '',
+        }));
+      }
+
+      // Achievements
+      if (resumeDetail.achievements && Array.isArray(resumeDetail.achievements)) {
+        newResume.achievements = resumeDetail.achievements.map((a: any) => ({
+          id: crypto.randomUUID(),
+          title: a.title || a.name || '',
+          description: a.description || '',
+          text: a.text || a.description || '',
+          date: a.date || '',
+        }));
+      }
     }
 
     console.log('✅ Processed resume:', {
@@ -729,11 +775,13 @@ export const ResumeEditorPage: React.FC = () => {
         // First, try to load existing resume data from Firestore
         let data = await getResume(user.uid, resumeId);
 
-        // Check if local data has actual content (not just contact info)
+        // Check if local data has actual content (not just empty placeholders)
         const hasLocalContent = data && (
+          (data.contact && data.contact.fullName && data.contact.fullName.length > 0) ||
           (data.experience && data.experience.length > 0) ||
           (data.projects && data.projects.length > 0) ||
-          (data.education && data.education.length > 0)
+          (data.education && data.education.length > 0) ||
+          (data.skills && data.skills.length > 0)
         );
 
         console.log('📦 Local data check:', {
@@ -755,8 +803,10 @@ export const ResumeEditorPage: React.FC = () => {
               resumeDetail = await resumeService.getResume(resumeId);
 
               const apiHasData = resumeDetail && (
+                resumeDetail.contact_info ||  // Wizard-created resumes have contact_info immediately
                 (resumeDetail.experience && Array.isArray(resumeDetail.experience) && resumeDetail.experience.length > 0) ||
                 (resumeDetail.projects && Array.isArray(resumeDetail.projects) && resumeDetail.projects.length > 0) ||
+                (resumeDetail.education && Array.isArray(resumeDetail.education) && resumeDetail.education.length > 0) ||
                 (resumeDetail.sections && Array.isArray(resumeDetail.sections) && resumeDetail.sections.length > 0)
               );
 
@@ -775,12 +825,22 @@ export const ResumeEditorPage: React.FC = () => {
               sections: resumeDetail?.sections?.length || 0
             });
 
-            // If we have parsed data with content, process it
-            if (resumeDetail && resumeDetail.parsed_text) {
+            // If we have resume data with content (wizard or parsed), process it
+            // Check for contact_info (wizard) OR experience/education (parsed)
+            const hasResumeData = resumeDetail && (
+              resumeDetail.contact_info ||
+              (resumeDetail.experience && resumeDetail.experience.length > 0) ||
+              (resumeDetail.education && resumeDetail.education.length > 0) ||
+              (resumeDetail.sections && Array.isArray(resumeDetail.sections) && resumeDetail.sections.length > 0)
+            );
+
+            if (hasResumeData) {
               const apiHasContent = (
                 ((resumeDetail as any).experience && (resumeDetail as any).experience.length > 0) ||
                 ((resumeDetail as any).projects && (resumeDetail as any).projects.length > 0) ||
-                ((resumeDetail as any).sections && Array.isArray((resumeDetail as any).sections) && (resumeDetail as any).sections.length > 0)
+                ((resumeDetail as any).education && (resumeDetail as any).education.length > 0) ||
+                ((resumeDetail as any).sections && Array.isArray((resumeDetail as any).sections) && (resumeDetail as any).sections.length > 0) ||
+                ((resumeDetail as any).contact_info)
               );
 
               console.log('API has content:', apiHasContent);
@@ -855,6 +915,8 @@ export const ResumeEditorPage: React.FC = () => {
         const normalizedResume = normalizeDateFieldsInResume(resumeData);
         await saveResume(user.uid, resumeId, normalizedResume);
         setSaveStatus('saved');
+        // Small delay to ensure Firestore write propagates before refreshing preview
+        setTimeout(() => setLastSaved(Date.now()), 500);
         setTimeout(() => setSaveStatus(null), 2000);
       } catch (err) {
         console.error('Autosave failed:', err);
@@ -864,6 +926,15 @@ export const ResumeEditorPage: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [resumeData, user, resumeId, loading]);
+
+  // Fetch balance for Target Job Analysis
+  useEffect(() => {
+    if (showTargetModal && user) {
+      creditService.getBalance()
+        .then(data => setUserBalance(data.balance))
+        .catch(err => console.error("Failed to fetch balance", err));
+    }
+  }, [showTargetModal, user]);
 
   const handleAIImproveSummary = async (text: string) => {
     if (!user) return text;
@@ -1456,31 +1527,41 @@ export const ResumeEditorPage: React.FC = () => {
             <div className="w-full lg:w-1/2 lg:sticky lg:top-24 h-fit">
               <div className="bg-white dark:bg-secondary-900 rounded-lg shadow-sm border border-secondary-200 dark:border-800 overflow-hidden">
                 <div className="p-4 border-b border-secondary-200 dark:border-secondary-800 bg-secondary-50 dark:bg-secondary-950 flex justify-between items-center">
-                  <h3 className="font-semibold text-secondary-900 dark:text-secondary-50 hidden lg:block">Live Preview</h3>
+                  <div className="hidden lg:flex items-center gap-2">
+                    <h3 className="font-semibold text-secondary-900 dark:text-secondary-50">
+                      {useTemplatePreview ? 'Template Preview' : 'Quick Preview'}
+                    </h3>
+                    {useTemplatePreview && (
+                      <span className="text-xs text-secondary-500">({resumeData.template || 'resume_1'})</span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end">
-                    <div className="flex bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-1">
-                      <button
-                        onClick={() => { setFitToWidth(false); setZoomLevel(prev => Math.max(0.2, prev - 0.1)); }}
-                        className="p-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded text-secondary-600 dark:text-secondary-400"
-                        title="Zoom Out (Ctrl -)"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-                      </button>
-                      <button
-                        onClick={() => setFitToWidth(!fitToWidth)}
-                        className={`px-2 text-xs font-mono flex items-center min-w-[3rem] justify-center hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded cursor-pointer ${fitToWidth ? 'text-blue-600 font-bold' : ''}`}
-                        title="Toggle Fit to Width"
-                      >
-                        {fitToWidth ? 'Auto' : `${Math.round(zoomLevel * 100)}%`}
-                      </button>
-                      <button
-                        onClick={() => { setFitToWidth(false); setZoomLevel(prev => Math.min(3, prev + 0.1)); }}
-                        className="p-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded text-secondary-600 dark:text-secondary-400"
-                        title="Zoom In (Ctrl +)"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                      </button>
-                    </div>
+                    {/* Zoom controls - only show for quick preview */}
+                    {!useTemplatePreview && (
+                      <div className="flex bg-white dark:bg-secondary-900 rounded-lg border border-secondary-200 dark:border-secondary-800 p-1">
+                        <button
+                          onClick={() => { setFitToWidth(false); setZoomLevel(prev => Math.max(0.2, prev - 0.1)); }}
+                          className="p-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded text-secondary-600 dark:text-secondary-400"
+                          title="Zoom Out (Ctrl -)"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
+                        </button>
+                        <button
+                          onClick={() => setFitToWidth(!fitToWidth)}
+                          className={`px-2 text-xs font-mono flex items-center min-w-[3rem] justify-center hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded cursor-pointer ${fitToWidth ? 'text-blue-600 font-bold' : ''}`}
+                          title="Toggle Fit to Width"
+                        >
+                          {fitToWidth ? 'Auto' : `${Math.round(zoomLevel * 100)}%`}
+                        </button>
+                        <button
+                          onClick={() => { setFitToWidth(false); setZoomLevel(prev => Math.min(3, prev + 0.1)); }}
+                          className="p-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded text-secondary-600 dark:text-secondary-400"
+                          title="Zoom In (Ctrl +)"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                        </button>
+                      </div>
+                    )}
 
                     {resumeData.originalFileUrl && (
                       <button
@@ -1492,6 +1573,17 @@ export const ResumeEditorPage: React.FC = () => {
                         {showOriginal ? 'Show Editor' : 'Original PDF'}
                       </button>
                     )}
+
+                    {/* Template/Quick Preview Toggle */}
+                    <button
+                      onClick={() => setUseTemplatePreview(!useTemplatePreview)}
+                      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${useTemplatePreview
+                        ? 'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300'
+                        : 'bg-white border-secondary-200 text-secondary-600 hover:bg-secondary-50 dark:bg-secondary-900 dark:border-secondary-700 dark:text-secondary-300'}`}
+                      title={useTemplatePreview ? 'Using actual template preview (PDF)' : 'Using quick HTML preview'}
+                    >
+                      {useTemplatePreview ? '📄 Template' : '⚡ Quick'}
+                    </button>
 
                     <button onClick={() => setShowPreview(false)} className="text-secondary-500 lg:hidden">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -1512,6 +1604,13 @@ export const ResumeEditorPage: React.FC = () => {
                         title="Original Resume"
                       />
                     </div>
+                  ) : useTemplatePreview && resumeId ? (
+                    /* Template Preview - Shows actual PDF with selected template */
+                    <TemplatedResumePreview
+                      resumeId={resumeId}
+                      template={resumeData.template || 'resume_1'}
+                      lastSaved={lastSaved}
+                    />
                   ) : (
                     <div
                       ref={contentRef}

@@ -162,7 +162,7 @@ class LaTeXCompiler:
     def compile_pdf(
         self,
         latex_source: str,
-        template_name: str = "modern",
+        template_name: str = "resume_1",
         additional_files: Optional[Dict[str, str]] = None
     ) -> bytes:
         """
@@ -337,7 +337,7 @@ class LaTeXCompiler:
     def generate_pdf(
         self,
         resume_data: Dict[str, Any],
-        template_name: str = "modern"
+        template_name: str = "resume_1"
     ) -> bytes:
         """
         Complete PDF generation pipeline: render template + compile PDF.

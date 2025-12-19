@@ -659,7 +659,6 @@ async def reparse_resume(
     }
 
 
-
 @router.post("/{resume_id}/versions", response_model=ResumeVersionResponse)
 async def create_version(
     resume_id: str,
@@ -699,6 +698,67 @@ async def create_version(
         version_name=version['version_name'],
         created_at=version['created_at']
     )
+
+@router.put("/{resume_id}/data")
+async def save_resume_data(
+    resume_id: str,
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Save resume editor data to Firestore.
+    This allows the frontend editor to save data through the backend,
+    ensuring it goes to the correct Firestore database.
+    """
+    from app.firebase import resume_maker_app
+    
+    user_id = current_user["uid"]
+    
+    # Verify resume ownership
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+    
+    if not resume_maker_app:
+        logging.warning("[DEV] Would save resume data for %s", resume_id)
+        return {"status": "success", "message": "Resume data saved (dev mode)"}
+    
+    try:
+        from firebase_admin import firestore
+        from datetime import datetime
+        
+        db = firestore.client(app=resume_maker_app)
+        
+        # Prepare data for saving
+        save_data = {
+            **data,
+            'id': resume_id,
+            'userId': user_id,
+            'updatedAt': datetime.utcnow(),
+        }
+        
+        # Save to resume_data collection
+        db.collection('users').document(user_id)\
+          .collection('resume_data').document(resume_id)\
+          .set(save_data, merge=True)
+        
+        logging.info(f"✅ Saved resume data for {resume_id}")
+        
+        return {
+            "status": "success",
+            "message": "Resume data saved",
+            "resume_id": resume_id
+        }
+    except Exception as e:
+        logging.error(f"Error saving resume data: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save resume data: {str(e)}"
+        )
+
 
 @router.get("/{resume_id}/versions", response_model=List[ResumeVersionResponse])
 async def get_resume_versions(
@@ -755,7 +815,8 @@ async def get_resume_version_detail(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Version not found"
         )
-    
+    return version  # Fixed return
+
 @router.delete("/{resume_id}/versions/{version_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_version(
     resume_id: str,
