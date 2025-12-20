@@ -70,48 +70,60 @@ async def improve_content(
 
         # Create appropriate prompt based on context
         prompts = {
-            "summary": """You are an expert resume writer. Improve the following professional summary to make it more compelling and ATS-friendly.
+            "summary": """You are an expert ATS Optimization Specialist. Rewrite the following professional summary to ensure it is 100% ATS-friendly and high-scoring.
 
-Make it:
-- Concise (2-3 sentences)
-- Achievement-focused
-- Include relevant keywords
-- Professional tone
+Requirements:
+- Use high-impact, industry-standard keywords commonly found in job descriptions.
+- Use strong, active voice (third-person).
+- Focus strictly on hard skills, quantifiable achievements, and core competencies.
+- Keep it concise (2-3 sentences) and dense with value.
+- Eliminate fluff, subjective adjectives, and generic buzzwords.
+- NO MARKDOWN (plain text only).
 
 Original summary:
 {text}
 
-Provide ONLY the improved summary, nothing else.""",
-            "experience": """You are an expert resume writer. Improve the following work experience bullet point.
+Provide ONLY the ATS-optimized summary as plain text.""",
 
-Make it:
-- Start with strong action verb
-- Include quantifiable achievements where possible
-- Highlight impact and results
-- Use ATS-friendly keywords
-- Keep it concise (1-2 lines)
+            "experience": """You are an expert ATS Optimization Specialist. Rewrite the following experience bullet point to be 100% ATS-friendly.
 
-Original:
-{text}
-
-Provide ONLY the improved bullet point, nothing else.""",
-            "project_description": """You are an expert resume writer. Improve the following project description.
-
-Make it:
-- Clear and concise
-- Highlight key technologies and skills
-- Show impact or results
-- Professional tone
+Requirements:
+- Start with a high-impact action verb (e.g., Engineered, Spearheaded, Optimized).
+- Strictly follow the 'Action + Context + Result' formula.
+- Include specific metrics, percentages, or numbers to quantify impact (crucial for ATS scoring).
+- Integrate relevant technical keywords naturally to match job descriptions.
+- Ensure simple, clear sentence structures that parsers can easily read.
+- NO MARKDOWN (plain text only).
 
 Original:
 {text}
 
-Provide ONLY the improved description, nothing else.""",
-            "skill_suggestion": """You are an expert resume writer. Based on the following skill category, suggest 5-8 relevant technical skills that would be valuable for this category.
+Provide ONLY the ATS-optimized bullet point as plain text.""",
+
+            "project_description": """You are an expert ATS Optimization Specialist. Optimize this project description for maximum ATS visibility.
+
+Requirements:
+- Clearly highlighting the specific technologies, tools, and frameworks used (these are key ATS keywords).
+- State the project's function and your direct contribution clearly.
+- Use professional, technical language appropriate for the industry.
+- Focus on the outcome or solution provided.
+- NO MARKDOWN (plain text only).
+
+Original:
+{text}
+
+Provide ONLY the ATS-optimized description as plain text.""",
+
+            "skill_suggestion": """You are an expert ATS Optimization Specialist. Suggest 5-8 high-value, ATS-friendly technical skills relevant to this category.
+
+Requirements:
+- Focus on specific, standard industry terms (e.g., "React.js" instead of "React", "AWS Lambda" instead of "Serverless").
+- Prioritize hard skills over soft skills.
+- Return ONLY a comma-separated list.
 
 Category: {text}
 
-Provide ONLY a comma-separated list of skills, nothing else.""",
+Provide ONLY the comma-separated list of skills.""",
         }
 
         prompt_template = prompts.get(request.context)

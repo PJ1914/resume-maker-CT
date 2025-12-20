@@ -350,14 +350,17 @@ HOW TO IDENTIFY PROJECT/JOB BOUNDARIES:
 ═══════════════════════════════════════════════════════════════════════════════
 
 Projects usually start with:
-- A project NAME followed by description (e.g., "CodeTapasya – Learning Management System")
+- A project NAME followed by technical stack or description
 - A link like "Live-Link" or "GitHub" at the end of the title line
-- Then bullet points with "•" or "-" underneath
+- Then bullet points with "•", "-", "*", "›", "»", or other unicode bullets
+- Bullet points may span multiple lines - combine them into the description
 
 Experience entries usually have:
 - Company name + Position on same or adjacent lines
-- Date range (e.g., "July 2025 – Present")
-- Then bullet points underneath
+- Date range (e.g., "July 2025 – Present", "2024 - 2025", "May 2024")
+- Then bullet points underneath describing responsibilities
+
+🚨 IMPORTANT: If a project or experience description has multiple bullet points, JOIN them with a newline character (\\n) into a SINGLE string. Do NOT create a list of strings. It must be ONE string.
 
 ═══════════════════════════════════════════════════════════════════════════════
 SECTION TYPES (use exactly these type values):
@@ -679,27 +682,61 @@ Return ONLY valid JSON. No markdown, no explanations.'''
         hyperlinks: Optional[List[Dict[str, str]]] = None
     ) -> Dict:
         """
-        Basic fallback parsing when Gemini is unavailable.
-        Extracts minimal information using simple patterns.
+        Fallback parsing when Gemini is unavailable.
+        Uses the regular regex-based ResumeParser for robust extraction.
         """
-        result = {
-            'contact_info': self._extract_contact_basic(text, hyperlinks),
-            'professional_summary': self._extract_summary_basic(text),
-            'experience': [],
-            'education': [],
-            'projects': [],
-            'skills': {},
-            'certifications': [],
-            'hackathons_competitions': [],
-            'awards': [],
-            'custom_sections': {},
-            'parsed_at': datetime.utcnow().isoformat(),
-            'parsing_method': 'fallback',
-            'metadata': metadata or {},
-            'parsed_text': text,
-        }
-        
-        return result
+        try:
+            from app.services.parser import ResumeParser
+            
+            parser = ResumeParser()
+            # ResumeParser.parse returns a dict with similar structure
+            regex_result = parser.parse(text, metadata=metadata, hyperlinks=hyperlinks)
+            
+            # Map regex_result to the structure expected here if needed
+            # ResumeParser result keys: 
+            # contact_info, skills, experience, projects, education, certifications, achievements
+            
+            # Extract summary specifically as it might be in sections['summary']
+            summary = regex_result.get('sections', {}).get('summary', '') or \
+                      regex_result.get('sections', {}).get('profile', '')
+            
+            result = {
+                'contact_info': regex_result.get('contact_info', {}),
+                'professional_summary': summary,
+                'experience': regex_result.get('experience', []),
+                'education': regex_result.get('education', []),
+                'projects': regex_result.get('projects', []),
+                'skills': regex_result.get('skills', {}),
+                'certifications': regex_result.get('certifications', []),
+                'hackathons_competitions': [], # Regex parser doesn't split these explicitly
+                'awards': regex_result.get('achievements', []), # Map achievements to awards/achievements
+                'achievements': regex_result.get('achievements', []),
+                'custom_sections': {},
+                'parsed_at': datetime.utcnow().isoformat(),
+                'parsing_method': 'fallback_regex',
+                'metadata': metadata or {},
+                'parsed_text': text,
+                'sections': regex_result.get('sections', {}) # Keep raw sections
+            }
+            
+            return result
+            
+        except Exception as e:
+            logging.error(f"Fallback parsing failed: {e}")
+            # Absolute minimal fallback if even regular parser fails
+            return {
+                'contact_info': self._extract_contact_basic(text, hyperlinks),
+                'professional_summary': self._extract_summary_basic(text),
+                'experience': [],
+                'education': [],
+                'projects': [],
+                'skills': {},
+                'certifications': [],
+                'parsed_at': datetime.utcnow().isoformat(),
+                'parsing_method': 'fallback_minimal',
+                'metadata': metadata or {},
+                'parsed_text': text,
+            }
     
     def _extract_contact_basic(
         self,

@@ -173,46 +173,43 @@ Full Resume Text:
 """
         
         prompt += """
-**SCORING CRITERIA (Total: 100 points) - BE STRICT:**
+**SCORING CRITERIA (Total: 100 points) - BE FAIR BUT DETAILED:**
 
 1. **Keywords & Skills (30 points)**
-   - Deduct points for: generic keywords, outdated skills, irrelevant terms
-   - Award points for: industry-specific terms, modern tech stack, relevant certifications
-   - 25-30: Exceptional keyword optimization
-   - 20-24: Good keyword usage
-   - 15-19: Average keywords
-   - Below 15: Poor or missing keywords
+   - 25-30: Exceptional optimization (matches job description perfectly)
+   - 20-24: Good usage of industry-standard keywords
+   - 15-19: Average keywords (some missing or generic)
+   - Below 15: Poor optimization
 
 2. **Section Quality (35 points)**
-   - Deduct heavily if missing: Experience (-10), Education (-8), Skills (-7)
-   - Deduct for: vague descriptions, no dates, poor organization
-   - Award for: detailed achievements, clear progression, relevant projects
-   - 30-35: Exceptional content depth
-   - 25-29: Good sections
-   - 20-24: Average sections
-   - Below 20: Missing or poor sections
+   - 30-35: Comprehensive details in Experience/Projects
+   - 25-29: Solid sections with clear dates and roles
+   - 20-24: Average sections (some vagueness)
+   - Below 20: Missing critical sections (like Experience/Education)
 
 3. **Formatting (15 points)**
-   - Deduct for: inconsistent formatting, walls of text, poor structure
-   - Award for: clean layout, proper hierarchy, good use of whitespace
+   - 13-15: Perfect layout, consistent fonts, clear hierarchy
+   - 10-12: Good readable structure
+   - Below 10: Messy, inconsistent, or wall of text
 
 4. **Quantification (10 points)**
-   - Deduct if no metrics (0-2 points)
-   - Few numbers (3-5 points)
-   - Good quantification (6-8 points)
-   - Excellent metrics throughout (9-10 points)
+   - 8-10: Excellent use of metrics (%, $, numbers) throughout
+   - 5-7: Some quantification present
+   - 0-4: Little to no numbers used
 
 5. **Readability (10 points)**
-   - Deduct for: typos, poor grammar, unclear language
-   - Award for: professional tone, clear communication
+   - 9-10: Professional, error-free, concise
+   - 7-8: Clear but could be punchier
+   - Below 7: Typos, grammar errors, or confusing sentences
 
 **IMPORTANT - GENERATE SPECIFIC, ACTIONABLE SUGGESTIONS:**
 - Analyze the ACTUAL resume content provided above
 - For each weakness identified, provide SPECIFIC examples from the resume
 - For "Improved Bullet Point Examples", extract ACTUAL bullet points from the resume and show improvements
 - Suggestions should be tailored to this specific resume, not generic templates
-- Include actual skills, companies, and achievements found in the resume
-- If resume text is "very short or poorly extracted", mention specific sections that are missing or truncated
+- If a section like 'Education' is missing but the candidate has strong 'Projects', suggest adding Education for completeness but acknowledge the strong projects.
+- RECOGNIZE achievements even without numbers (e.g., "launched app", "led team").
+- IMPROVED EXAMPLES should be professionally phrased, using "Action + Context + Result" - focus on correcting grammar/clarity while boosting impact.
 
 **RESPONSE FORMAT (JSON only):**
 ```json

@@ -25,6 +25,14 @@ class TextNormalizer:
         if not text:
             return ""
         
+        # Remove markdown bold/italic markers
+        # Replace **text** or __text__ with just text
+        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+        text = re.sub(r'__([^_]+)__', r'\1', text)
+        
+        # Remove standalone markdown markers that might have been missed
+        text = text.replace('**', '').replace('__', '')
+        
         # Fix concatenated words: add space before lowercase followed by uppercase
         # e.g., "Selectedamong" -> "Selected among"
         text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
@@ -55,6 +63,10 @@ class TextNormalizer:
         
         # Normalize bullets
         text = re.sub(r'[•●○■□▪▫]', '•', text)
+        
+        # Remove specific font artifacts/garbage often found in PDF extraction
+        # ƒ (folder/phone), § (section/github), ï (linkedin), etc.
+        text = re.sub(r'[ƒ§ï]', '', text)
         
         # Remove control characters except newline and tab
         text = ''.join(char for char in text if char == '\n' or char == '\t' or not char.isprintable() or ord(char) >= 32)
@@ -97,19 +109,23 @@ class SectionDetector:
     
     # Common section headers (case-insensitive patterns)
     SECTION_PATTERNS = {
-        'contact': r'\b(contact|personal\s+information)\b',
-        'summary': r'\b(summary|profile|objective|about\s+me|professional\s+summary)\b',
-        'experience': r'\b(experience|work\s+history|employment|professional\s+experience)\b',
-        'education': r'\b(education|academic|qualifications|academic\s+background)\b',
-        'skills': r'\b(skills|technical\s+skills|core\s+competencies|expertise)\b',
-        'projects': r'\b(projects|key\s+projects)\b|^portfolio$',
-        'certifications': r'\b(certifications?|licenses?|credentials|certifications?\s*[/&]\s*(achievements?|awards?|honors?))\b',
-        'awards': r'\b(awards?|honors?|achievements?|recognition|certifications?\s*[/&]\s*(achievements?|awards?|honors?))\b',
-        'publications': r'\b(publications?|papers?|research)\b',
-        'languages': r'\b(languages?|language\s+proficiency)\b',
-        'interests': r'\b(interests?|hobbies)\b',
-        'references': r'\b(references?)\b',
+        'contact': r'\b(contact|personal\s+information|contact\s+info|details)\b',
+        'summary': r'\b(summary|profile|objective|about\s+me|professional\s+summary|career\s+objective|career\s+summary|about)\b',
+        'experience': r'\b(experience|work\s+history|employment|professional\s+experience|work\s+experience|career\s+history|roles\s+responsibilities)\b',
+        'education': r'\b(education|academic|qualifications|academic\s+background|scholastic\s+achievements|academic\s+history)\b',
+        'skills': r'\b(skills|technical\s+skills|core\s+competencies|expertise|tech\s+stack|key\s+skills|skill\s+set)\b',
+        'projects': r'\b(projects|key\s+projects|personal\s+projects|academic\s+projects|project\s+experience)\b|^portfolio$',
+        'certifications': r'\b(certifications?|licenses?|credentials|certifications?\s*[/&]\s*(achievements?|awards?|honors?)|professional\s+development)\b',
+        'awards': r'\b(awards?|honors?|achievements?|recognition|honours|accomplishments|distinctions)\b',
+        'publications': r'\b(publications?|papers?|research|bibliography)\b',
+        'languages': r'\b(languages?|language\s+proficiency|spoken\s+languages)\b',
+        'interests': r'\b(interests?|hobbies|activities|extra-curricular|co-curricular)\b',
+        'references': r'\b(references?|referees)\b',
+        'volunteering': r'\b(volunteer|volunteering|community\s+service)\b',
     }
+
+    # Common unicode bullets and variations for splitting items
+    BULLET_PATTERN = r'(?:^|\s)[•●○■□▪▫(?:)-−–—*]\s+'
     
     @staticmethod
     def detect_sections(text: str) -> Dict[str, str]:
@@ -134,12 +150,43 @@ class SectionDetector:
             
             # Check if this line is a section header
             detected_section = None
+            remaining_content = None
+            
+            # Helper to check if line starts with pattern (ignoring case)
+            # We already stripped whitespace
+            
             for section_name, pattern in SectionDetector.SECTION_PATTERNS.items():
-                if re.search(pattern, line_stripped, re.IGNORECASE):
-                    # Likely a section header if it's short (max 10 words to handle "Certifications / Achievements")
+                match = re.search(pattern, line_stripped, re.IGNORECASE)
+                if match:
+                    # To be a header, the match should ideally be at the start of the line
+                    # text could be "• Experience", so we check if match start is small
+                    if match.start() > 3: 
+                        continue
+                        
+                    # Check length of the whole line to avoid matching sentences
+                    # e.g. "My experience includes..."
                     word_count = len(re.split(r'\s+', line_stripped))
-                    if word_count <= 10:
+                    
+                    # If line is short, it's a header. 
+                    # If it has a colon, it's a header.
+                    # If it matches specific patterns strict at start, it's a header.
+                    
+                    is_short_line = word_count <= 6
+                    has_colon = ':' in line_stripped
+                    is_start_match = match.start() == 0 or (match.start() < 3 and line_stripped[0] in '•-')
+                    
+                    if is_start_match and (is_short_line or has_colon or word_count <= 10):
                         detected_section = section_name
+                        
+                        # Determine if there is content on the same line
+                        # Everything after the match
+                        raw_remainder = line_stripped[match.end():].strip()
+                        
+                        # Remove leading separators like : - –
+                        clean_remainder = re.sub(r'^[:\-\–\—\s]+', '', raw_remainder).strip()
+                        
+                        if clean_remainder:
+                            remaining_content = clean_remainder
                         break
             
             if detected_section:
@@ -155,6 +202,8 @@ class SectionDetector:
                 # Start new section
                 current_section = detected_section
                 current_content = []
+                if remaining_content:
+                    current_content.append(remaining_content)
             else:
                 # Add to current section
                 current_content.append(line)
@@ -435,11 +484,18 @@ class SectionDetector:
         current_exp = None
         description_lines = []
         
-        # Date patterns - handle various formats including "May2024" (no space)
-        date_pattern = r'((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s*\d{4})\s*[-–—]\s*((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s*\d{4}|Present|Current|Now)'
+        # Extended date patterns for "Universal" support
+        # Matches: "Jan 2020", "01/2020", "2020", "January 2020", "Present", "Current", "Now", "Till Date"
+        month_regex = r'(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)'
         
-        # Year range pattern: 2022 - Present, June 2025 – Present
-        year_range_pattern = r'((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)?\s*\d{4})\s*[-–—]\s*(\d{4}|Present|Current|Now)'
+        date_part = rf'(?:{month_regex}\s*,?\s*\d{{2,4}}|\d{{1,2}}[/-]\d{{2,4}}|\d{{4}})'
+        present_part = r'(?:Present|Current|Now|Till\s*Date|Ongoing)'
+        
+        # Format: "Date - Date"
+        date_pattern = rf'({date_part})\s*[-–—to]+\s*({date_part}|{present_part})'
+        
+        # Single Date / Year Only (Handle carefully to avoid false positives with phone numbers)
+        year_range_pattern = r'(\d{4})\s*[-–—]\s*(\d{4}|Present|Current|Now)'
         
         # Location pattern for next-line location
         location_pattern = r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),?\s+(?:India|USA|UK|Canada|Australia|[A-Z][a-z]+)$'
