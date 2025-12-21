@@ -322,8 +322,16 @@ class LaTeXCompiler:
                     try:
                         tex_content = tex_file_path.read_text(encoding='utf-8', errors='ignore')
                         logger.error(f"Generated LaTeX (first 1000 chars):\n{tex_content[:1000]}")
+                        
+                        # Save debug files to backend directory for examination
+                        debug_dir = Path(__file__).parent.parent / "debug_latex"
+                        debug_dir.mkdir(exist_ok=True)
+                        (debug_dir / "failed_main.tex").write_text(tex_content, encoding='utf-8')
+                        if log_file.exists():
+                            (debug_dir / "failed_main.log").write_text(log_content, encoding='utf-8')
+                        logger.error(f"Debug files saved to: {debug_dir}")
                     except Exception as e:
-                        logger.error(f"Could not read tex file: {e}")
+                        logger.error(f"Could not read/save tex file: {e}")
                 
                 raise RuntimeError(
                     f"LaTeX compilation failed. Check logs for details. Log preview:\n{log_content[:2000]}..."

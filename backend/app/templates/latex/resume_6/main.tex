@@ -50,7 +50,7 @@
 \begin{rSection}{Education}
 
 \BLOCK{ for edu in education }
-{\bf \VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex}} \hfill {\VAR{edu.start_date|escape_tex} - \VAR{edu.end_date|escape_tex}}
+{\bf \VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex}} \hfill {\VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } - \BLOCK{ endif }\VAR{edu.end_date|escape_tex}}
 \\ 
 \VAR{edu.institution|escape_tex}\BLOCK{ if edu.location }, \VAR{edu.location|escape_tex}\BLOCK{ endif }
 \BLOCK{ if edu.gpa }
@@ -87,7 +87,7 @@
 
 \BLOCK{ for exp in experience }
 \BLOCK{ if exp.description or (exp.highlights and exp.highlights|length > 0) }
-\begin{rSubsection}{\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.location|escape_tex}}
+\begin{rSubsection}{\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex}\BLOCK{ if exp.start_date and exp.end_date } - \BLOCK{ endif }\VAR{exp.end_date|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.location|escape_tex}}
 \BLOCK{ if exp.description }
 \item \VAR{exp.description|escape_tex}
 \BLOCK{ endif }
@@ -96,7 +96,7 @@
 \BLOCK{ endfor }
 \end{rSubsection}
 \BLOCK{ else }
-{\bf \VAR{exp.position|escape_tex}} \hfill {\VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}}
+{\bf \VAR{exp.position|escape_tex}} \hfill {\VAR{exp.start_date|escape_tex}\BLOCK{ if exp.start_date and exp.end_date } - \BLOCK{ endif }\VAR{exp.end_date|escape_tex}}
 \\
 {\em \VAR{exp.company|escape_tex}} \hfill {\em \VAR{exp.location|escape_tex}}
 \smallskip

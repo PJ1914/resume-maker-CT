@@ -107,6 +107,52 @@ class GeminiResumeParser:
             cleaned = re.sub(r'([A-Za-z]+)(\d{4})', r'\1 \2', str(date_str))
             return cleaned.strip()
         
+        def clean_text(text: str) -> str:
+            """Clean up text by removing leading bullets, dashes, and fixing common issues."""
+            if not text:
+                return ""
+            import re
+            text = str(text).strip()
+            
+            # Remove leading bullet patterns: •, -, –, —, *, >, etc.
+            text = re.sub(r'^[\s]*[•\-–—\*\>»›○●▪▸◦]+[\s]*', '', text)
+            
+            # Fix concatenated words after bullets (e.g., "•Ledend" -> "Led")
+            # This catches cases where there's no space after bullet removal
+            
+            # Remove duplicate dashes like -- or –– 
+            text = re.sub(r'[\-–—]{2,}', '–', text)
+            
+            # Remove dash at start of text
+            text = re.sub(r'^[\s]*[\-–—]+[\s]*', '', text)
+            
+            # Fix spacing issues - ensure space after bullet if bullet wasn't removed
+            text = re.sub(r'([•\-–—])([A-Za-z])', r'\1 \2', text)
+            
+            return text.strip()
+        
+        def clean_item(item: Dict) -> Dict:
+            """Clean all text fields in an item."""
+            if not isinstance(item, dict):
+                return item
+            
+            # Fields that should be cleaned
+            text_fields = ['description', 'summary', 'text', 'title', 'name', 'position', 'role']
+            for field in text_fields:
+                if field in item and item[field]:
+                    item[field] = clean_text(item[field])
+            
+            # Clean highlights list if present
+            if 'highlights' in item and isinstance(item['highlights'], list):
+                item['highlights'] = [clean_text(h) for h in item['highlights'] if h and clean_text(h)]
+            
+            # Clean achievements list if present  
+            if 'achievements' in item and isinstance(item['achievements'], list):
+                item['achievements'] = [clean_text(a) for a in item['achievements'] if a and clean_text(a)]
+            
+            return item
+
+        
         # If using new dynamic sections format, transform to flat format
         if 'sections' in result:
             flat_result = {
@@ -147,13 +193,15 @@ class GeminiResumeParser:
                 
                 if section_type == 'summary':
                     if items:
-                        flat_result['professional_summary'] = items[0].get('text', '') if isinstance(items[0], dict) else str(items[0])
+                        summary_text = items[0].get('text', '') if isinstance(items[0], dict) else str(items[0])
+                        flat_result['professional_summary'] = clean_text(summary_text)
                 
                 elif section_type == 'experience':
                     for item in items:
                         if isinstance(item, dict):
                             item['startDate'] = clean_date(item.get('startDate', ''))
                             item['endDate'] = clean_date(item.get('endDate', ''))
+                            item = clean_item(item)
                             flat_result['experience'].append(item)
                 
                 elif section_type == 'education':
@@ -161,6 +209,7 @@ class GeminiResumeParser:
                         if isinstance(item, dict):
                             item['startDate'] = clean_date(item.get('startDate', ''))
                             item['endDate'] = clean_date(item.get('endDate', ''))
+                            item = clean_item(item)
                             flat_result['education'].append(item)
                 
                 elif section_type == 'projects':
@@ -168,6 +217,7 @@ class GeminiResumeParser:
                         if isinstance(item, dict):
                             item['startDate'] = clean_date(item.get('startDate', ''))
                             item['endDate'] = clean_date(item.get('endDate', ''))
+                            item = clean_item(item)
                             flat_result['projects'].append(item)
                 
                 elif section_type == 'skills':
@@ -175,16 +225,21 @@ class GeminiResumeParser:
                         if isinstance(item, dict):
                             category = item.get('category', 'Skills')
                             skills_list = item.get('items', [])
-                            flat_result['skills'][category] = skills_list
+                            # Clean skill items
+                            cleaned_skills = [clean_text(s) for s in skills_list if s and clean_text(s)]
+                            if cleaned_skills:
+                                flat_result['skills'][category] = cleaned_skills
                 
                 elif section_type == 'certifications':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['certifications'].append(item)
                 
                 elif section_type in ['achievements', 'hackathons']:
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             # Add to both for flexibility
                             flat_result['hackathons_competitions'].append(item)
                             flat_result['achievements'].append(item)
@@ -192,35 +247,41 @@ class GeminiResumeParser:
                 elif section_type == 'workshops':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['workshops'].append(item)
                 
                 elif section_type == 'publications':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['publications'].append(item)
                 
                 elif section_type == 'volunteer':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['volunteer'].append(item)
                 
                 elif section_type == 'languages':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['languages'].append(item)
                         elif isinstance(item, str):
-                            flat_result['languages'].append({'name': item})
+                            flat_result['languages'].append({'name': clean_text(item)})
                 
                 elif section_type == 'courses' or section_type == 'coursework':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['courses'].append(item)
                         elif isinstance(item, str):
-                            flat_result['courses'].append({'name': item})
+                            flat_result['courses'].append({'name': clean_text(item)})
                 
                 elif section_type == 'training':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['training'].append(item)
                 
                 elif section_type == 'research':
@@ -228,6 +289,7 @@ class GeminiResumeParser:
                         if isinstance(item, dict):
                             item['startDate'] = clean_date(item.get('startDate', ''))
                             item['endDate'] = clean_date(item.get('endDate', ''))
+                            item = clean_item(item)
                             flat_result['research'].append(item)
                 
                 elif section_type == 'leadership':
@@ -235,6 +297,7 @@ class GeminiResumeParser:
                         if isinstance(item, dict):
                             item['startDate'] = clean_date(item.get('startDate', ''))
                             item['endDate'] = clean_date(item.get('endDate', ''))
+                            item = clean_item(item)
                             flat_result['leadership'].append(item)
                 
                 elif section_type == 'extracurricular' or section_type == 'activities':
@@ -242,23 +305,27 @@ class GeminiResumeParser:
                         if isinstance(item, dict):
                             item['startDate'] = clean_date(item.get('startDate', ''))
                             item['endDate'] = clean_date(item.get('endDate', ''))
+                            item = clean_item(item)
                             flat_result['extracurricular'].append(item)
                 
                 elif section_type == 'memberships' or section_type == 'affiliations':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['memberships'].append(item)
                         elif isinstance(item, str):
-                            flat_result['memberships'].append({'name': item})
+                            flat_result['memberships'].append({'name': clean_text(item)})
                 
                 elif section_type == 'patents':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['patents'].append(item)
                 
                 elif section_type == 'conferences' or section_type == 'speaking':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['conferences'].append(item)
                 
                 elif section_type == 'military':
@@ -266,23 +333,27 @@ class GeminiResumeParser:
                         if isinstance(item, dict):
                             item['startDate'] = clean_date(item.get('startDate', ''))
                             item['endDate'] = clean_date(item.get('endDate', ''))
+                            item = clean_item(item)
                             flat_result['military'].append(item)
                 
                 elif section_type == 'interests' or section_type == 'hobbies':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['interests'].append(item)
                         elif isinstance(item, str):
-                            flat_result['interests'].append({'name': item})
+                            flat_result['interests'].append({'name': clean_text(item)})
                 
                 elif section_type == 'references':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['references'].append(item)
                 
                 elif section_type == 'awards' or section_type == 'honors':
                     for item in items:
                         if isinstance(item, dict):
+                            item = clean_item(item)
                             flat_result['awards'].append(item)
                 
                 else:
@@ -292,12 +363,13 @@ class GeminiResumeParser:
             
             return flat_result
         
-        # Old format - just clean dates
+        # Old format - clean dates AND clean text fields
         for exp in result.get('experience', []):
             if exp.get('startDate'):
                 exp['startDate'] = clean_date(exp['startDate'])
             if exp.get('endDate'):
                 exp['endDate'] = clean_date(exp['endDate'])
+            clean_item(exp)
         
         # Clean education dates
         for edu in result.get('education', []):
@@ -305,6 +377,7 @@ class GeminiResumeParser:
                 edu['startDate'] = clean_date(edu['startDate'])
             if edu.get('endDate'):
                 edu['endDate'] = clean_date(edu['endDate'])
+            clean_item(edu)
         
         # Clean project dates
         for proj in result.get('projects', []):
@@ -312,6 +385,15 @@ class GeminiResumeParser:
                 proj['startDate'] = clean_date(proj['startDate'])
             if proj.get('endDate'):
                 proj['endDate'] = clean_date(proj['endDate'])
+            clean_item(proj)
+        
+        # Clean achievements
+        for ach in result.get('achievements', []):
+            clean_item(ach)
+        
+        # Clean certifications
+        for cert in result.get('certifications', []):
+            clean_item(cert)
         
         return result
     

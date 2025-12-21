@@ -100,7 +100,7 @@
 \BLOCK{ for exp in experience }
   \resumeSubheading
     {\VAR{exp.company|escape_tex}}{\VAR{exp.location|escape_tex}}
-    {\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex} -- \VAR{exp.end_date|escape_tex}}
+    {\VAR{exp.position|escape_tex}}{\VAR{exp.start_date|escape_tex}\BLOCK{ if exp.start_date and exp.end_date } -- \BLOCK{ endif }\VAR{exp.end_date|escape_tex}}
     \BLOCK{ if exp.description or exp.highlights }
     \resumeItemListStart
         \BLOCK{ if exp.description }
@@ -125,15 +125,20 @@
     \resumeProject
         {\VAR{proj.name|escape_tex}}
         {\VAR{proj.technologies|join(', ')|escape_tex}}
-        {\VAR{proj.start_date|escape_tex} \BLOCK{ if proj.end_date } -- \VAR{proj.end_date|escape_tex} \BLOCK{ endif }}
+        {\VAR{proj.start_date|escape_tex}\BLOCK{ if proj.start_date and proj.end_date } -- \BLOCK{ endif }\VAR{proj.end_date|escape_tex}}
+        \BLOCK{ if proj.description or proj.highlights or proj.link }
         \resumeItemListStart
             \BLOCK{ if proj.description }
             \item \VAR{proj.description|escape_tex}
             \BLOCK{ endif }
+            \BLOCK{ for highlight in proj.highlights }
+            \item \VAR{highlight|escape_tex}
+            \BLOCK{ endfor }
             \BLOCK{ if proj.link }
             \item \href{\VAR{proj.link}}{Project Link}
             \BLOCK{ endif }
         \resumeItemListEnd
+        \BLOCK{ endif }
 \BLOCK{ endfor }
 
 \resumeSubHeadingListEnd
@@ -187,7 +192,7 @@
 \BLOCK{ for edu in education }
     \resumeSubheading
         {\VAR{edu.institution|escape_tex}}{\VAR{edu.location|escape_tex}}
-        {\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex} \BLOCK{ if edu.gpa }, GPA: \VAR{edu.gpa|escape_tex}\BLOCK{ endif }}{\VAR{edu.start_date|escape_tex} -- \VAR{edu.end_date|escape_tex}}
+        {\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex} \BLOCK{ if edu.gpa }, GPA: \VAR{edu.gpa|escape_tex}\BLOCK{ endif }}{\VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } -- \BLOCK{ endif }\VAR{edu.end_date|escape_tex}}
 \BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }

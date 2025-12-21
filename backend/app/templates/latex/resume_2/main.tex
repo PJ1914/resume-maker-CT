@@ -35,7 +35,7 @@
 \begin{rSection}{Work Experience}
 
 \BLOCK{ for exp in experience }
-{\bf \VAR{exp.position|escape_tex}, \VAR{exp.company|escape_tex}} \hfill {\em \VAR{exp.start_date|escape_tex} - \VAR{exp.end_date|escape_tex}} 
+{\bf \VAR{exp.position|escape_tex}, \VAR{exp.company|escape_tex}} \hfill {\em \VAR{exp.start_date|escape_tex}\BLOCK{ if exp.start_date and exp.end_date } - \BLOCK{ endif }\VAR{exp.end_date|escape_tex}} 
 
 \BLOCK{ if exp.description or exp.highlights }
 \begin{itemize} 
@@ -63,14 +63,19 @@
 \BLOCK{ if proj.description }
 \VAR{proj.description|escape_tex}
 \BLOCK{ endif }
+\BLOCK{ if proj.technologies or proj.link or proj.highlights }
 \begin{itemize}
     \BLOCK{ if proj.technologies }
     \item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
     \BLOCK{ endif }
+    \BLOCK{ for highlight in proj.highlights }
+    \item \VAR{highlight|escape_tex}
+    \BLOCK{ endfor }
     \BLOCK{ if proj.link }
     \item \VAR{proj.link|escape_tex}
     \BLOCK{ endif }
 \end{itemize}
+\BLOCK{ endif }
 \BLOCK{ endfor }
 
 \end{rSection}

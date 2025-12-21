@@ -9,9 +9,16 @@ export interface WizardStep {
 interface WizardProgressProps {
   steps: WizardStep[]
   currentStep: number
+  onStepClick?: (stepIndex: number) => void
 }
 
-export default function WizardProgress({ steps, currentStep }: WizardProgressProps) {
+export default function WizardProgress({ steps, currentStep, onStepClick }: WizardProgressProps) {
+  const handleStepClick = (index: number) => {
+    if (onStepClick) {
+      onStepClick(index)
+    }
+  }
+
   return (
     <div className="px-4 py-2">
       <div className="max-w-6xl mx-auto">
@@ -19,10 +26,21 @@ export default function WizardProgress({ steps, currentStep }: WizardProgressPro
           {steps.map((step, index) => {
             const isCompleted = index < currentStep
             const isCurrent = index === currentStep
+            const isClickable = !!onStepClick
 
             return (
               <div key={step.id} className="flex items-center flex-1">
-                <div className="flex items-center gap-2 flex-1">
+                <div
+                  className={`flex items-center gap-2 flex-1 ${isClickable ? 'cursor-pointer group' : ''}`}
+                  onClick={() => handleStepClick(index)}
+                  role={isClickable ? 'button' : undefined}
+                  tabIndex={isClickable ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+                      handleStepClick(index)
+                    }
+                  }}
+                >
                   {/* Step Circle */}
                   <div
                     className={`
@@ -34,6 +52,7 @@ export default function WizardProgress({ steps, currentStep }: WizardProgressPro
                           ? 'bg-primary-900 dark:bg-primary-600 text-white ring-2 ring-primary-900/30 dark:ring-primary-500/30'
                           : 'bg-secondary-200 dark:bg-secondary-700 text-secondary-500 dark:text-secondary-400'
                       }
+                      ${isClickable ? 'group-hover:ring-2 group-hover:ring-primary-500/50 group-hover:scale-110' : ''}
                     `}
                   >
                     {isCompleted ? (
@@ -51,7 +70,9 @@ export default function WizardProgress({ steps, currentStep }: WizardProgressPro
                         : isCompleted
                           ? 'text-success-600 dark:text-success-400'
                           : 'text-secondary-500 dark:text-secondary-400'
-                        }`}
+                        }
+                        ${isClickable ? 'group-hover:text-primary-600 dark:group-hover:text-primary-400' : ''}
+                      `}
                     >
                       {step.title}
                     </div>

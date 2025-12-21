@@ -124,7 +124,7 @@
 \BLOCK{ for exp in experience }
 \employer{\VAR{exp.company|escape_tex}}
 \location{\VAR{exp.location|escape_tex}}
-\dates{\VAR{exp.start_date|escape_tex}-\VAR{exp.end_date|escape_tex}}
+\dates{\VAR{exp.start_date|escape_tex}\BLOCK{ if exp.start_date and exp.end_date } -\BLOCK{ endif }\VAR{exp.end_date|escape_tex}}
 \title{\textbf{\VAR{exp.position|escape_tex}}}
 \begin{position}
 \BLOCK{ if exp.description }

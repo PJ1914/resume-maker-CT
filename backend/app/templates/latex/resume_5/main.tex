@@ -98,52 +98,57 @@
 %% \cvsection title in the "main" bar.
 
 %%% SIDEBAR CONTENT - Embedded directly for dynamic rendering
-\BLOCK{ if skills }
+\BLOCK{ if skills or certifications or languages or achievements }
 \marginpar{
   \vspace{0.1cm}
+  \BLOCK{ if skills }
   \cvsection{Skills}
-  \BLOCK{ if skills.technical }
-  \BLOCK{ for skill in skills.technical }
-  \cvtag{\VAR{skill|escape_tex}}
+  \BLOCK{ for skill in skills }
+  \textbf{\small \VAR{skill.category|escape_tex}}
+  
+  \BLOCK{ for item in skill.items }
+  \cvtag{\VAR{item|escape_tex}}
   \BLOCK{ endfor }
-  \BLOCK{ endif }
-  \BLOCK{ if skills.soft }
-  \BLOCK{ for skill in skills.soft }
-  \cvtag{\VAR{skill|escape_tex}}
+  
+  \medskip
   \BLOCK{ endfor }
-  \BLOCK{ endif }
-  \divider
   \BLOCK{ endif }
   
   \BLOCK{ if certifications }
   \cvsection{Certifications}
   \BLOCK{ for cert in certifications }
-  \cvevent{\VAR{cert.name|escape_tex}}{\VAR{cert.issuer|escape_tex}}{\VAR{cert.date|escape_tex}}{}
-  \divider
+  \par\textbf{\small \VAR{cert.name|escape_tex}}
+  \BLOCK{ if cert.issuer }
+  \par{\footnotesize\textit{\VAR{cert.issuer|escape_tex}}}
+  \BLOCK{ endif }
+  \medskip
   \BLOCK{ endfor }
   \BLOCK{ endif }
   
   \BLOCK{ if languages }
   \cvsection{Languages}
   \BLOCK{ for lang in languages }
-  \cvtag{\VAR{lang.name|escape_tex}} (\VAR{lang.proficiency|escape_tex})
+  \cvtag{\VAR{lang.language|escape_tex}} (\VAR{lang.proficiency|escape_tex})
   \BLOCK{ endfor }
-  \divider
   \BLOCK{ endif }
   
   \BLOCK{ if achievements }
   \cvsection{Achievements}
   \BLOCK{ for ach in achievements }
-  \textbf{\VAR{ach.title|escape_tex}} (\VAR{ach.date|escape_tex})
-  \divider
+  \par\textbf{\small \VAR{ach.title|escape_tex}}
+  \BLOCK{ if ach.date }
+  \par{\footnotesize (\VAR{ach.date|escape_tex})}
+  \BLOCK{ endif }
+  \medskip
   \BLOCK{ endfor }
   \BLOCK{ endif }
 }
+\BLOCK{ endif }
 
 \cvsection{Experience}
 
 \BLOCK{ for exp in experience }
-\cvevent{\VAR{exp.position|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.start_date|escape_tex} -- \VAR{exp.end_date|escape_tex}}{\VAR{exp.location|escape_tex}}
+\cvevent{\VAR{exp.position|escape_tex}}{\VAR{exp.company|escape_tex}}{\VAR{exp.start_date|escape_tex}\BLOCK{ if exp.start_date and exp.end_date } -- \BLOCK{ endif }\VAR{exp.end_date|escape_tex}}{\VAR{exp.location|escape_tex}}
 \BLOCK{ if exp.description or exp.highlights }
 \begin{itemize}
 \BLOCK{ if exp.description }
@@ -160,7 +165,7 @@
 \cvsection{Education}
 
 \BLOCK{ for edu in education }
-\cvevent{\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex}}{\VAR{edu.institution|escape_tex}}{\VAR{edu.start_date|escape_tex} -- \VAR{edu.end_date|escape_tex}}{\VAR{edu.location|escape_tex}}
+\cvevent{\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex}}{\VAR{edu.institution|escape_tex}}{\VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } -- \BLOCK{ endif }\VAR{edu.end_date|escape_tex}}{\VAR{edu.location|escape_tex}}
 \BLOCK{ if edu.gpa }
 GPA: \VAR{edu.gpa|escape_tex}
 \BLOCK{ endif }
@@ -170,12 +175,24 @@ GPA: \VAR{edu.gpa|escape_tex}
 \BLOCK{ if projects }
 \cvsection{Projects}
 \BLOCK{ for proj in projects }
-\cvevent{\VAR{proj.name|escape_tex}}{Technologies: \VAR{proj.technologies|join(', ')|escape_tex}}{}{}
+\textbf{\large \VAR{proj.name|escape_tex}}
+
+\BLOCK{ if proj.technologies }
+\textbf{\color{accent}Technologies:} \VAR{proj.technologies|join(', ')|escape_tex}
+
+\BLOCK{ endif }
 \BLOCK{ if proj.description }
 \VAR{proj.description|escape_tex}
+
 \BLOCK{ endif }
+\BLOCK{ for highlight in proj.highlights }
+\begin{itemize}
+\item \VAR{highlight|escape_tex}
+\end{itemize}
+\BLOCK{ endfor }
 \BLOCK{ if proj.link }
-\VAR{proj.link|escape_tex}
+\href{\VAR{proj.link}}{\faLink\ Project Link}
+
 \BLOCK{ endif }
 \divider
 \BLOCK{ endfor }
