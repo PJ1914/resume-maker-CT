@@ -134,9 +134,8 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
+      {/* Description */}
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-secondary-900 dark:text-white mb-2">Quick Start</h1>
         <p className="text-sm sm:text-base text-secondary-600 dark:text-secondary-400 leading-relaxed">
           Optionally paste your existing resume text below. Our AI will extract and populate your information automatically. Or skip to build manually.
         </p>
