@@ -47,6 +47,10 @@ class ContactInfo(BaseModel):
     phone: Optional[str] = None
     location: Optional[str] = None
     linkedin: Optional[str] = None
+    github: Optional[str] = None
+    leetcode: Optional[str] = None
+    codechef: Optional[str] = None
+    hackerrank: Optional[str] = None
     website: Optional[str] = None
 
 class ExperienceEntry(BaseModel):

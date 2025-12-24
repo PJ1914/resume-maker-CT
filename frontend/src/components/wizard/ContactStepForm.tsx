@@ -1,4 +1,4 @@
-import { User, Mail, Phone, MapPin, Linkedin, Globe } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Linkedin, Globe, Github, Code2, Trophy } from 'lucide-react'
 import { InfoTooltip } from '../ui/info-tooltip'
 
 interface ContactData {
@@ -7,6 +7,10 @@ interface ContactData {
   phone: string
   location: string
   linkedin: string
+  github: string
+  leetcode: string
+  codechef: string
+  hackerrank: string
   website: string
 }
 
@@ -121,11 +125,83 @@ export default function ContactStepForm({ data, onChange }: ContactStepFormProps
           </div>
         </div>
 
+        {/* GitHub */}
+        <div>
+          <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+            GitHub Profile
+            <InfoTooltip content="Your GitHub username or profile URL (e.g., github.com/username)" />
+          </label>
+          <div className="relative">
+            <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
+            <input
+              type="url"
+              value={data.github}
+              onChange={(e) => handleChange('github', e.target.value)}
+              placeholder="github.com/johndoe"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* LeetCode */}
+        <div>
+          <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+            LeetCode Profile
+            <InfoTooltip content="Your LeetCode profile URL (e.g., leetcode.com/u/username)" />
+          </label>
+          <div className="relative">
+            <Code2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
+            <input
+              type="url"
+              value={data.leetcode}
+              onChange={(e) => handleChange('leetcode', e.target.value)}
+              placeholder="leetcode.com/u/johndoe"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* CodeChef */}
+        <div>
+          <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+            CodeChef Profile
+            <InfoTooltip content="Your CodeChef profile URL (e.g., codechef.com/users/username)" />
+          </label>
+          <div className="relative">
+            <Trophy className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
+            <input
+              type="url"
+              value={data.codechef}
+              onChange={(e) => handleChange('codechef', e.target.value)}
+              placeholder="codechef.com/users/johndoe"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* HackerRank */}
+        <div>
+          <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+            HackerRank Profile
+            <InfoTooltip content="Your HackerRank profile URL (e.g., hackerrank.com/username)" />
+          </label>
+          <div className="relative">
+            <Code2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
+            <input
+              type="url"
+              value={data.hackerrank}
+              onChange={(e) => handleChange('hackerrank', e.target.value)}
+              placeholder="hackerrank.com/johndoe"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
         {/* Website */}
         <div>
           <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
             Personal Website
-            <InfoTooltip content="Link to your portfolio, GitHub, or personal blog if relevant to the job." />
+            <InfoTooltip content="Link to your portfolio or personal blog if relevant to the job." />
           </label>
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />

@@ -268,6 +268,10 @@ Return JSON with this exact structure (omit sections if not found):
     "phone": "+1234567890",
     "location": "City, State",
     "linkedin": "linkedin.com/in/username",
+    "github": "github.com/username",
+    "leetcode": "leetcode.com/u/username",
+    "codechef": "codechef.com/users/username",
+    "hackerrank": "hackerrank.com/username",
     "website": "example.com"
   }},
   "summary": "Professional summary text here",
