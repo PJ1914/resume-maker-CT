@@ -343,14 +343,16 @@ export default function ResumeWizardPage() {
           <div className="lg:col-span-3">
             {/* Step Content */}
             <div className="bg-white dark:bg-secondary-900 rounded-xl border border-secondary-200 dark:border-secondary-800 p-5 sm:p-12 shadow-sm mb-6 sm:mb-8 overflow-hidden">
-              <div className="mb-6 sm:mb-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-secondary-900 dark:text-white mb-2">
-                  {WIZARD_STEPS[currentStep].title}
-                </h2>
-                <p className="text-sm sm:text-base text-secondary-600 dark:text-secondary-400">
-                  {WIZARD_STEPS[currentStep].description}
-                </p>
-              </div>
+              {currentStep !== 10 && (
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-secondary-900 dark:text-white mb-2">
+                    {WIZARD_STEPS[currentStep].title}
+                  </h2>
+                  <p className="text-sm sm:text-base text-secondary-600 dark:text-secondary-400">
+                    {WIZARD_STEPS[currentStep].description}
+                  </p>
+                </div>
+              )}
 
               {/* Form Content */}
               <div className="mb-6 sm:mb-8">
