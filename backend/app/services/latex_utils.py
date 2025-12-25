@@ -170,6 +170,10 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         'linkedin': escape_latex(contact.get('linkedin', '')),
         'github': escape_latex(contact.get('github', '')),
         'portfolio': escape_latex(contact.get('portfolio', '')),
+        'leetcode': escape_latex(contact.get('leetcode', '')),
+        'codechef': escape_latex(contact.get('codechef', '')),
+        'hackerrank': escape_latex(contact.get('hackerrank', '')),
+        'website': escape_latex(contact.get('website', '') or contact.get('portfolio', '')),
     }
     
     # Structure summary

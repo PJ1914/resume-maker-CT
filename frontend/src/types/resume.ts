@@ -9,6 +9,9 @@ export interface ContactInfo {
   location: string;
   linkedin?: string;
   github?: string;
+  leetcode?: string;
+  codechef?: string;
+  hackerrank?: string;
   portfolio?: string;
   otherLinks?: string[];
 }

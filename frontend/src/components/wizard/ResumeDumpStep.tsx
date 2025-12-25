@@ -39,6 +39,8 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
       // Call backend API to extract resume data
       const response = await apiClient.post('/api/ai/extract-resume', {
         resume_text: resumeText,
+      }, {
+        timeout: 60000 // 60 second timeout
       })
 
       console.log('Extraction response:', response)
@@ -48,8 +50,20 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
       }
 
       // Transform API response to match wizard field names
+      const responseContact = (response as any).contact || {}
       const extractedData = {
-        contact: (response as any).contact || {},
+        contact: {
+          name: responseContact.name || '',
+          email: responseContact.email || '',
+          phone: responseContact.phone || '',
+          location: responseContact.location || '',
+          linkedin: responseContact.linkedin || '',
+          github: responseContact.github || '',
+          leetcode: responseContact.leetcode || '',
+          codechef: responseContact.codechef || '',
+          hackerrank: responseContact.hackerrank || '',
+          website: responseContact.website || '',
+        },
         summary: (response as any).summary || '',
         experience: ((response as any).experience || []).map((exp: any, idx: number) => ({
           id: `exp-${idx}-${Date.now()}`,

@@ -539,6 +539,9 @@ export const ResumeEditorPage: React.FC = () => {
         location: contactInfo.location || contactInfo.address || '',
         linkedin: contactInfo.linkedin || '',
         github: contactInfo.github || '',
+        leetcode: contactInfo.leetcode || '',
+        codechef: contactInfo.codechef || '',
+        hackerrank: contactInfo.hackerrank || '',
         portfolio: contactInfo.website || contactInfo.portfolio || '',
       };
     }

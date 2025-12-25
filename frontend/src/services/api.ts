@@ -11,6 +11,7 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
+      timeout: 60000, // 60 second timeout for AI operations
     })
 
     // Request interceptor to add auth token

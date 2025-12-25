@@ -255,81 +255,25 @@ async def extract_resume_data(
         logger.info(f"Starting resume extraction for user: {current_user.get('uid')}")
         logger.info(f"Resume text length: {len(request.resume_text)} characters")
         
-        prompt = f"""Extract structured resume information from the following text and return ONLY valid JSON (no markdown, no explanation).
+        # Truncate resume if too long to speed up processing
+        max_chars = 5000
+        resume_text = request.resume_text[:max_chars]
+        
+        prompt = f"""Extract resume data as JSON only (no markdown).
 
-RESUME TEXT:
-{request.resume_text}
+RESUME:
+{resume_text}
 
-Return JSON with this exact structure (omit sections if not found):
-{{
-  "contact": {{
-    "name": "Full Name",
-    "email": "email@example.com",
-    "phone": "+1234567890",
-    "location": "City, State",
-    "linkedin": "linkedin.com/in/username",
-    "github": "github.com/username",
-    "leetcode": "leetcode.com/u/username",
-    "codechef": "codechef.com/users/username",
-    "hackerrank": "hackerrank.com/username",
-    "website": "example.com"
-  }},
-  "summary": "Professional summary text here",
-  "experience": [
-    {{
-      "company": "Company Name",
-      "position": "Job Title",
-      "startDate": "Jan 2020",
-      "endDate": "Dec 2021",
-      "description": "Description of responsibilities"
-    }}
-  ],
-  "education": [
-    {{
-      "school": "University Name",
-      "degree": "Bachelor of Science",
-      "field": "Computer Science",
-      "year": "2020",
-      "gpa": "3.8"
-    }}
-  ],
-  "skills": {{
-    "technical": ["Python", "JavaScript", "React"],
-    "soft": ["Leadership", "Communication"]
-  }},
-  "projects": [
-    {{
-      "name": "Project Name",
-      "description": "What you built and accomplished",
-      "link": "github.com/project",
-      "technologies": ["React", "Node.js"]
-    }}
-  ],
-  "certifications": [
-    {{
-      "name": "Certification Name",
-      "issuer": "Issuing Organization",
-      "date": "Jan 2024"
-    }}
-  ],
-  "achievements": [
-    {{
-      "title": "Achievement Title",
-      "description": "Brief description",
-      "date": "2024"
-    }}
-  ]
-}}
-
-Extract ONLY the JSON response. No markdown code blocks, no explanations."""
+Return valid JSON:
+{{"contact": {{"name": "Full Name", "email": "email@example.com", "phone": "+1234567890", "location": "City, State", "linkedin": "url", "github": "url", "leetcode": "url", "codechef": "url", "hackerrank": "url", "website": "url"}}, "summary": "summary text", "experience": [{{"company": "Company", "position": "Title", "startDate": "2020", "endDate": "2021", "description": "desc"}}], "education": [{{"school": "University", "degree": "Bachelor", "field": "Field", "year": "2020", "gpa": "3.8"}}], "skills": {{"technical": ["skill1", "skill2"], "soft": ["skill3"]}}, "projects": [{{"name": "Project", "description": "desc", "link": "url", "technologies": ["tech1", "tech2"]}}], "certifications": [{{"name": "Cert", "issuer": "Org", "date": "2024"}}], "achievements": [{{"title": "Title", "description": "desc", "date": "2024"}}]}}"""
 
         logger.info("Calling Gemini API for resume extraction")
         model = genai.GenerativeModel(settings.GEMINI_MODEL)
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
-                temperature=0.3,
-                max_output_tokens=2000
+                temperature=0.2,
+                max_output_tokens=1000
             )
         )
         

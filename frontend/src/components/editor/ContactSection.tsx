@@ -100,6 +100,42 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           />
         </div>
 
+        {/* LeetCode */}
+        <div>
+          <label className="label">LeetCode</label>
+          <input
+            type="url"
+            className="input"
+            value={contact.leetcode || ''}
+            onChange={(e) => handleChange('leetcode', e.target.value)}
+            placeholder="leetcode.com/u/johndoe"
+          />
+        </div>
+
+        {/* CodeChef */}
+        <div>
+          <label className="label">CodeChef</label>
+          <input
+            type="url"
+            className="input"
+            value={contact.codechef || ''}
+            onChange={(e) => handleChange('codechef', e.target.value)}
+            placeholder="codechef.com/users/johndoe"
+          />
+        </div>
+
+        {/* HackerRank */}
+        <div>
+          <label className="label">HackerRank</label>
+          <input
+            type="url"
+            className="input"
+            value={contact.hackerrank || ''}
+            onChange={(e) => handleChange('hackerrank', e.target.value)}
+            placeholder="hackerrank.com/johndoe"
+          />
+        </div>
+
         {/* Portfolio */}
         <div className="md:col-span-2">
           <label className="label">Portfolio/Website</label>
