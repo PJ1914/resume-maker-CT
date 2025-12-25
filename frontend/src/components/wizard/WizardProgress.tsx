@@ -21,17 +21,17 @@ export default function WizardProgress({ steps, currentStep, onStepClick }: Wiza
 
   return (
     <div className="px-4 py-2">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between gap-1">
+      <div className="w-full">
+        <div className="flex items-center justify-start gap-1">
           {steps.map((step, index) => {
             const isCompleted = index < currentStep
             const isCurrent = index === currentStep
             const isClickable = !!onStepClick
 
             return (
-              <div key={step.id} className="flex items-center flex-1">
+              <div key={step.id} className="flex items-center">
                 <div
-                  className={`flex items-center gap-2 flex-1 ${isClickable ? 'cursor-pointer group' : ''}`}
+                  className={`flex items-center gap-2 ${isClickable ? 'cursor-pointer group' : ''}`}
                   onClick={() => handleStepClick(index)}
                   role={isClickable ? 'button' : undefined}
                   tabIndex={isClickable ? 0 : undefined}
@@ -63,7 +63,7 @@ export default function WizardProgress({ steps, currentStep, onStepClick }: Wiza
                   </div>
 
                   {/* Step Label */}
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0">
                     <div
                       className={`text-[10px] font-semibold truncate transition-colors ${isCurrent
                         ? 'text-primary-900 dark:text-white'

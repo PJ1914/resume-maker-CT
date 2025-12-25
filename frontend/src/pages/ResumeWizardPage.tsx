@@ -327,7 +327,7 @@ export default function ResumeWizardPage() {
 
       {/* Progress Bar */}
       <div className="bg-white dark:bg-secondary-900 border-b border-secondary-200 dark:border-secondary-800 overflow-x-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 min-w-[600px] sm:min-w-0">
+        <div className="max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <WizardProgress
             steps={WIZARD_STEPS}
             currentStep={currentStep}
