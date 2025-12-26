@@ -1,4 +1,4 @@
-import axios from 'axios'
+ import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -12,6 +12,22 @@ export interface DashboardStats {
     ai_actions_today: number
     templates_purchased: number
     portfolios_deployed: number
+}
+
+export interface AnalyticsData {
+    user_growth: Array<{ date: string; count: number }>
+    revenue_trend: Array<{ date: string; amount: number; credits: number; count: number }>
+    credit_usage: Array<{ feature: string; count: number; credits: number }>
+    top_templates: Array<{ template: string; count: number }>
+    user_activity: {
+        hourly: Array<{ hour: number; count: number }>
+    }
+    platform_stats: {
+        resumes: number
+        portfolios: number
+        interviews: number
+        total: number
+    }
 }
 
 export const adminService = {
@@ -31,9 +47,18 @@ export const adminService = {
         return response.data
     },
 
-    getUsers: async () => {
+    getAnalytics: async (days: number = 30): Promise<AnalyticsData> => {
         const token = localStorage.getItem('authToken')
-        const response = await axios.get(`${API_URL}/api/admin/users`, {
+        const response = await axios.get(`${API_URL}/api/admin/analytics`, {
+            params: { days },
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        return response.data
+    },
+
+    getUsers: async (page: number = 1, limit: number = 50) => {
+        const token = localStorage.getItem('authToken')
+        const response = await axios.get(`${API_URL}/api/admin/users?page=${page}&limit=${limit}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         return response.data

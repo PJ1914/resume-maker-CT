@@ -11,6 +11,7 @@ load_dotenv()
 from app.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("resume_maker")
+# Router registration - includes testimonials endpoint v9 - robust stats
 from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, credits, payments, admin, portfolio, contact, interview
 
 # Print startup info

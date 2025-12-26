@@ -64,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
 
-              <Link to="/dashboard" className="flex items-center gap-2">
+              <Link to="/" className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-primary-900 flex items-center justify-center">
                   <FileText className="h-5 w-5 text-white" />
                 </div>

@@ -9,7 +9,9 @@ import {
     CheckCircle,
     Mail,
     Calendar,
-    Eye
+    Eye,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { Link } from 'react-router-dom'
@@ -18,11 +20,18 @@ import { Fragment } from 'react'
 
 export default function UsersPage() {
     const [searchQuery, setSearchQuery] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
+    const limit = 50
 
-    const { data: users, isLoading } = useQuery({
-        queryKey: ['admin-users'],
-        queryFn: adminService.getUsers
+    const { data: usersData, isLoading } = useQuery({
+        queryKey: ['admin-users', currentPage],
+        queryFn: () => adminService.getUsers(currentPage, limit),
+        refetchInterval: 30000 // Refetch every 30 seconds
     })
+
+    const users = usersData?.users || []
+    const totalPages = usersData?.total_pages || 1
+    const total = usersData?.total || 0
 
     const filteredUsers = users?.filter((user: any) =>
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -130,6 +139,34 @@ export default function UsersPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
+                        <div className="text-sm text-gray-400">
+                            Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, total)} of {total} users
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-lg border border-white/10 bg-[#0a0a0a] text-white hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <span className="text-sm text-gray-400">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-lg border border-white/10 bg-[#0a0a0a] text-white hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

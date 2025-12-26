@@ -1,34 +1,162 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { FileText, User, LogOut } from 'lucide-react'
+import { FileText, User, LogOut, ChevronDown, CheckCircle, Zap, Layout, Mic, Users, MessageSquare, PenTool, BookOpen, HelpCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import toast from 'react-hot-toast'
 
 export function PublicNavbar() {
     const navigate = useNavigate()
     const { user, signOut } = useAuth()
+    const [hoveredProduct, setHoveredProduct] = useState(false)
+    const [hoveredResources, setHoveredResources] = useState(false)
 
     return (
         <motion.nav
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="fixed top-0 w-full bg-white/50 dark:bg-black/50 backdrop-blur-2xl z-50 border-b border-secondary-200 dark:border-white/10 overflow-hidden transition-colors"
+            className="fixed top-0 w-full bg-white/80 dark:bg-black/80 backdrop-blur-2xl z-50 border-b border-secondary-200 dark:border-white/10 overflow-visible transition-colors"
         >
-            <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-4 max-w-7xl flex items-center justify-between">
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    onClick={() => navigate('/')}
-                    className="flex items-center gap-1.5 sm:gap-3 cursor-pointer"
-                >
-                    <div className="relative h-7 w-7 sm:h-10 sm:w-10 bg-white rounded-lg flex items-center justify-center group">
-                        <div className="absolute inset-0 bg-secondary-900 dark:bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-                        <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-white dark:text-black relative z-10" />
+            <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-4 max-w-7xl flex items-center justify-between relative">
+                <div className="flex items-center gap-8 md:gap-12">
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-1.5 sm:gap-3 cursor-pointer"
+                    >
+                        <div className="relative h-7 w-7 sm:h-10 sm:w-10 bg-secondary-900 dark:bg-white rounded-lg flex items-center justify-center group text-white dark:text-black">
+                            <FileText className="h-4 w-4 sm:h-6 sm:w-6 relative z-10" />
+                        </div>
+                        <span className="text-base sm:text-xl font-bold tracking-tight text-secondary-900 dark:text-white">
+                            prativeda
+                        </span>
+                    </motion.div>
+
+                    {/* Desktop Navigation */}
+                    <div className="hidden md:flex items-center gap-8">
+                        {/* Products Dropdown */}
+                        <div
+                            className="relative"
+                            onMouseEnter={() => setHoveredProduct(true)}
+                            onMouseLeave={() => setHoveredProduct(false)}
+                        >
+                            <button className="flex items-center gap-1.5 text-secondary-600 dark:text-white/80 hover:text-secondary-900 dark:hover:text-white font-medium transition-colors py-2">
+                                Products
+                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${hoveredProduct ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                                {hoveredProduct && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-zinc-900 border border-secondary-200 dark:border-white/10 rounded-2xl shadow-xl p-4 grid gap-2 z-50"
+                                    >
+                                        <div className="absolute top-0 left-8 -mt-2 w-4 h-4 bg-white dark:bg-zinc-900 border-t border-l border-secondary-200 dark:border-white/10 transform rotate-45" />
+
+                                        <NavItem
+                                            icon={FileText}
+                                            title="Resume Builder"
+                                            desc="Create ATS-friendly resumes"
+                                            onClick={() => navigate('/resume/create')}
+                                        />
+                                        <NavItem
+                                            icon={CheckCircle}
+                                            title="ATS Checker"
+                                            desc="Score & optimize your resume"
+                                            onClick={() => navigate('/ats-checker')}
+                                        />
+                                        <NavItem
+                                            icon={Mic}
+                                            title="Interview Prep"
+                                            desc="AI voice & text coaching"
+                                            onClick={() => navigate('/product/interview-prep')}
+                                        />
+                                        <NavItem
+                                            icon={Layout}
+                                            title="Portfolio Builder"
+                                            desc="Turn resume into a website"
+                                            onClick={() => navigate('/product/portfolio')}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Resources Dropdown */}
+                        <div
+                            className="relative"
+                            onMouseEnter={() => setHoveredResources(true)}
+                            onMouseLeave={() => setHoveredResources(false)}
+                        >
+                            <button className="flex items-center gap-1.5 text-secondary-600 dark:text-white/80 hover:text-secondary-900 dark:hover:text-white font-medium transition-colors py-2">
+                                Resources
+                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${hoveredResources ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                                {hoveredResources && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-zinc-900 border border-secondary-200 dark:border-white/10 rounded-2xl shadow-xl p-4 grid gap-2 z-50"
+                                    >
+                                        <div className="absolute top-0 left-8 -mt-2 w-4 h-4 bg-white dark:bg-zinc-900 border-t border-l border-secondary-200 dark:border-white/10 transform rotate-45" />
+
+                                        <NavItem
+                                            icon={Zap}
+                                            title="Platform Features"
+                                            desc="Explore our full capabilities"
+                                            onClick={() => navigate('/features')}
+                                        />
+                                        <NavItem
+                                            icon={PenTool}
+                                            title="Cover Letter Tips"
+                                            desc="Write letters that get noticed"
+                                            onClick={() => navigate('/cover-letter-tips')}
+                                        />
+                                        <NavItem
+                                            icon={BookOpen}
+                                            title="Career Blog"
+                                            desc="Expert advice and insights"
+                                            onClick={() => navigate('/career-blog')}
+                                        />
+                                        <NavItem
+                                            icon={HelpCircle}
+                                            title="Help Center"
+                                            desc="Guides and troubleshooting"
+                                            onClick={() => navigate('/help')}
+                                        />
+                                        <NavItem
+                                            icon={Users}
+                                            title="About Us"
+                                            desc="Our mission and story"
+                                            onClick={() => navigate('/about')}
+                                        />
+                                        <NavItem
+                                            icon={MessageSquare}
+                                            title="Contact Support"
+                                            desc="Get help and get in touch"
+                                            onClick={() => navigate('/contact')}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        <button
+                            onClick={() => navigate('/pricing')}
+                            className="text-secondary-600 dark:text-white/80 hover:text-secondary-900 dark:hover:text-white font-medium transition-colors"
+                        >
+                            Pricing
+                        </button>
                     </div>
-                    <span className="text-base sm:text-xl font-bold tracking-tight text-secondary-900 dark:text-white">
-                        prativeda
-                    </span>
-                </motion.div>
+                </div>
 
                 <div className="flex items-center gap-1.5 sm:gap-4">
                     {user ? (
@@ -37,9 +165,9 @@ export function PublicNavbar() {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => navigate('/profile')}
+                                onClick={() => navigate('/dashboard')}
                                 className="flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-2 hover:bg-secondary-100 dark:hover:bg-white/10 rounded-lg transition-colors"
-                                title={user.email || 'Profile'}
+                                title={user.email || 'Dashboard'}
                             >
                                 {user.photoURL ? (
                                     <img
@@ -101,5 +229,22 @@ export function PublicNavbar() {
                 </div>
             </div>
         </motion.nav>
+    )
+}
+
+function NavItem({ icon: Icon, title, desc, onClick }: { icon: any, title: string, desc: string, onClick: () => void }) {
+    return (
+        <button
+            onClick={onClick}
+            className="flex items-start gap-4 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-white/5 transition-colors text-left group"
+        >
+            <div className="p-2 bg-secondary-100 dark:bg-white/10 rounded-lg group-hover:bg-secondary-200 dark:group-hover:bg-white/20 transition-colors">
+                <Icon className="w-5 h-5 text-secondary-900 dark:text-white" />
+            </div>
+            <div>
+                <h4 className="font-semibold text-secondary-900 dark:text-white text-sm">{title}</h4>
+                <p className="text-xs text-secondary-500 dark:text-white/50">{desc}</p>
+            </div>
+        </button>
     )
 }

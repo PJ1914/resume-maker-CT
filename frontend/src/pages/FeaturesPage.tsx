@@ -5,14 +5,15 @@ import {
   Brain,
   Activity,
   BarChart3,
-  Layers,
+  Upload,
   Zap,
   CheckCircle,
   Shield,
   Sparkles,
-  TrendingUp,
   RefreshCw,
-  Code2,
+  Github,
+  Mic,
+  Layout
 } from 'lucide-react'
 import PublicLayout from '../components/layouts/PublicLayout'
 import { SEO } from '../components/SEO'
@@ -23,112 +24,134 @@ export default function FeaturesPage() {
   const features = [
     {
       icon: Brain,
-      title: 'AI-Powered Intelligence',
-      description: 'Neural network analysis optimizes every word for maximum impact.',
+      title: 'AI-Powered Resume Parser',
+      description: 'Upload your existing resume and let AI extract and optimize your information automatically.',
       details: [
-        'Smart content suggestions',
-        'Industry-specific keywords',
-        'Action verb recommendations',
-        'Tone and style optimization',
+        'PDF, DOCX, TXT support',
+        'Intelligent data extraction',
+        'Auto-formatting',
+        'Smart section detection',
       ],
     },
     {
       icon: Activity,
       title: 'Real-Time ATS Scoring',
-      description: 'Live feedback shows exactly how recruiters will see your resume.',
+      description: 'Get instant feedback on how well your resume will perform with Applicant Tracking Systems.',
       details: [
-        'Instant compatibility check',
-        'Format validation',
-        'Keyword density analysis',
-        'Pass rate prediction',
-      ],
-    },
-    {
-      icon: BarChart3,
-      title: 'Data-Driven Insights',
-      description: 'Advanced analytics reveal what makes top-performing resumes stand out.',
-      details: [
-        'Industry benchmarks',
-        'Success rate tracking',
-        'Competitor analysis',
-        'Performance metrics',
-      ],
-    },
-    {
-      icon: Layers,
-      title: 'Enterprise-Grade Output',
-      description: 'LaTeX rendering produces pixel-perfect, professional documents.',
-      details: [
-        'Multiple export formats',
-        'High-quality PDF output',
-        'Print-ready layouts',
-        'Custom branding options',
-      ],
-    },
-    {
-      icon: Zap,
-      title: 'Lightning Fast',
-      description: 'Generate and update resumes in seconds, not hours.',
-      details: [
-        'Real-time preview',
-        'Auto-save functionality',
-        'Quick template switching',
-        'Instant PDF generation',
-      ],
-    },
-    {
-      icon: Shield,
-      title: 'Secure & Private',
-      description: 'Enterprise-grade security protects your personal information.',
-      details: [
-        'End-to-end encryption',
-        'Firebase security',
-        'GDPR compliant',
-        'No data sharing',
+        'Score out of 100',
+        'Detailed recommendations',
+        'Keyword optimization',
+        'Format compatibility check',
       ],
     },
     {
       icon: Sparkles,
-      title: 'Smart Templates',
-      description: '6+ professional LaTeX templates designed by industry experts.',
+      title: 'Professional LaTeX Templates',
+      description: '6+ ATS-optimized templates with pixel-perfect formatting and modern designs.',
       details: [
-        'ATS-optimized layouts',
-        'Modern designs',
+        'Modern, Classic, Technical styles',
         'Fully customizable',
-        'Industry-specific options',
+        'Industry-specific layouts',
+        'Print-ready output',
+      ],
+    },
+    {
+      icon: FileText,
+      title: 'Smart Resume Editor',
+      description: 'Intuitive editor with real-time preview and AI-powered content suggestions.',
+      details: [
+        'Live preview',
+        'AI content enhancement',
+        'Section management',
+        'Auto-save functionality',
       ],
     },
     {
       icon: RefreshCw,
       title: 'Version Control',
-      description: 'Track changes and maintain multiple resume versions effortlessly.',
+      description: 'Create unlimited resume versions tailored for different job applications.',
       details: [
         'Unlimited versions',
-        'Change history',
-        'Easy rollback',
-        'Compare versions',
+        'Version history',
+        'Easy duplication',
+        'Compare changes',
       ],
     },
     {
-      icon: TrendingUp,
-      title: 'Career Analytics',
-      description: 'Track your job search progress with detailed insights.',
+      icon: Upload,
+      title: 'High-Quality PDF Export',
+      description: 'Download professional PDFs optimized for both ATS systems and human readers.',
       details: [
-        'Application tracking',
-        'Response rate analysis',
-        'Interview conversion',
-        'Success predictions',
+        'ATS-friendly format',
+        'High-resolution output',
+        'Consistent formatting',
+        'Print-ready quality',
       ],
     },
     {
-      icon: Code2,
-      title: 'Developer Tools',
-      description: 'Advanced features for tech professionals.',
+      icon: Github,
+      title: 'GitHub Integration',
+      description: 'Connect your GitHub account to showcase your projects and contributions.',
       details: [
-        'GitHub integration',
-        'Project showcase',
-        'Skills visualization',
-        'Code snippets support',
+        'OAuth authentication',
+        'Project imports',
+        'Contribution stats',
+        'Repository linking',
+      ],
+    },
+    {
+      icon: Mic,
+      title: 'AI Interview Prep',
+      description: 'Practice interviews with AI-powered voice and text coaching.',
+      details: [
+        'Voice interview simulation',
+        'Real-time feedback',
+        'Common questions bank',
+        'Performance analytics',
+      ],
+    },
+    {
+      icon: Layout,
+      title: 'Portfolio Builder',
+      description: 'Transform your resume into a professional portfolio website.',
+      details: [
+        'One-click conversion',
+        'Responsive design',
+        'Custom domains',
+        'SEO optimized',
+      ],
+    },
+    {
+      icon: Shield,
+      title: 'Secure & Private',
+      description: 'Enterprise-grade security with Firebase authentication and encrypted storage.',
+      details: [
+        'Firebase Auth (Google, GitHub, Email)',
+        'Encrypted data storage',
+        'Private by default',
+        'No data sharing',
+      ],
+    },
+    {
+      icon: Zap,
+      title: 'Credit System',
+      description: 'Flexible credit-based pricing for AI features with packages that never expire.',
+      details: [
+        'Pay-as-you-go model',
+        'Credits never expire',
+        'Transparent pricing',
+        'Free credits to start',
+      ],
+    },
+    {
+      icon: BarChart3,
+      title: 'Resume Analytics',
+      description: 'Track your resume performance and get insights on improvements.',
+      details: [
+        'ATS score tracking',
+        'Improvement suggestions',
+        'Version comparisons',
+        'Export history',
       ],
     },
   ]
@@ -137,14 +160,8 @@ export default function FeaturesPage() {
     <>
       <SEO
         title="Features - Prativeda | AI Resume Builder & ATS Scoring"
-        description="Discover Prativeda's powerful features: AI resume parsing, ATS scoring, portfolio templates, LaTeX export, and more to boost your job search."
-        keywords="resume features, ATS scoring, portfolio templates, LaTeX resume, resume parser, AI resume"
-        url="https://prativeda.codetapasya.com/features"
-      />
-      <SEO
-        title="Features - Prativeda | Professional Resume Builder"
-        description="Explore Prativeda's powerful features for ATS-optimized resumes, portfolio generation, and career tools."
-        keywords="resume features, ATS optimization, portfolio builder, career tools"
+        description="Discover Prativeda's powerful features: AI resume parsing, ATS scoring, LaTeX templates, GitHub integration, interview prep, and portfolio builder."
+        keywords="resume features, ATS scoring, LaTeX resume, resume parser, AI resume, GitHub integration, interview prep, portfolio builder"
         url="https://prativeda.codetapasya.com/features"
       />
       <PublicLayout>
@@ -162,7 +179,7 @@ export default function FeaturesPage() {
                 <span className="sm:inline block mt-2 sm:mt-0">Your Career Success</span>
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-secondary-600 dark:text-white/60 max-w-3xl mx-auto font-light">
-                Everything you need to create, optimize, and track your resume journey.
+                Everything you need to create, optimize, and showcase your professional profile.
               </p>
             </motion.div>
 
@@ -209,7 +226,7 @@ export default function FeaturesPage() {
             >
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-secondary-900 dark:text-white">Ready to Get Started?</h2>
               <p className="text-base sm:text-lg text-secondary-600 dark:text-white/60 mb-8 max-w-2xl mx-auto">
-                Join thousands of professionals who have transformed their resumes with prativeda.
+                Join thousands of professionals who have transformed their resumes with Prativeda.
               </p>
               <motion.button
                 whileHover={{ scale: 1.05, boxShadow: '0 0 50px rgba(255,255,255,0.5)' }}

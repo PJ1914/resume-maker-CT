@@ -27,6 +27,12 @@ import InterviewPrepPage from '../pages/InterviewPrepPage'
 import ResumeVersionsPage from '../pages/ResumeVersionsPage'
 import { VersionHistory } from '../components/versions/VersionHistory'
 import { useAuth } from '../context/AuthContext'
+import ATSCheckerPage from '../pages/ATSCheckerPage'
+import InterviewPrepMarketingPage from '../pages/InterviewPrepMarketingPage'
+import PortfolioMarketingPage from '../pages/PortfolioMarketingPage'
+import CoverLetterTipsPage from '../pages/CoverLetterTipsPage'
+import CareerBlogPage from '../pages/CareerBlogPage'
+import HelpCenterPage from '../pages/HelpCenterPage'
 
 // Admin Components
 import AdminGuard from '../components/admin/AdminGuard'
@@ -233,7 +239,13 @@ export default function AppRoutes() {
 
       {/* Public Pages */}
       <Route path="/features" element={<FeaturesPage />} />
+      <Route path="/ats-checker" element={<ATSCheckerPage />} />
+      <Route path="/product/interview-prep" element={<InterviewPrepMarketingPage />} />
+      <Route path="/product/portfolio" element={<PortfolioMarketingPage />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/cover-letter-tips" element={<CoverLetterTipsPage />} />
+      <Route path="/career-blog" element={<CareerBlogPage />} />
+      <Route path="/help" element={<HelpCenterPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

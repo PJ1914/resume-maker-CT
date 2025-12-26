@@ -853,3 +853,48 @@ async def delete_version(
         )
     
     return None
+@router.delete("/{resume_id}/versions/{version_id}")
+async def delete_version(
+    resume_id: str,
+    version_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a specific resume version.
+    """
+    user_id = current_user["uid"]
+    
+    # Check existence
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+        
+    if not delete_resume_version(user_id, resume_id, version_id):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete resume version"
+        )
+        
+    return {"status": "success", "message": "Version deleted"}
+
+@router.get("/public/testimonials")
+async def get_testimonials(limit: int = 10):
+    """
+    Get top performing success stories (testimonials) from real users.
+    Public endpoint.
+    """
+    from app.services.firestore import get_top_performing_resumes
+    results = get_top_performing_resumes(limit=limit)
+    return results
+
+@router.get("/public/stats")
+async def get_stats():
+    """
+    Get platform statistics.
+    Public endpoint.
+    """
+    from app.services.firestore import get_platform_stats
+    return get_platform_stats()

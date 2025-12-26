@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from app.dependencies import admin_only
-from app.schemas.admin import DashboardStats
+from app.schemas.admin import DashboardStats, AnalyticsData
 from typing import List, Optional
+from google.cloud.firestore_v1 import FieldFilter
 
 router = APIRouter(
     prefix="/admin",
@@ -12,64 +13,573 @@ router = APIRouter(
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats():
     """
-    Get aggregated statistics for the admin dashboard.
+    Get aggregated statistics for the admin dashboard with REAL DATA.
+    Optimized for parallel fetching and minimal data transfer.
     """
-    # TODO: Replace with real data fetching from services
-    return DashboardStats(
-        total_users=1250,
-        active_users_today=45,
-        credits_purchased_today=500,
-        total_credits_used=12000,
-        resumes_created=340,
-        ats_checks_today=12,
-        ai_actions_today=85,
-        templates_purchased=5,
-        portfolios_deployed=3
-    )
+    from firebase_admin import auth, firestore
+    from app.firebase import codetapasya_app, resume_maker_app
+    from datetime import datetime, timedelta
+    import asyncio
+    
+    # Initialize default stats
+    stats = {
+        "total_users": 0,
+        "active_users_today": 0,
+        "credits_purchased_today": 0,
+        "total_credits_used": 0,
+        "resumes_created": 0,
+        "ats_checks_today": 0,
+        "ai_actions_today": 0,
+        "templates_purchased": 0,
+        "portfolios_deployed": 0
+    }
+    
+    start_time = datetime.utcnow()
+    today = start_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday = start_time - timedelta(days=1)
+    
+    try:
+        loop = asyncio.get_running_loop()
+        db = None
+        if resume_maker_app:
+            db = firestore.client(app=resume_maker_app)
+
+        # --- Helper Functions for Parallel Execution ---
+
+        def fetch_auth_stats():
+            """Fetch user stats from Firebase Auth"""
+            result = {"total": 0, "active": 0}
+            if codetapasya_app:
+                try:
+                    page = auth.list_users(max_results=1000, app=codetapasya_app)
+                    result["total"] = len(page.users)
+                    
+                    yesterday_ts = int(yesterday.timestamp() * 1000)
+                    result["active"] = sum(1 for user in page.users 
+                                         if user.user_metadata.last_sign_in_timestamp 
+                                         and user.user_metadata.last_sign_in_timestamp >= yesterday_ts)
+                except Exception as e:
+                    print(f"Auth fetch error: {e}")
+            return result
+
+        def fetch_resume_count():
+            """Count total resumes"""
+            if not db: return 0
+            try:
+                # Optimized: select([]) fetches only doc references, not data
+                return sum(1 for _ in db.collection('resumes').select([]).stream())
+            except Exception:
+                return 0
+
+        def fetch_portfolio_count():
+            """Count deployed portfolios"""
+            if not db: return 0
+            try:
+                return sum(1 for _ in db.collection('portfolio_sessions')
+                          .where(filter=FieldFilter('deployment_status', '==', 'SUCCESS'))
+                          .select([]).stream())
+            except Exception:
+                return 0
+
+        def fetch_templates_count():
+            """Count templates purchased"""
+            if not db: return 0
+            try:
+                return sum(1 for _ in db.collection('unlocked_templates').select([]).stream())
+            except Exception:
+                return 0
+
+        def fetch_transaction_stats():
+            """Fetch credit transaction stats"""
+            if not db: return 0
+            try:
+                # Fetch only necessary fields: created_at, credits
+                txns = db.collection('credit_transactions')\
+                    .where(filter=FieldFilter('type', '==', 'purchase'))\
+                    .where(filter=FieldFilter('status', '==', 'success'))\
+                    .select(['created_at', 'credits']).stream()
+                
+                total_today = 0
+                for doc in txns:
+                    data = doc.to_dict()
+                    created_at = data.get('created_at')
+                    if created_at:
+                        # Handle potential timestamp types safely
+                        try:
+                            if hasattr(created_at, 'timestamp'):
+                                d = datetime.utcfromtimestamp(created_at.timestamp())
+                            else:
+                                d = datetime.fromisoformat(str(created_at).replace('Z', '+00:00'))
+                            
+                            if d.date() == today.date():
+                                total_today += data.get('credits', 0)
+                        except: pass
+                return total_today
+            except Exception:
+                return 0
+
+        def fetch_audit_stats():
+            """Fetch usage stats from audit logs"""
+            if not db: return {"total": 0, "ats": 0, "ai": 0}
+            try:
+                # Fetch relevant logs with limited fields
+                logs = db.collection('audit_log')\
+                    .where(filter=FieldFilter('action', 'in', ['ats_check', 'ai_enhance', 'pdf_export', 
+                                           'portfolio_generate', 'interview_prep']))\
+                    .select(['action', 'credit_cost', 'timestamp']).stream()
+                
+                res = {"total": 0, "ats": 0, "ai": 0}
+                for doc in logs:
+                    data = doc.to_dict()
+                    res["total"] += data.get('credit_cost', 0)
+                    
+                    created_at = data.get('timestamp')
+                    if created_at:
+                        try:
+                            if hasattr(created_at, 'timestamp'):
+                                d = datetime.utcfromtimestamp(created_at.timestamp())
+                            else:
+                                d = datetime.fromisoformat(str(created_at).replace('Z', '+00:00'))
+                                
+                            if d.date() == today.date():
+                                action = data.get('action')
+                                if action == 'ats_check':
+                                    res["ats"] += 1
+                                elif action in ['ai_enhance', 'ai_rewrite', 'interview_prep']:
+                                    res["ai"] += 1
+                        except: pass
+                return res
+            except Exception:
+                return {"total": 0, "ats": 0, "ai": 0}
+
+        # --- Execute in Parallel ---
+        
+        tasks = [
+            loop.run_in_executor(None, fetch_auth_stats),
+            loop.run_in_executor(None, fetch_resume_count),
+            loop.run_in_executor(None, fetch_portfolio_count),
+            loop.run_in_executor(None, fetch_templates_count),
+            loop.run_in_executor(None, fetch_transaction_stats),
+            loop.run_in_executor(None, fetch_audit_stats)
+        ]
+
+        results = await asyncio.gather(*tasks)
+        
+        # Unpack results
+        auth_res = results[0]
+        resume_count = results[1]
+        portfolio_count = results[2]
+        template_count = results[3]
+        txn_stats = results[4]
+        audit_res = results[5]
+
+        # Populate stats object
+        stats["total_users"] = auth_res["total"]
+        stats["active_users_today"] = auth_res["active"]
+        stats["resumes_created"] = resume_count
+        stats["portfolios_deployed"] = portfolio_count
+        stats["templates_purchased"] = template_count
+        stats["credits_purchased_today"] = txn_stats
+        stats["total_credits_used"] = audit_res["total"]
+        stats["ats_checks_today"] = audit_res["ats"]
+        stats["ai_actions_today"] = audit_res["ai"]
+
+    except Exception as e:
+        print(f"Error in optimized get_dashboard_stats: {e}")
+    
+    return DashboardStats(**stats)
 
 @router.get("/logs")
 async def get_admin_logs():
     """
-    Get recent admin activity logs.
+    Get recent admin activity logs from Firestore.
     """
-    return [
-        {"action": "System Update", "timestamp": "2025-12-07T10:00:00Z", "details": "Maintenance mode enabled"},
-        {"action": "User Ban", "timestamp": "2025-12-06T14:30:00Z", "details": "Banned user user@example.com"}
-    ]
+    from firebase_admin import firestore
+    from app.firebase import resume_maker_app
+    
+    logs = []
+    
+    try:
+        if resume_maker_app:
+            db = firestore.client(app=resume_maker_app)
+            
+            # Get recent audit logs (last 20)
+            audit_ref = db.collection('audit_log')\
+                .order_by('timestamp', direction=firestore.Query.DESCENDING)\
+                .limit(20)
+            
+            for doc in audit_ref.stream():
+                data = doc.to_dict()
+                timestamp = data.get('timestamp')
+                
+                # Convert timestamp to ISO string
+                if timestamp:
+                    if hasattr(timestamp, 'timestamp'):
+                        iso_time = datetime.utcfromtimestamp(timestamp.timestamp()).isoformat() + 'Z'
+                    else:
+                        iso_time = str(timestamp)
+                else:
+                    iso_time = datetime.utcnow().isoformat() + 'Z'
+                
+                logs.append({
+                    "action": data.get('action', 'Unknown Action'),
+                    "timestamp": iso_time,
+                    "details": f"{data.get('user_email', 'System')} - {data.get('details', 'No details')}"
+                })
+    except Exception as e:
+        print(f"Error fetching admin logs: {e}")
+        # Return some default logs
+        logs = [
+            {
+                "action": "System Started",
+                "timestamp": datetime.utcnow().isoformat() + 'Z',
+                "details": "Admin dashboard initialized"
+            }
+        ]
+    
+    return logs
+
+@router.get("/analytics", response_model=AnalyticsData)
+async def get_analytics_data(days: int = 30):
+    """
+    Get comprehensive analytics data for charts and visualizations.
+    Optimized for parallel fetching and minimal data transfer.
+    """
+    from firebase_admin import firestore, auth
+    from app.firebase import resume_maker_app, codetapasya_app
+    from datetime import datetime, timedelta
+    from collections import defaultdict
+    import asyncio
+    
+    analytics = {
+        "user_growth": [],
+        "revenue_trend": [],
+        "credit_usage": [],
+        "top_templates": [],
+        "user_activity": {},
+        "platform_stats": {}
+    }
+    
+    try:
+        loop = asyncio.get_running_loop()
+        db = None
+        if resume_maker_app:
+            db = firestore.client(app=resume_maker_app)
+            
+        # Calculate date range
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+        start_date_ts = int(start_date.timestamp() * 1000)
+
+        # --- Helper Functions for Parallel Execution ---
+
+        def fetch_user_growth():
+            """1. USER GROWTH (Daily signups)"""
+            growth_data = []
+            if codetapasya_app:
+                try:
+                    # Get users (Note: list_users is still synchronous/slow for huge datasets)
+                    # Ideally we would limit this based on 'last_sign_in' or similar if possible via API, 
+                    # but pure Auth API doesn't support query by date.
+                    # We accept this cost for now but run it in parallel.
+                    page = auth.list_users(max_results=1000, app=codetapasya_app)
+                    daily_signups = defaultdict(int)
+                    
+                    for user in page.users:
+                        if user.user_metadata.creation_timestamp:
+                            if user.user_metadata.creation_timestamp >= start_date_ts:
+                                signup_date = datetime.utcfromtimestamp(
+                                    user.user_metadata.creation_timestamp / 1000
+                                ).date()
+                                daily_signups[signup_date.isoformat()] += 1
+                    
+                    for date_str in sorted(daily_signups.keys()):
+                        growth_data.append({
+                            "date": date_str,
+                            "count": daily_signups[date_str]
+                        })
+                except Exception as e:
+                    print(f"Error getting user growth: {e}")
+            return growth_data
+
+        def fetch_revenue_trend():
+            """2. REVENUE TREND (Daily credit purchases)"""
+            revenue_data = []
+            if not db: return revenue_data
+            try:
+                # Select only needed fields
+                transactions = db.collection('credit_transactions')\
+                    .where(filter=FieldFilter('type', '==', 'purchase'))\
+                    .where(filter=FieldFilter('status', '==', 'success'))\
+                    .select(['created_at', 'amount', 'credits']).stream()
+                
+                daily_revenue = defaultdict(lambda: {"amount": 0, "credits": 0, "count": 0})
+                
+                for doc in transactions:
+                    data = doc.to_dict()
+                    created_at = data.get('created_at')
+                    if created_at:
+                        try:
+                            if hasattr(created_at, 'timestamp'):
+                                doc_date = datetime.utcfromtimestamp(created_at.timestamp()).date()
+                            else:
+                                doc_date = datetime.fromisoformat(str(created_at).split('T')[0]).date()
+                            
+                            if doc_date >= start_date.date():
+                                date_str = doc_date.isoformat()
+                                daily_revenue[date_str]["amount"] += data.get('amount', 0)
+                                daily_revenue[date_str]["credits"] += data.get('credits', 0)
+                                daily_revenue[date_str]["count"] += 1
+                        except: pass
+
+                for date_str in sorted(daily_revenue.keys()):
+                    revenue_data.append({
+                        "date": date_str,
+                        **daily_revenue[date_str]
+                    })
+            except Exception as e:
+                print(f"Error getting revenue trend: {e}")
+            return revenue_data
+
+        def fetch_credit_usage():
+            """3. CREDIT USAGE BY FEATURE"""
+            usage_data = []
+            if not db: return usage_data
+            try:
+                # Select only action and cost
+                audit_logs = db.collection('audit_log')\
+                    .where(filter=FieldFilter('action', 'in', ['ats_check', 'ai_enhance', 'pdf_export', 
+                                           'portfolio_generate', 'interview_prep', 'ai_rewrite']))\
+                    .select(['action', 'credit_cost']).stream()
+                
+                feature_usage = defaultdict(lambda: {"count": 0, "credits": 0})
+                
+                for doc in audit_logs:
+                    data = doc.to_dict()
+                    action = data.get('action', 'unknown')
+                    credits = data.get('credit_cost', 0)
+                    
+                    feature_usage[action]["count"] += 1
+                    feature_usage[action]["credits"] += credits
+                
+                action_names = {
+                    'ats_check': 'ATS Score Check',
+                    'ai_enhance': 'AI Enhancement',
+                    'ai_rewrite': 'AI Rewrite',
+                    'pdf_export': 'PDF Export',
+                    'portfolio_generate': 'Portfolio Generation',
+                    'interview_prep': 'Interview Prep'
+                }
+                
+                for action, data in feature_usage.items():
+                    usage_data.append({
+                        "feature": action_names.get(action, action),
+                        "count": data["count"],
+                        "credits": data["credits"]
+                    })
+            except Exception as e:
+                print(f"Error getting credit usage: {e}")
+            return usage_data
+
+        def fetch_top_templates():
+            """4. TOP TEMPLATES"""
+            templates_data = []
+            if not db: return templates_data
+            try:
+                # Fetch ONLY template_id field
+                resumes = db.collection('resumes').select(['template_id']).stream()
+                template_usage = defaultdict(int)
+                
+                for doc in resumes:
+                    data = doc.to_dict()
+                    template = data.get('template_id', 'unknown')
+                    template_usage[template] += 1
+                
+                sorted_templates = sorted(template_usage.items(), key=lambda x: x[1], reverse=True)[:10]
+                
+                for template, count in sorted_templates:
+                    templates_data.append({
+                        "template": template,
+                        "count": count
+                    })
+            except Exception as e:
+                print(f"Error getting top templates: {e}")
+            return templates_data
+
+        def fetch_user_activity():
+            """5. USER ACTIVITY HEATMAP"""
+            activity_data = {"hourly": []}
+            if not db: return activity_data
+            try:
+                # Recent logs, only timestamp
+                recent_logs = db.collection('audit_log')\
+                    .order_by('timestamp', direction=firestore.Query.DESCENDING)\
+                    .limit(1000)\
+                    .select(['timestamp']).stream()
+                
+                hourly_activity = defaultdict(int)
+                
+                for doc in recent_logs:
+                    data = doc.to_dict()
+                    timestamp = data.get('timestamp')
+                    if timestamp:
+                        try:
+                            if hasattr(timestamp, 'timestamp'):
+                                hour = datetime.utcfromtimestamp(timestamp.timestamp()).hour
+                            else:
+                                hour = datetime.fromisoformat(str(timestamp).replace('Z', '+00:00')).hour
+                            hourly_activity[hour] += 1
+                        except: pass
+                
+                activity_data["hourly"] = [{"hour": h, "count": hourly_activity.get(h, 0)} for h in range(24)]
+            except Exception as e:
+                print(f"Error getting user activity: {e}")
+            return activity_data
+
+        def fetch_platform_stats():
+            """6. PLATFORM STATS"""
+            stats = {"resumes": 0, "portfolios": 0, "interviews": 0, "total": 0}
+            if not db: return stats
+            try:
+                # Use count via select([])
+                t_resumes = sum(1 for _ in db.collection('resumes').select([]).stream())
+                t_portfolios = sum(1 for _ in db.collection('portfolio_sessions').select([]).stream())
+                t_interviews = sum(1 for _ in db.collection('interview_sessions').select([]).stream())
+                
+                stats = {
+                    "resumes": t_resumes,
+                    "portfolios": t_portfolios,
+                    "interviews": t_interviews,
+                    "total": t_resumes + t_portfolios + t_interviews
+                }
+            except Exception as e:
+                print(f"Error getting platform stats: {e}")
+            return stats
+
+        # --- Execute in Parallel ---
+
+        tasks = [
+            loop.run_in_executor(None, fetch_user_growth),
+            loop.run_in_executor(None, fetch_revenue_trend),
+            loop.run_in_executor(None, fetch_credit_usage),
+            loop.run_in_executor(None, fetch_top_templates),
+            loop.run_in_executor(None, fetch_user_activity),
+            loop.run_in_executor(None, fetch_platform_stats)
+        ]
+
+        results = await asyncio.gather(*tasks)
+
+        analytics["user_growth"] = results[0]
+        analytics["revenue_trend"] = results[1]
+        analytics["credit_usage"] = results[2]
+        analytics["top_templates"] = results[3]
+        analytics["user_activity"] = results[4]
+        analytics["platform_stats"] = results[5]
+
+    except Exception as e:
+        print(f"Error in optimized get_analytics_data: {e}")
+    
+    return AnalyticsData(**analytics)
 
 # --- User Management ---
 
-@router.get("/users", response_model=List[dict])
-async def list_users(limit: int = 20, page_token: str = None):
+@router.get("/users", response_model=dict)
+async def list_users(page: int = 1, limit: int = 50):
     """
-    List all users from Firebase Auth.
+    List all users from Firebase Auth with real Firestore data and pagination.
     """
-    from firebase_admin import auth
-    from app.firebase import codetapasya_app
+    from firebase_admin import auth, firestore
+    from app.firebase import codetapasya_app, resume_maker_app
     
     if not codetapasya_app:
         # Mock data for dev without service account
-        return [
-            {
-                "uid": "dev-user-123",
-                "email": "dev@example.com",
-                "display_name": "Development User",
-                "created_at": 1700000000000,
-                "last_login_at": 1700000000000,
-                "disabled": False,
-                "credits_balance": 100,
-                "resumes_count": 2
-            }
-        ]
+        return {
+            "users": [
+                {
+                    "uid": "dev-user-123",
+                    "email": "dev@example.com",
+                    "display_name": "Development User",
+                    "created_at": 1700000000000,
+                    "last_login_at": 1700000000000,
+                    "disabled": False,
+                    "credits_balance": 100,
+                    "resumes_count": 2
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "limit": 50,
+            "total_pages": 1
+        }
 
     try:
-        # List users from Firebase Auth
-        page = auth.list_users(page_token=page_token, max_results=limit, app=codetapasya_app)
+        # Get all users first (to calculate total)
+        all_users_page = auth.list_users(max_results=1000, app=codetapasya_app)
+        all_users = list(all_users_page.users)
+        total_users = len(all_users)
+        
+        # Calculate pagination
+        total_pages = (total_users + limit - 1) // limit
+        start_idx = (page - 1) * limit
+        end_idx = start_idx + limit
+        
+        # Get Firestore client to fetch credits and resumes
+        db = None
+        if resume_maker_app:
+            db = firestore.client(app=resume_maker_app)
+        
+        # Helper function to fetch stats for a single user
+        def fetch_user_stats(user_uid):
+            credits_balance = 0
+            resumes_count = 0
+            
+            if db:
+                try:
+                    # Get user's credit balance
+                    balance_doc = db.collection('users').document(user_uid).collection('credits').document('balance').get()
+                    if balance_doc.exists:
+                        # Handle potential float/int conversion
+                        balance = balance_doc.to_dict().get('balance', 0)
+                        credits_balance = int(balance) if balance is not None else 0
+                    
+                    # Count user's resumes (optimized via projection/count)
+                    # Using select([]) to only fetch document references, significantly faster
+                    # Note: count() aggregation would be best but requires specific SDK version
+                    try:
+                        # aggregates = db.collection('resumes').where(filter=FieldFilter('user_id', '==', user_uid)).count().get()
+                        # resumes_count = aggregates[0][0].value
+                        
+                        # Fallback to projection if count() not available or for compatibility
+                        resumes_ref = db.collection('resumes').where(filter=FieldFilter('user_id', '==', user_uid)).select([]).stream()
+                        resumes_count = sum(1 for _ in resumes_ref)
+                    except Exception as e:
+                        print(f"Error counting resumes for {user_uid}: {e}")
+                        
+                except Exception as e:
+                    print(f"Error fetching Firestore data for user {user_uid}: {e}")
+            
+            return credits_balance, resumes_count
+
+        # Fetch all stats concurrently
+        import asyncio
+        loop = asyncio.get_running_loop()
+        
+        # Prepare the slice of users
+        paginated_users = all_users[start_idx:end_idx]
+        
+        # Create tasks for all users in the page
+        tasks = [
+            loop.run_in_executor(None, fetch_user_stats, user.uid)
+            for user in paginated_users
+        ]
+        
+        # Wait for all tasks to complete
+        stats_results = await asyncio.gather(*tasks)
         
         users_list = []
-        for user in page.users:
-            # TODO: Fetch additional stats from Firestore (credits, etc.)
-            # For now, we'll return basic auth info
+        for i, user in enumerate(paginated_users):
+            credits_balance, resumes_count = stats_results[i]
+            
             users_list.append({
                 "uid": user.uid,
                 "email": user.email,
@@ -79,21 +589,28 @@ async def list_users(limit: int = 20, page_token: str = None):
                 "last_login_at": user.user_metadata.last_sign_in_timestamp,
                 "disabled": user.disabled,
                 "custom_claims": user.custom_claims,
-                "credits_balance": 0, # Placeholder
-                "resumes_count": 0    # Placeholder
+                "credits_balance": credits_balance,
+                "resumes_count": resumes_count
             })
             
-        return users_list
+        return {
+            "users": users_list,
+            "total": total_users,
+            "page": page,
+            "limit": limit,
+            "total_pages": total_pages
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/users/{uid}", response_model=dict)
 async def get_user_details(uid: str):
     """
-    Get detailed user info including credits, resumes, etc.
+    Get detailed user info including credits, resumes, portfolios, and credit history.
     """
-    from firebase_admin import auth
-    from app.firebase import codetapasya_app
+    from firebase_admin import auth, firestore
+    from app.firebase import codetapasya_app, resume_maker_app
+    from datetime import datetime
     
     if not codetapasya_app:
         return {
@@ -108,9 +625,71 @@ async def get_user_details(uid: str):
     try:
         user = auth.get_user(uid, app=codetapasya_app)
         
-        # TODO: Fetch real data from Firestore
-        # db = get_firestore_client()
-        # credits_doc = db.collection('users').document(uid).collection('credits').document('balance').get()
+        # Initialize default values
+        credits_balance = 0
+        resumes_count = 0
+        portfolios_count = 0
+        credit_history = []
+        resumes = []
+        
+        # Fetch real data from Firestore
+        if resume_maker_app:
+            db = firestore.client(app=resume_maker_app)
+            
+            try:
+                # Get user's credit balance from subcollection
+                balance_doc = db.collection('users').document(uid).collection('credits').document('balance').get()
+                if balance_doc.exists:
+                    balance_data = balance_doc.to_dict()
+                    credits_balance = balance_data.get('balance', 0)
+                
+                # Get user's resumes
+                resumes_snapshot = db.collection('resumes').where(filter=FieldFilter('user_id', '==', uid)).stream()
+                resumes_count = 0
+                for resume_doc in resumes_snapshot:
+                    resumes_count += 1
+                    resume_data = resume_doc.to_dict()
+                    resumes.append({
+                        "id": resume_doc.id,
+                        "title": resume_data.get('title', 'Untitled Resume'),
+                        "template": resume_data.get('template', 'unknown'),
+                        "updated_at": resume_data.get('updated_at', datetime.utcnow()).isoformat() if hasattr(resume_data.get('updated_at'), 'isoformat') else str(resume_data.get('updated_at', '')),
+                        "score": resume_data.get('ats_score', 0)
+                    })
+                
+                # Count portfolios
+                portfolios_snapshot = db.collection('portfolio_sessions').where(filter=FieldFilter('user_id', '==', uid)).stream()
+                portfolios_count = sum(1 for _ in portfolios_snapshot)
+                
+                # Get credit transaction history
+                credit_transactions = db.collection('credit_transactions')\
+                    .where(filter=FieldFilter('user_id', '==', uid))\
+                    .order_by('created_at', direction=firestore.Query.DESCENDING)\
+                    .limit(20)\
+                    .stream()
+                
+                for txn_doc in credit_transactions:
+                    txn_data = txn_doc.to_dict()
+                    timestamp = txn_data.get('created_at')
+                    
+                    # Convert timestamp to ISO string
+                    if timestamp:
+                        if hasattr(timestamp, 'timestamp'):
+                            iso_time = datetime.utcfromtimestamp(timestamp.timestamp()).isoformat() + 'Z'
+                        else:
+                            iso_time = str(timestamp)
+                    else:
+                        iso_time = datetime.utcnow().isoformat() + 'Z'
+                    
+                    credit_history.append({
+                        "timestamp": iso_time,
+                        "action": txn_data.get('type', 'unknown'),
+                        "amount": txn_data.get('credits', 0),
+                        "description": txn_data.get('description', '')
+                    })
+                    
+            except Exception as e:
+                print(f"Error fetching Firestore data for user {uid}: {e}")
         
         return {
             "uid": user.uid,
@@ -123,20 +702,14 @@ async def get_user_details(uid: str):
             "last_login_at": user.user_metadata.last_sign_in_timestamp,
             "disabled": user.disabled,
             "custom_claims": user.custom_claims,
-            # Mock extended data for now
-            "credits_balance": 120,
-            "resumes_count": 3,
-            "portfolios_count": 1,
-            "credit_history": [
-                {"timestamp": "2025-12-01T10:00:00Z", "action": "purchase", "amount": 100},
-                {"timestamp": "2025-12-02T14:30:00Z", "action": "ats_check", "amount": -5}
-            ],
-            "resumes": [
-                {"id": "res_1", "title": "Software Engineer", "updated_at": "2025-12-05T09:00:00Z", "score": 85}
-            ]
+            "credits_balance": credits_balance,
+            "resumes_count": resumes_count,
+            "portfolios_count": portfolios_count,
+            "credit_history": credit_history,
+            "resumes": resumes
         }
     except Exception as e:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=f"User not found: {str(e)}")
 
 @router.post("/users/{uid}/ban")
 async def ban_user(uid: str):

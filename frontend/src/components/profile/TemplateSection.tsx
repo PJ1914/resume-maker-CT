@@ -142,7 +142,7 @@ export default function TemplateSection() {
                         <ChevronRight className="h-4 w-4" />
                     </button>
                     <button
-                        onClick={() => navigate('/templates')}
+                        onClick={() => navigate('/resume/create')}
                         className="text-xs sm:text-sm text-secondary-500 dark:text-gray-400 hover:text-secondary-900 dark:hover:text-white transition-colors ml-2"
                     >
                         Browse All

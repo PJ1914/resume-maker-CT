@@ -1,8 +1,8 @@
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import PublicLayout from '../components/layouts/PublicLayout'
 import { SEO, HomeSchema } from '../components/SEO'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
   Sparkles,
   FileText,
@@ -25,6 +25,21 @@ import {
   Code2,
   Palette,
   Lock,
+  Globe,
+  Layout,
+  MessageSquare,
+  Video,
+  History,
+  GitBranch,
+  Mic,
+  Camera,
+  Share2,
+  AudioWaveform,
+  PhoneOff,
+  Quote,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -74,12 +89,147 @@ export default function LandingPage() {
     },
   ]
 
+  const [landingStats, setLandingStats] = useState({
+    resumes_created: '1,000+',
+    ats_pass_rate: '95%',
+    avg_score: '92%',
+    user_rating: '4.9/5',
+    build_time: '<10min'
+  });
+
   const stats = [
-    { value: '10,000+', label: 'Resumes Built' },
-    { value: '95%', label: 'ATS Pass Rate' },
-    { value: '92%', label: 'Avg Score' },
-    { value: '<2min', label: 'Build Time' },
+    { value: landingStats.resumes_created, label: 'Resumes Built' },
+    { value: landingStats.ats_pass_rate, label: 'ATS Pass Rate' },
+    { value: landingStats.avg_score, label: 'Avg Score' },
+    { value: landingStats.build_time, label: 'Build Time' },
   ]
+
+  const [successStories, setSuccessStories] = useState<any[]>([])
+
+  useEffect(() => {
+    // Fetch stats
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/resumes/public/stats');
+        if (response.ok) {
+          const data = await response.json();
+          setLandingStats({
+            resumes_created: data.resumes_created || '1,000+',
+            ats_pass_rate: data.ats_pass_rate || '95%',
+            avg_score: data.avg_score || '92%',
+            user_rating: data.user_rating || '4.9/5',
+            build_time: '<10min'
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+      }
+    };
+    fetchStats();
+
+    // Fetch real testimonials from backend
+    const fetchSuccessStories = async () => {
+      try {
+        // Use relative URL to fetch from backend
+        // Note: In development, this relies on Vite proxy. In production, this should point to API URL.
+        const response = await fetch('/api/resumes/public/testimonials?limit=50');
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setSuccessStories(data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch testimonials:", error);
+      }
+    };
+
+    fetchSuccessStories();
+  }, []);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let animationFrameId: number;
+
+    const scroll = () => {
+      if (!isPaused && scrollContainer) {
+        if (scrollContainer.scrollLeft >= (scrollContainer.scrollWidth - scrollContainer.clientWidth - 1)) {
+          // Reset to beginning or handle end. For true infinite, we need better reset point.
+          // Simple auto scroll: loop back when hitting end is jarring.
+          // Better: increment until end, then maybe reverse or verify logic.
+          // Let's use the standard Reset-to-0 if we can.
+          scrollContainer.scrollLeft = 0;
+        } else {
+          scrollContainer.scrollLeft += 1;
+        }
+      }
+      animationFrameId = requestAnimationFrame(scroll);
+    };
+
+    animationFrameId = requestAnimationFrame(scroll);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isPaused, successStories]);
+
+  // FAQ State
+  const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
+  const [faqPage, setFaqPage] = useState(1);
+  const faqsPerPage = 5;
+
+  const faqs = [
+    {
+      question: "Is Prativeda free to use?",
+      answer: "We operate on a transparent credit system. You receive 10 FREE credits every month, enough to create and score a resume. for power users, we offer affordable top-up packs starting at just ₹89."
+    },
+    {
+      question: "How do the credits work?",
+      answer: "Each premium action uses credits: Creating a resume (5 credits), ATS Scoring (5 credits), and PDF Export (3 credits). Your free allowance renews monthly, or you can buy more whenever you need."
+    },
+    {
+      question: "Why isn't it completely free?",
+      answer: "We use enterprise-grade AI and expensive LaTeX rendering servers to ensure your resume is perfect. The small credit fee covers these server costs so we can provide you with the best possible quality."
+    },
+    {
+      question: "Can I download my resume for free?",
+      answer: "Yes! If you have credits available (from your monthly free 10), downloading is covered. Each high-quality PDF export costs 3 credits."
+    },
+    {
+      question: "Do credits expire?",
+      answer: "Your monthly free credits reset every month. However, purchased top-up credits do not expire and stay in your account until you use them."
+    },
+    {
+      question: "Can I use it for multiple resumes?",
+      answer: "Yes, you can create and manage multiple versions of your resume. Each new resume creation deducts 5 credits, but editing existing text usually costs less (1 credit) or is free."
+    },
+    {
+      question: "What if I run out of credits?",
+      answer: "No worries! You can purchase additional credit packs instantly. Our 'Starter Pack' begins at ₹89, offering great value for job seekers who need a quick boost."
+    },
+    {
+      question: "Does it support Indian resume formats?",
+      answer: "Absolutely. Our templates are optimized for both Indian and Global markets. Whether you need a standard format or a modern creative layout, we have you covered."
+    },
+    {
+      question: "Is my personal data safe?",
+      answer: "Yes, we take security seriously. Your data is encrypted and stored securely. We do not sell your personal information to third-party recruiters or agencies."
+    },
+    {
+      question: "How accurate is the ATS score?",
+      answer: "Our ATS scorer mimics real-world enterprise applicant tracking systems. A score above 80% generally indicates excellent compatibility with most job portals."
+    }
+  ];
+
+  // Pagination logic
+  const totalFaqPages = Math.ceil(faqs.length / faqsPerPage);
+  const displayedFaqs = faqs.slice((faqPage - 1) * faqsPerPage, faqPage * faqsPerPage);
+
+  // No duplication for unique display
+  const displayStories = successStories;
 
   return (
     <>
@@ -95,7 +245,7 @@ export default function LandingPage() {
 
 
         {/* Hero Section - Futuristic 3D */}
-        <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 lg:min-h-screen flex flex-col lg:justify-center">
+        <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 lg:min-h-screen flex flex-col lg:justify-center overflow-hidden">
           <div className="container mx-auto max-w-7xl relative z-10">
             <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
               {/* Left Content */}
@@ -190,15 +340,15 @@ export default function LandingPage() {
                   className="flex items-center gap-8 pt-8 border-t border-secondary-200 dark:border-white/10"
                 >
                   <div>
-                    <div className="text-3xl font-bold mb-1 text-secondary-900 dark:text-white">10,000+</div>
+                    <div className="text-3xl font-bold mb-1 text-secondary-900 dark:text-white">{landingStats.resumes_created}</div>
                     <div className="text-sm text-secondary-500 dark:text-white/50">Resumes Created</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold mb-1 text-secondary-900 dark:text-white">95%</div>
+                    <div className="text-3xl font-bold mb-1 text-secondary-900 dark:text-white">{landingStats.ats_pass_rate}</div>
                     <div className="text-sm text-secondary-500 dark:text-white/50">ATS Pass Rate</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold mb-1 text-secondary-900 dark:text-white">4.9/5</div>
+                    <div className="text-3xl font-bold mb-1 text-secondary-900 dark:text-white">{landingStats.user_rating}</div>
                     <div className="text-sm text-secondary-500 dark:text-white/50">User Rating</div>
                   </div>
                 </motion.div>
@@ -210,7 +360,7 @@ export default function LandingPage() {
                   x: mousePosition.x,
                   y: mousePosition.y,
                 }}
-                className="relative hidden lg:block h-[600px] lg:scale-90 xl:scale-100 origin-center"
+                className="relative hidden lg:block h-[600px] lg:scale-75 xl:scale-100 origin-center"
               >
                 {/* Main Dashboard Panel */}
                 <motion.div
@@ -330,7 +480,7 @@ export default function LandingPage() {
                   transition={{ delay: 1, duration: 1 }}
                   className="absolute bottom-20 left-10 px-4 py-2 bg-white dark:bg-white/5 backdrop-blur-xl rounded-full border border-secondary-200 dark:border-white/10 shadow-lg dark:shadow-none"
                 >
-                  <span className="text-sm font-medium text-secondary-600 dark:text-white/60">Credits: <span className="text-secondary-900 dark:text-white">19,692</span></span>
+                  <span className="text-sm font-medium text-secondary-600 dark:text-white/60">Credits: <span className="text-secondary-900 dark:text-white">100</span></span>
                 </motion.div>
               </motion.div>
             </div>
@@ -359,7 +509,7 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-8 sm:py-20 px-4 sm:px-6 relative border-y border-secondary-200 dark:border-white/10">
+        <section className="py-8 sm:py-20 px-4 sm:px-6 relative border-y border-secondary-200 dark:border-white/10 overflow-hidden">
           <div className="container mx-auto max-w-7xl">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 lg:gap-12">
               {stats.map((stat, index) => (
@@ -459,7 +609,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-20 sm:py-32 px-4 sm:px-6 relative">
+        <section className="py-20 sm:py-32 px-4 sm:px-6 relative overflow-hidden">
           <div className="container mx-auto max-w-7xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -509,7 +659,7 @@ export default function LandingPage() {
         </section>
 
         {/* Wizard Timeline Section */}
-        <section className="py-20 sm:py-32 px-4 sm:px-6 relative border-y border-secondary-200 dark:border-white/10">
+        <section className="py-20 sm:py-32 px-4 sm:px-6 relative border-y border-secondary-200 dark:border-white/10 overflow-hidden">
           <div className="container mx-auto max-w-7xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -641,7 +791,7 @@ export default function LandingPage() {
         </section>
 
         {/* Upload & Templates Section */}
-        <section className="py-20 sm:py-32 px-4 sm:px-6 relative">
+        <section className="py-20 sm:py-32 px-4 sm:px-6 relative overflow-hidden">
           <div className="container mx-auto max-w-7xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -717,8 +867,272 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Portfolio & Hosting Section */}
+        <section className="py-20 sm:py-32 px-4 sm:px-6 relative border-t border-secondary-200 dark:border-white/10 overflow-hidden">
+          <div className="container mx-auto max-w-7xl">
+            <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center mb-20 sm:mb-32">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                className="order-2 lg:order-1"
+              >
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity" />
+                  <div className="relative bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-secondary-200 dark:border-white/10 overflow-hidden shadow-2xl">
+                    <div className="flex items-center gap-2 px-4 py-3 border-b border-secondary-200 dark:border-white/10 bg-secondary-50/50 dark:bg-white/5">
+                      <div className="flex gap-1.5">
+                        <div className="w-3 h-3 rounded-full bg-red-400" />
+                        <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                        <div className="w-3 h-3 rounded-full bg-green-400" />
+                      </div>
+                      <div className="flex-1 text-center">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-black/20 text-[10px] text-secondary-500 dark:text-white/40 font-mono">
+                          <Lock className="w-3 h-3" />
+                          portfolio.dev
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-1">
+                      <img
+                        src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&q=80&w=800&h=600"
+                        alt="Portfolio Preview"
+                        className="w-full h-auto rounded-lg opacity-90"
+                      />
+                    </div>
+                  </div>
+
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="absolute right-0 sm:-right-4 top-10 bg-white dark:bg-zinc-900 border border-secondary-200 dark:border-white/10 rounded-lg p-3 shadow-xl flex flex-col gap-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </span>
+                      <span className="text-xs font-bold text-secondary-900 dark:text-white">Live Deployment</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="w-6 h-6 rounded bg-black flex items-center justify-center text-white" title="Vercel">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                          <path d="M12 1L24 22H0L12 1Z" />
+                        </svg>
+                      </div>
+                      <div className="w-6 h-6 rounded bg-teal-500 flex items-center justify-center text-white" title="Netlify">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                          <path d="M7.4 20l11.3-11.3 5.3 5.3L7.4 20zM0 7.4l7.4 7.4 5.3-5.3L0 7.4zM7.4 0l-5.3 5.3 11.3 11.3L18.7 11.3 7.4 0z" />
+                        </svg>
+                      </div>
+                      <div className="w-6 h-6 rounded bg-gray-800 flex items-center justify-center text-white" title="GitHub">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                          <path fillRule="evenodd" clipRule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-7.77-3.795-1.425 0 0-.525-1.425-1.425-1.8 0 0-1.155-.795.105-.78 0 0 1.29.09 1.95 1.335.855 1.47 2.25 1.05 2.79.81.09-.63.345-1.05.63-1.29-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.92 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                className="order-1 lg:order-2"
+              >
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold mb-6">
+                  <Globe className="w-4 h-4" />
+                  Web Presence
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-secondary-900 dark:text-white">
+                  Instant Portfolio Generation
+                </h2>
+                <p className="text-lg text-secondary-600 dark:text-white/60 mb-8 leading-relaxed">
+                  Transform your resume into a stunning, responsive portfolio website in seconds. No coding required.
+                </p>
+                <div className="space-y-4">
+                  {[
+                    { title: 'One-Click Deploy', desc: 'Push to Vercel, Netlify, or GitHub instantly.' },
+                    { title: 'Responsive Design', desc: 'Looks perfect on mobile, tablet, and desktop.' },
+                    { title: 'SEO Optimized', desc: 'Rank higher on Google with automatic SEO.' }
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-secondary-100 dark:bg-white/10 flex items-center justify-center text-secondary-900 dark:text-white">
+                        {i === 0 ? <Zap className="w-5 h-5" /> : i === 1 ? <Layout className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-secondary-900 dark:text-white">{item.title}</h3>
+                        <p className="text-sm text-secondary-500 dark:text-white/50">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Interview Prep Section */}
+            <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center mb-20 sm:mb-32">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+              >
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-semibold mb-6">
+                  <Mic className="w-4 h-4" />
+                  Interview Coach
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-secondary-900 dark:text-white">
+                  AI Interview Preparation
+                </h2>
+                <p className="text-lg text-secondary-600 dark:text-white/60 mb-8 leading-relaxed">
+                  Practice with our AI interviewer that adapts to your resume and job description. Get real-time feedback on your answers.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { icon: MessageSquare, label: 'Smart Questions' },
+                    { icon: AudioWaveform, label: 'Audio Analysis' },
+                    { icon: Brain, label: 'Feedback Loop' },
+                    { icon: Star, label: 'Score & Improve' }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-secondary-50 dark:bg-white/5 border border-secondary-100 dark:border-white/10">
+                      <item.icon className="w-5 h-5 text-purple-500" />
+                      <span className="font-medium text-secondary-900 dark:text-white">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                className="relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-full blur-[100px] opacity-20" />
+                <div className="relative bg-white dark:bg-zinc-900 rounded-2xl border border-secondary-200 dark:border-white/10 p-6 shadow-2xl">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                        <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-secondary-900 dark:text-white">AI Interviewer</div>
+                        <div className="text-xs text-green-500 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          Online
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-3 py-1 rounded-full bg-secondary-100 dark:bg-white/10 text-xs font-medium">05:23</div>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <div className="bg-secondary-50 dark:bg-white/5 rounded-lg p-4 rounded-tl-none border border-secondary-100 dark:border-white/5">
+                      <p className="text-sm text-secondary-600 dark:text-white/80">
+                        Based on your experience at Tech Corp, how did you handle the scalability challenges mentioned in your resume?
+                      </p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-500/10 rounded-lg p-4 rounded-tr-none ml-auto max-w-[80%] border border-purple-100 dark:border-purple-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-full h-4 bg-purple-200 dark:bg-purple-500/20 rounded animate-pulse" />
+                        <div className="w-2/3 h-4 bg-purple-200 dark:bg-purple-500/20 rounded animate-pulse" />
+                      </div>
+                      <p className="text-xs text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1">
+                        <Mic className="w-3 h-3" />
+                        Recording...
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center gap-4">
+                    <button className="w-12 h-12 rounded-full bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors">
+                      <PhoneOff className="w-5 h-5" />
+                    </button>
+                    <button className="w-12 h-12 rounded-full bg-secondary-900 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                      <Mic className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Version Control Section */}
+            <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                className="order-2 lg:order-1"
+              >
+                <div className="relative bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-secondary-200 dark:border-white/10 p-6 sm:p-8">
+                  <div className="space-y-6">
+                    {[
+                      { ver: 'v2.4', label: 'Senior Dev Application', date: '2 mins ago', active: true },
+                      { ver: 'v2.3', label: 'Startup Generalist', date: '2 days ago', active: false },
+                      { ver: 'v2.2', label: 'Remote Role Base', date: '5 days ago', active: false },
+                    ].map((item, i) => (
+                      <div key={i} className={`flex items-center gap-4 p-4 rounded-xl border ${item.active ? 'bg-secondary-50 dark:bg-white/10 border-secondary-200 dark:border-white/20' : 'border-transparent opacity-60'}`}>
+                        <div className={`p-2 rounded-lg ${item.active ? 'bg-secondary-900 text-white' : 'bg-secondary-100 dark:bg-white/10'}`}>
+                          <GitBranch className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-secondary-900 dark:text-white">{item.label}</span>
+                            <span className="text-xs font-mono text-secondary-500 dark:text-white/40">{item.ver}</span>
+                          </div>
+                          <div className="text-xs text-secondary-500 dark:text-white/50 flex items-center gap-2">
+                            <History className="w-3 h-3" />
+                            Updated {item.date}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                className="order-1 lg:order-2"
+              >
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-6">
+                  <History className="w-4 h-4" />
+                  Version Control
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-secondary-900 dark:text-white">
+                  Resume Versioning
+                </h2>
+                <p className="text-lg text-secondary-600 dark:text-white/60 mb-8 leading-relaxed">
+                  Never lose a change. Maintain multiple versions of your resume tailored for different job applications and companies.
+                </p>
+                <div className="space-y-4">
+                  {[
+                    { title: 'Unlimited Versions', desc: 'Create as many variations as you need.' },
+                    { title: 'Auto-Save History', desc: 'Rewind to any point in time with ease.' },
+                    { title: 'Compare Changes', desc: 'See what changed between versions.' }
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                        <CheckCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-secondary-900 dark:text-white">{item.title}</h3>
+                        <p className="text-sm text-secondary-500 dark:text-white/50">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
         {/* ATS & Security Section */}
-        <section className="py-20 sm:py-32 px-4 sm:px-6 relative border-y border-secondary-200 dark:border-white/10">
+        <section className="py-20 sm:py-32 px-4 sm:px-6 relative border-y border-secondary-200 dark:border-white/10 overflow-hidden">
           <div className="container mx-auto max-w-7xl">
             <div className="grid md:grid-cols-2 gap-12 sm:gap-16 items-center">
               {/* Left: ATS Scoring */}
@@ -812,8 +1226,150 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Testimonials Section */}
+        <section className="py-20 sm:py-32 relative overflow-hidden bg-secondary-50 dark:bg-black/20">
+          <div className="container mx-auto max-w-7xl px-4 sm:px-6 mb-12 sm:mb-20">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              className="text-center"
+            >
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 tracking-tight text-secondary-900 dark:text-white">
+                Success Stories
+              </h2>
+              <p className="text-lg sm:text-xl text-secondary-600 dark:text-white/60 font-light max-w-2xl mx-auto">
+                Join thousands of professionals who landed their dream jobs with Prativeda.
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="relative w-full overflow-hidden mask-gradient-x">
+            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-secondary-50 dark:from-[#0f172a] to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-secondary-50 dark:from-[#0f172a] to-transparent z-10 pointer-events-none" />
+
+            <div
+              ref={scrollRef}
+              className="flex gap-6 overflow-x-auto pb-10 px-4 no-scrollbar scroll-smooth"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={() => setIsPaused(true)}
+              onTouchEnd={() => setIsPaused(false)}
+              style={{ scrollBehavior: isPaused ? 'auto' : 'unset' }} // 'auto' for user touch, 'unset' for js smooth scroll
+            >
+              {(displayStories.length > 0 ? displayStories : [
+                { name: 'Loading Success Stories...', role: 'Please wait', company: '...', text: 'Fetching real user data...' },
+                { name: 'Loading Success Stories...', role: 'Please wait', company: '...', text: 'Fetching real user data...' }
+              ]).map((user, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-[300px] sm:w-[350px] p-6 bg-white dark:bg-secondary-900 rounded-2xl border border-secondary-200 dark:border-white/10 shadow-lg relative group hover:-translate-y-1 transition-transform duration-300"
+                >
+                  <Quote className="absolute top-6 right-6 w-8 h-8 text-secondary-100 dark:text-white/5 group-hover:text-secondary-200 dark:group-hover:text-white/10 transition-colors" />
+
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(user.rating || 5)].map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    ))}
+                  </div>
+
+                  <p className="text-secondary-600 dark:text-white/80 mb-6 text-sm leading-relaxed min-h-[60px]">
+                    "{user.text}"
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-secondary-200 dark:bg-white/20 flex items-center justify-center font-bold text-secondary-900 dark:text-white border border-secondary-300 dark:border-white/10 overflow-hidden leading-none">
+                      {user.name ? user.name.charAt(0) : '?'}
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-secondary-900 dark:text-white">{user.name}</div>
+                      <div className="text-xs text-secondary-500 dark:text-white/50">{user.role} at {user.company}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-20 sm:py-32 px-4 sm:px-6 relative border-t border-secondary-200 dark:border-white/10 overflow-hidden">
+          <div className="container mx-auto max-w-4xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              className="text-center mb-12 sm:mb-20"
+            >
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 tracking-tight text-secondary-900 dark:text-white">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-lg sm:text-xl text-secondary-600 dark:text-white/60 font-light max-w-2xl mx-auto">
+                Everything you need to know about building your perfect resume.
+              </p>
+            </motion.div>
+
+            <div className="space-y-4">
+              {displayedFaqs.map((faq, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white dark:bg-white/5 backdrop-blur-sm border border-secondary-200 dark:border-white/10 rounded-xl overflow-hidden"
+                >
+                  <button
+                    onClick={() => setActiveFAQ(activeFAQ === index ? null : index)}
+                    className="w-full flex items-center justify-between p-4 sm:p-6 text-left focus:outline-none"
+                  >
+                    <span className="text-base sm:text-lg font-semibold text-secondary-900 dark:text-white pr-4 sm:pr-8">
+                      {faq.question}
+                    </span>
+                    <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-secondary-200 dark:border-white/20 flex items-center justify-center transition-colors ${activeFAQ === index ? 'bg-secondary-900 dark:bg-white text-white dark:text-black' : 'text-secondary-500 dark:text-white/50'}`}>
+                      {activeFAQ === index ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    </div>
+                  </button>
+                  <AnimatePresence>
+                    {activeFAQ === index && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      >
+                        <div className="px-4 pb-4 sm:px-6 sm:pb-6 text-sm sm:text-base text-secondary-600 dark:text-white/70 leading-relaxed border-t border-secondary-100 dark:border-white/5 pt-3 sm:pt-4">
+                          {faq.answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* FAQ Pagination */}
+            {totalFaqPages > 1 && (
+              <div className="flex justify-center gap-2 mt-8 sm:mt-12">
+                {[...Array(totalFaqPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setFaqPage(i + 1)}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${faqPage === i + 1
+                      ? 'bg-secondary-900 dark:bg-white text-white dark:text-black shadow-lg scale-110'
+                      : 'bg-white dark:bg-white/5 text-secondary-600 dark:text-white/60 hover:bg-secondary-100 dark:hover:bg-white/10'
+                      }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* CTA Section */}
-        <section className="py-20 sm:py-32 px-4 sm:px-6 relative">
+        <section className="py-12 sm:py-32 px-4 sm:px-6 relative overflow-hidden">
           <div className="container mx-auto max-w-5xl">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -831,22 +1387,22 @@ export default function LandingPage() {
                   viewport={{ once: true, margin: '-100px' }}
                   transition={{ delay: 0.2 }}
                 >
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 tracking-tight text-secondary-900 dark:text-white">
+                  <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-6 tracking-tight text-secondary-900 dark:text-white">
                     Start Your Journey
                   </h2>
-                  <p className="text-lg sm:text-xl text-secondary-600 dark:text-white/60 mb-8 sm:mb-10 max-w-2xl mx-auto font-light">
+                  <p className="text-base sm:text-xl text-secondary-600 dark:text-white/60 mb-6 sm:mb-10 max-w-2xl mx-auto font-light">
                     Join 10,000+ professionals building their future with AI-powered resumes.
                   </p>
                   <motion.button
                     whileHover={{ scale: 1.05, boxShadow: '0 0 50px rgba(255,255,255,0.5)' }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => navigate('/login')}
-                    className="group relative px-8 py-4 sm:px-12 sm:py-5 bg-secondary-900 dark:bg-white text-white dark:text-black rounded-xl font-bold text-lg overflow-hidden w-full sm:w-auto"
+                    className="group relative px-6 py-3 sm:px-12 sm:py-5 bg-secondary-900 dark:bg-white text-white dark:text-black rounded-xl font-bold text-base sm:text-lg overflow-hidden w-full sm:w-auto"
                   >
                     <div className="absolute inset-0 bg-secondary-800 dark:bg-white blur-2xl opacity-50 group-hover:opacity-75 transition-opacity" />
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       Get Started Free
-                      <ArrowUpRight className="h-6 w-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                      <ArrowUpRight className="h-5 w-5 sm:h-6 sm:w-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </span>
                   </motion.button>
                 </motion.div>

@@ -94,7 +94,7 @@ export default function CreditsSection() {
 
                 {/* Buy Credits Button */}
                 <button
-                    onClick={() => navigate('/pricing')}
+                    onClick={() => navigate('/credits/purchase')}
                     className="p-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm"
                 >
                     <div className="flex items-center gap-2 mb-1 opacity-90">

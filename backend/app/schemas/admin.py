@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime
 
 class DashboardStats(BaseModel):
@@ -12,6 +12,15 @@ class DashboardStats(BaseModel):
     ai_actions_today: int
     templates_purchased: int
     portfolios_deployed: int
+
+class AnalyticsData(BaseModel):
+    """Extended analytics for charts and graphs"""
+    user_growth: List[Dict] = []  # Daily/weekly user signups
+    revenue_trend: List[Dict] = []  # Daily revenue
+    credit_usage: List[Dict] = []  # Credit usage by feature
+    top_templates: List[Dict] = []  # Most used templates
+    user_activity: Dict = {}  # Activity heatmap data
+    platform_stats: Dict = {}  # Platform distribution
 
 class AdminLog(BaseModel):
     admin_email: str
