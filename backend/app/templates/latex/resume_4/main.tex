@@ -47,6 +47,8 @@
 
 % Default font is the helvetica postscript font
 \usepackage{helvet}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
 
 % Increase text height
 \textheight=700pt
@@ -64,7 +66,7 @@
 % -linked-in profile
 
 \address{}%intentionally left blank 
-\address{\VAR{email|escape_tex}\\\VAR{phone|escape_tex}\\\VAR{location|escape_tex}\BLOCK{ if linkedin }\\linkedin.com/in/\VAR{linkedin|escape_tex}\BLOCK{ endif }\BLOCK{ if github }\\github.com/\VAR{github|escape_tex}\BLOCK{ endif }\BLOCK{ if leetcode }\\leetcode.com/u/\VAR{leetcode|escape_tex}\BLOCK{ endif }\BLOCK{ if codechef }\\codechef.com/users/\VAR{codechef|escape_tex}\BLOCK{ endif }\BLOCK{ if hackerrank }\\hackerrank.com/\VAR{hackerrank|escape_tex}\BLOCK{ endif }\BLOCK{ if website }\\\ VAR{website|escape_tex}\BLOCK{ endif }}
+\address{\VAR{email|escape_tex}\\\VAR{phone|escape_tex}\\\VAR{location|escape_tex}\BLOCK{ if linkedin }\\linkedin.com/in/\VAR{linkedin|escape_tex}\BLOCK{ endif }\BLOCK{ if github }\\github.com/\VAR{github|escape_tex}\BLOCK{ endif }\BLOCK{ if leetcode }\\leetcode.com/u/\VAR{leetcode|escape_tex}\BLOCK{ endif }\BLOCK{ if codechef }\\codechef.com/users/\VAR{codechef|escape_tex}\BLOCK{ endif }\BLOCK{ if hackerrank }\\hackerrank.com/\VAR{hackerrank|escape_tex}\BLOCK{ endif }\BLOCK{ if website }\\\VAR{website}\BLOCK{ endif }}
 
 % Uncomment to add a third address
 %\address{Address 3 line 1\\Address 3 line 2\\Address 3 line 3}
