@@ -536,7 +536,7 @@ async def preview_template(template_name: str):
     try:
         # Define cache directory and file path
         # Version the cache to invalidate when template logic changes
-        PREVIEW_VERSION = "v5"  # Increment this when template data structure changes
+        PREVIEW_VERSION = "v6"  # Increment this when template data structure changes
         cache_dir = Path(__file__).parent.parent / "static" / "previews"
         cache_dir.mkdir(parents=True, exist_ok=True)
         cached_pdf_path = cache_dir / f"{template_name}_{PREVIEW_VERSION}.pdf"
