@@ -21,7 +21,6 @@
 \BLOCK{ if edu.gpa }
 \\ GPA: \VAR{edu.gpa|escape_tex}
 \BLOCK{ endif }
-\smallskip \\
 \BLOCK{ endfor }
 
 \end{rSection}
@@ -38,7 +37,7 @@
 {\bf \VAR{exp.position|escape_tex}, \VAR{exp.company|escape_tex}} \hfill {\em \VAR{exp.start_date|escape_tex}\BLOCK{ if exp.start_date and exp.end_date } - \BLOCK{ endif }\VAR{exp.end_date|escape_tex}} 
 
 \BLOCK{ if exp.description or exp.highlights }
-\begin{itemize} 
+\begin{itemize}\itemsep-0.3em
     \BLOCK{ if exp.description }
     \item \VAR{exp.description|escape_tex}
     \BLOCK{ endif }
@@ -64,7 +63,7 @@
 \VAR{proj.description|escape_tex}
 \BLOCK{ endif }
 \BLOCK{ if proj.technologies or proj.link or proj.highlights }
-\begin{itemize}
+\begin{itemize}\itemsep-0.3em
     \BLOCK{ if proj.technologies }
     \item Technologies: \VAR{proj.technologies|join(', ')|escape_tex}
     \BLOCK{ endif }
@@ -103,7 +102,7 @@
 
 \BLOCK{ if certifications }
 \begin{rSection}{Certifications}
-\begin{itemize}
+\begin{itemize}\itemsep-0.3em
     \BLOCK{ for cert in certifications }
     \item {\bf \VAR{cert.name|escape_tex}} - \VAR{cert.issuer|escape_tex} \hfill {\em \VAR{cert.date|escape_tex}}
     \BLOCK{ endfor }
@@ -117,7 +116,7 @@
 
 \BLOCK{ if languages }
 \begin{rSection}{Languages}
-\begin{itemize}
+\begin{itemize}\itemsep-0.3em
     \BLOCK{ for lang in languages }
     \item {\bf \VAR{lang.language|escape_tex}}: \VAR{lang.proficiency|escape_tex}
     \BLOCK{ endfor }
@@ -131,12 +130,9 @@
 
 \BLOCK{ if achievements }
 \begin{rSection}{Achievements} 
-\begin{itemize}
+\begin{itemize}\itemsep-0.3em
     \BLOCK{ for ach in achievements }
-    \item {\bf \VAR{ach.title|escape_tex}} \hfill {\em \VAR{ach.date|escape_tex}}
-    \BLOCK{ if ach.description }
-    \\ \VAR{ach.description|escape_tex}
-    \BLOCK{ endif }
+    \item {\bf \VAR{ach.title|escape_tex}}\BLOCK{ if ach.description } -- \VAR{ach.description|escape_tex}\BLOCK{ endif } \hfill {\em \VAR{ach.date|escape_tex}}
     \BLOCK{ endfor }
 \end{itemize}
 \end{rSection}
