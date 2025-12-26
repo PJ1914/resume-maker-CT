@@ -273,11 +273,19 @@ Return valid JSON:
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.2,
-                max_output_tokens=1000
+                max_output_tokens=4000  # Increased to handle detailed resumes without truncation
             )
         )
         
         logger.info(f"Received response from Gemini API")
+        
+        # Check if response was potentially truncated
+        if hasattr(response, 'candidates') and response.candidates:
+            candidate = response.candidates[0]
+            if hasattr(candidate, 'finish_reason'):
+                finish_reason = str(candidate.finish_reason)
+                if 'MAX_TOKENS' in finish_reason or 'LENGTH' in finish_reason:
+                    logger.warning(f"Response may be truncated due to: {finish_reason}")
         
         # Parse the response - it should be JSON
         response_text = response.text.strip()
@@ -288,8 +296,22 @@ Return valid JSON:
             response_text = response_text.split("```")[1]
             if response_text.startswith("json"):
                 response_text = response_text[4:]
+            response_text = response_text.strip()
+        
+        # Also handle trailing ``` if present
+        if response_text.endswith("```"):
+            response_text = response_text[:-3].strip()
         
         logger.info("Parsing JSON response")
+        
+        # Check for obvious truncation
+        if not response_text.endswith("}"):
+            logger.error("Response appears to be truncated - doesn't end with '}'")
+            raise HTTPException(
+                status_code=500,
+                detail="AI response was truncated. Please try again with a shorter resume."
+            )
+        
         extracted_data = json.loads(response_text)
         logger.info(f"Successfully extracted resume data with keys: {list(extracted_data.keys())}")
         
@@ -300,11 +322,13 @@ Return valid JSON:
         
     except json.JSONDecodeError as e:
         logger.error(f"JSON parsing error: {str(e)}")
-        logger.error(f"Response text was: {response_text[:500]}")
+        logger.error(f"Response text was: {response_text[:500] if 'response_text' in dir() else 'N/A'}")
         raise HTTPException(
             status_code=400,
-            detail=f"Failed to parse AI response as JSON: {str(e)}"
+            detail=f"Failed to parse AI response as JSON. The response may have been truncated. Please try again."
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Resume extraction failed: {str(e)}", exc_info=True)
         raise HTTPException(
