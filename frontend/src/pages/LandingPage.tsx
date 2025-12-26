@@ -105,12 +105,13 @@ export default function LandingPage() {
   ]
 
   const [successStories, setSuccessStories] = useState<any[]>([])
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
   useEffect(() => {
     // Fetch stats
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/resumes/public/stats');
+        const response = await fetch(`${API_URL}/api/resumes/public/stats`);
         if (response.ok) {
           const data = await response.json();
           setLandingStats({
@@ -130,9 +131,8 @@ export default function LandingPage() {
     // Fetch real testimonials from backend
     const fetchSuccessStories = async () => {
       try {
-        // Use relative URL to fetch from backend
-        // Note: In development, this relies on Vite proxy. In production, this should point to API URL.
-        const response = await fetch('/api/resumes/public/testimonials?limit=50');
+        // Use absolute URL to fetch from backend
+        const response = await fetch(`${API_URL}/api/resumes/public/testimonials?limit=50`);
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
