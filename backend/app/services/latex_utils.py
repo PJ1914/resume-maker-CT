@@ -134,6 +134,47 @@ def format_date(date_str: str) -> str:
     return date_str
 
 
+def split_date_range(start_date: str, end_date: str) -> tuple:
+    """
+    Detect if start_date or end_date contains a combined range (e.g., '2024 – 2028')
+    and split it properly.
+    
+    Args:
+        start_date: The start date field value
+        end_date: The end date field value
+        
+    Returns:
+        Tuple of (clean_start_date, clean_end_date)
+    """
+    # Range separators to look for
+    separators = [' – ', ' - ', '–', '-', ' to ']
+    
+    # Check if start_date contains a range
+    clean_start = str(start_date).strip() if start_date else ''
+    clean_end = str(end_date).strip() if end_date else ''
+    
+    # If start_date contains a range separator, split it
+    for sep in separators:
+        if sep in clean_start:
+            parts = clean_start.split(sep)
+            if len(parts) == 2:
+                clean_start = parts[0].strip()
+                # Only use the second part as end_date if end_date is empty or same as start_date
+                if not clean_end or clean_end == start_date:
+                    clean_end = parts[1].strip()
+            break
+    
+    # If end_date contains a range separator, extract just the end part
+    for sep in separators:
+        if sep in clean_end:
+            parts = clean_end.split(sep)
+            if len(parts) == 2:
+                clean_end = parts[1].strip()
+            break
+    
+    return (clean_start, clean_end)
+
+
 def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Prepare resume data for LaTeX template rendering.
@@ -186,16 +227,21 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(exp_data, list):
         for exp in exp_data:
             if not isinstance(exp, dict): continue
+            
+            # Clean up date ranges - handle combined dates like "2024 – 2028-01"
+            raw_start = exp.get('startDate', '')
+            raw_end = exp.get('endDate', '')
+            clean_start, clean_end = split_date_range(raw_start, raw_end)
+            
             # Determine end_date - use "Present" only if explicitly current
-            end_date_raw = exp.get('endDate', '')
             is_current = exp.get('current', False)
             
             if is_current:
                 # Explicitly marked as current job
                 end_date = 'Present'
-            elif end_date_raw:
+            elif clean_end:
                 # Has an end date, use it
-                end_date = escape_latex(format_date(end_date_raw))
+                end_date = escape_latex(format_date(clean_end))
             else:
                 # No end date and not marked as current - leave empty
                 # (template will handle display)
@@ -246,7 +292,7 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
                 position=escape_latex(exp.get('position', exp.get('title', ''))),
                 company=escape_latex(exp.get('company', '')),
                 location=escape_latex(exp.get('location', '')),
-                start_date=escape_latex(format_date(exp.get('startDate', ''))),
+                start_date=escape_latex(format_date(clean_start)),
                 end_date=end_date,
                 current=is_current,
                 description=final_description,
@@ -259,10 +305,15 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(edu_data, list):
         for edu in edu_data:
             if not isinstance(edu, dict): continue
+            
+            # Clean up date ranges - handle combined dates like "2024 – 2028-01"
+            raw_start = edu.get('startDate', '')
+            raw_end = edu.get('endDate', '')
+            clean_start, clean_end = split_date_range(raw_start, raw_end)
+            
             # Handle empty end_date
-            end_date_raw = edu.get('endDate', '')
-            if end_date_raw:
-                end_date = escape_latex(format_date(end_date_raw))
+            if clean_end:
+                end_date = escape_latex(format_date(clean_end))
             else:
                 end_date = 'Present'
             
@@ -271,7 +322,7 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
                 field=escape_latex(edu.get('field', '')),
                 institution=escape_latex(edu.get('institution', '')),
                 location=escape_latex(edu.get('location', '')),
-                start_date=escape_latex(format_date(edu.get('startDate', ''))),
+                start_date=escape_latex(format_date(clean_start)),
                 end_date=end_date,
                 gpa=escape_latex(edu.get('gpa', '')),
                 honors=escape_latex(edu.get('honors', '')),
@@ -283,6 +334,11 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(proj_data, list):
         for proj in proj_data:
             if not isinstance(proj, dict): continue
+            
+            # Clean up date ranges - handle combined dates
+            raw_start = proj.get('startDate', '')
+            raw_end = proj.get('endDate', '')
+            clean_start, clean_end = split_date_range(raw_start, raw_end)
             
             # Handle technologies as either string or list
             tech = proj.get('technologies', [])
@@ -337,8 +393,8 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
                 technologies=technologies,
                 link=escape_latex(proj.get('link', '')),
                 highlights=all_highlights,
-                start_date=escape_latex(format_date(proj.get('startDate', ''))),
-                end_date=format_date(proj.get('endDate', '')),
+                start_date=escape_latex(format_date(clean_start)),
+                end_date=format_date(clean_end),
             ))
     
     # Structure skills (convert to SimpleNamespace for dot notation to avoid dict.items() conflict)

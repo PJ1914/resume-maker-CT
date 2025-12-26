@@ -915,6 +915,19 @@ export default function ResumeDetailPage() {
                 <div className="text-sm text-secondary-900 dark:text-secondary-50">{formatDate(resume.created_at)}</div>
               </div>
 
+              <div>
+                <div className="text-xs font-medium text-secondary-500 dark:text-secondary-400 mb-1">Template</div>
+                <div className="text-sm text-secondary-900 dark:text-secondary-50">
+                  {resume.template ? (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 font-medium">
+                      {resume.template.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  ) : (
+                    <span className="text-secondary-500 dark:text-secondary-400">Uploaded (No template)</span>
+                  )}
+                </div>
+              </div>
+
               {(scoreData?.total_score || resume.latest_score) && (
                 <div>
                   <div className="text-xs font-medium text-secondary-500 dark:text-secondary-400 mb-1">Latest ATS Score</div>

@@ -197,7 +197,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                       onChange={(e) =>
                         updateEducation(index, { honors: e.target.value })
                       }
-                      placeholder="Dean's List, Magna Cum Laude"
+                      placeholder=" "
                     />
                   </div>
                 </div>
