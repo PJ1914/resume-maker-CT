@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { useResume, useDeleteResume } from '@/hooks/useResumes'
+import { API_URL } from '@/config/firebase'
 import { useResumeScore, useScoreResume } from '@/hooks/useScoring'
 import { resumeService, type ResumeDetail } from '@/services/resume.service'
 import toast from 'react-hot-toast'
@@ -24,95 +25,7 @@ import { TemplateRenderer } from '@/components/TemplateRenderer'
 import { ScorerToggle } from '@/components/ui/toggle'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
-// Helper function to format resume text into HTML
-function formatResumeText(text: string): string {
-  if (!text) return '';
 
-  // Split by common section headers
-  const lines = text.split('\n');
-  let html = '';
-  let inList = false;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-
-    // Skip empty lines and page breaks
-    if (!line || line.includes('Page Break')) continue;
-
-    // Section headers (all caps or common keywords)
-    if (line.match(/^(PROFESSIONAL SUMMARY|EXPERIENCE|PROJECTS|TECHNICAL SKILLS|EDUCATION|HACKATHONS|COMPETITIONS|CERTIFICATIONS|AWARDS)/i)) {
-      if (inList) {
-        html += '</ul>';
-        inList = false;
-      }
-      html += `<h2>${line}</h2>`;
-    }
-    // Job/Project titles with bullet points
-    else if (line.startsWith('•')) {
-      const content = line.substring(1).trim();
-      // Check if it's a main heading (job/project title)
-      if (content.match(/^[A-Z]/)) {
-        if (inList) {
-          html += '</ul>';
-          inList = false;
-        }
-        // Extract title and dates if present
-        const parts = content.split(/\s{2,}/);
-        if (parts.length > 1 && parts[parts.length - 1].match(/\d{4}/)) {
-          const date = parts.pop();
-          const title = parts.join(' ');
-          html += `<div class="section"><h3>${title}</h3><p class="job-date">${date}</p>`;
-        } else {
-          html += `<div class="section"><h3>${content}</h3>`;
-        }
-      } else {
-        // It's a bullet point
-        if (!inList) {
-          html += '<ul>';
-          inList = true;
-        }
-        html += `<li>${content}</li>`;
-      }
-    }
-    // Sub-items with dashes
-    else if (line.startsWith('-')) {
-      if (!inList) {
-        html += '<ul>';
-        inList = true;
-      }
-      html += `<li>${line.substring(1).trim()}</li>`;
-    }
-    // Job title, company, location pattern
-    else if (line.match(/^[A-Z][a-zA-Z\s]+\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i)) {
-      if (inList) {
-        html += '</ul>';
-        inList = false;
-      }
-      const parts = line.split(/\s{2,}/);
-      if (parts.length >= 2) {
-        html += `<div class="job-header"><span class="job-title">${parts[0]}</span><span class="job-date">${parts[parts.length - 1]}</span></div>`;
-      }
-    }
-    // Company and location
-    else if (line.match(/^[A-Z][a-zA-Z\s,]+$/)) {
-      html += `<p class="company">${line}</p>`;
-    }
-    // Regular content
-    else {
-      if (inList) {
-        html += '</ul>';
-        inList = false;
-      }
-      html += `<p>${line}</p>`;
-    }
-  }
-
-  if (inList) {
-    html += '</ul>';
-  }
-
-  return html;
-}
 
 export default function ResumeDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -292,7 +205,7 @@ export default function ResumeDetailPage() {
       let token = ''
       if (user) token = await user.getIdToken()
 
-      const resp = await fetch(`/api/resumes/${resume.resume_id}/download-original`, {
+      const resp = await fetch(`${API_URL}/api/resumes/${resume.resume_id}/download-original`, {
         method: 'GET',
         headers: {
           'Accept': 'application/pdf',

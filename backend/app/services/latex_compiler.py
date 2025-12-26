@@ -175,14 +175,14 @@ class LaTeXCompiler:
         
         return rendered_files
     
-    def compile_pdf(
+    async def compile_pdf(
         self,
         latex_source: str,
         template_name: str = "resume_1",
         additional_files: Optional[Dict[str, str]] = None
     ) -> bytes:
         """
-        Compile LaTeX source to PDF.
+        Compile LaTeX source to PDF (Async).
         
         Args:
             latex_source: LaTeX source code (main.tex content)
@@ -195,9 +195,9 @@ class LaTeXCompiler:
         Raises:
             RuntimeError: If compilation fails
         """
-        return self._compile_pdf_local(latex_source, template_name, additional_files)
+        return await self._compile_pdf_local(latex_source, template_name, additional_files)
     
-    def _compile_pdf_local(
+    async def _compile_pdf_local(
         self,
         latex_source: str,
         template_name: str,
@@ -205,166 +205,114 @@ class LaTeXCompiler:
     ) -> bytes:
         """
         Compile LaTeX source to PDF using local LaTeX installation (Tectonic preferred).
+        Running in executor to avoid blocking event loop.
         """
-        # Path to the original template assets (fonts, cls, sty)
-        template_dir = TEMPLATES_DIR / template_name
-        
-        # Create temporary directory for compilation
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        import asyncio
+        loop = asyncio.get_running_loop()
+
+        def _run_compilation():
+            # Path to the original template assets (fonts, cls, sty)
+            template_dir = TEMPLATES_DIR / template_name
             
-            # 1. Copy all template files (fonts, images, cls) to the temp dir
-            # This ensures Tectonic/LaTeX can find all dependencies
-            if template_dir.exists():
-                try:
-                    # shutil.copytree requires destination to not exist usually, 
-                    # but dirs_exist_ok=True (Python 3.8+) allows merging
-                    shutil.copytree(template_dir, temp_path, dirs_exist_ok=True)
-                except Exception as e:
-                    logger.warning(f"Could not copy template assets from {template_dir}: {e}")
-            
-            # 2. Write the dynamic main.tex
-            # We overwrite the template's main.tex with our rendered version
-            tex_file = temp_path / "main.tex"
-            tex_file.write_text(latex_source, encoding='utf-8')
-            
-            # 3. Write any additional template files (like page1sidebar.tex)
-            if additional_files:
-                for filename, content in additional_files.items():
-                    file_path = temp_path / filename
-                    file_path.write_text(content, encoding='utf-8')
-                    logger.info(f"Wrote additional template file: {filename}")
-            # Use pdflatex from MiKTeX (skip tectonic due to fontconfig issues)
-            # For resume_4, use only pdflatex as it uses res.cls which works better with pdf latex
-            if template_name == 'resume_4':
-                compilers = ['pdflatex']
-            else:
-                compilers = ['pdflatex', 'xelatex']
-            pdf_path = None
-            
-            for compiler in compilers:
-                try:
-                    # Check if compiler exists using shutil.which (more robust)
-                    if not shutil.which(compiler):
-                        logger.warning(f"Compiler {compiler} not found in PATH")
-                        continue
-                    
-                    logger.info(f"Compiling with {compiler}...")
-                    
-                    if compiler == 'tectonic':
-                        # Tectonic compilation
-                        cmd = [
-                            compiler,
-                            "main.tex"
-                        ]
-                        result = subprocess.run(
-                            cmd,
-                            cwd=temp_path,
-                            capture_output=True,
-                            text=True,
-                            timeout=120
-                        )
-                    else:
-                        # Standard LaTeX compilation (run twice for refs)
-                        # Enable automatic package installation for MiKTeX
-                        env = os.environ.copy()
-                        env['MIKTEX_TEMP'] = str(temp_path)
-                        env['MIKTEX_ENABLE_INSTALLER'] = 't'  # Auto-install missing packages
+            # Create temporary directory for compilation
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir)
+                
+                # 1. Copy all template files (fonts, images, cls) to the temp dir
+                if template_dir.exists():
+                    try:
+                        shutil.copytree(template_dir, temp_path, dirs_exist_ok=True)
+                    except Exception as e:
+                        logger.warning(f"Could not copy template assets from {template_dir}: {e}")
+                
+                # 2. Write the dynamic main.tex
+                tex_file = temp_path / "main.tex"
+                tex_file.write_text(latex_source, encoding='utf-8')
+                
+                # 3. Write any additional template files
+                if additional_files:
+                    for filename, content in additional_files.items():
+                        file_path = temp_path / filename
+                        file_path.write_text(content, encoding='utf-8')
+                        logger.info(f"Wrote additional template file: {filename}")
+
+                # Select compilers
+                if template_name == 'resume_4':
+                    compilers = ['pdflatex']
+                else:
+                    compilers = ['pdflatex', 'xelatex']
+                
+                pdf_path = None
+                
+                for compiler in compilers:
+                    try:
+                        if not shutil.which(compiler):
+                            logger.warning(f"Compiler {compiler} not found in PATH")
+                            continue
                         
-                        for run_num in range(2):
-                            cmd = [
-                                compiler,
-                                '-interaction=nonstopmode',
-                                '-halt-on-error',
-                                '-file-line-error',
-                                "main.tex"
-                            ]
-                            logger.info(f"{compiler} run {run_num + 1}/2...")
+                        logger.info(f"Compiling with {compiler}...")
+                        
+                        if compiler == 'tectonic':
+                            cmd = [compiler, "main.tex"]
                             result = subprocess.run(
-                                cmd,
-                                cwd=temp_path,
-                                capture_output=True,
-                                text=True,
-                                timeout=240,  # Increase timeout to allow package installation
-                                env=env
+                                cmd, cwd=temp_path, capture_output=True, text=True, timeout=120
                             )
+                        else:
+                            env = os.environ.copy()
+                            env['MIKTEX_TEMP'] = str(temp_path)
+                            env['MIKTEX_ENABLE_INSTALLER'] = 't'
                             
-                            # Log output for debugging
-                            if result.stdout:
-                                logger.debug(f"{compiler} stdout: {result.stdout[-500:]}")
-                            if result.stderr:
-                                logger.debug(f"{compiler} stderr: {result.stderr[-500:]}")
-                    
-                    if result.returncode != 0:
-                        # Log full error for debugging
-                        error_msg = result.stderr or result.stdout
-                        logger.warning(f"{compiler} compilation failed with code {result.returncode}")
-                        if error_msg:
-                            logger.warning(f"Error output (last 1000 chars): {error_msg[-1000:]}")
-                        # Try next compiler
-                        continue
-
-                    # Check if PDF was created
-                    # Tectonic output might be named differently depending on args, but usually matches input
-                    pdf_path = temp_path / "main.pdf"
-                    if pdf_path.exists():
-                        break  # Success!
-                
-                except subprocess.TimeoutExpired:
-                    logger.error(f"LaTeX compilation timed out with {compiler}")
-                    continue
-                except Exception as e:
-                    logger.error(f"Error running {compiler}: {e}")
-                    continue
-            
-            if pdf_path is None or not pdf_path.exists():
-                # Try to read log for debugging
-                log_file = temp_path / "main.log"
-                log_content = "No log file generated."
-                if log_file.exists():
-                    try:
-                        log_content = log_file.read_text(encoding='utf-8', errors='ignore')
-                        # Extract key error lines
-                        error_lines = [line for line in log_content.split('\n') if '!' in line or 'Error' in line or 'error' in line]
-                        if error_lines:
-                            logger.error(f"LaTeX errors found: {error_lines[:10]}")
-                    except Exception as e:
-                        logger.error(f"Could not read log file: {e}")
-                
-                # Also save the generated .tex file for debugging
-                tex_content = "Could not read .tex file"
-                tex_file_path = temp_path / "main.tex"
-                if tex_file_path.exists():
-                    try:
-                        tex_content = tex_file_path.read_text(encoding='utf-8', errors='ignore')
-                        logger.error(f"Generated LaTeX (first 1000 chars):\n{tex_content[:1000]}")
+                            for run_num in range(2):
+                                cmd = [
+                                    compiler,
+                                    '-interaction=nonstopmode',
+                                    '-halt-on-error',
+                                    '-file-line-error',
+                                    "main.tex"
+                                ]
+                                result = subprocess.run(
+                                    cmd,
+                                    cwd=temp_path,
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=240,
+                                    env=env
+                                )
+                                if result.stdout: logger.debug(f"{compiler} stdout: {result.stdout[-500:]}")
+                                if result.stderr: logger.debug(f"{compiler} stderr: {result.stderr[-500:]}")
                         
-                        # Save debug files to backend directory for examination
-                        debug_dir = Path(__file__).parent.parent / "debug_latex"
-                        debug_dir.mkdir(exist_ok=True)
-                        (debug_dir / "failed_main.tex").write_text(tex_content, encoding='utf-8')
-                        if log_file.exists():
-                            (debug_dir / "failed_main.log").write_text(log_content, encoding='utf-8')
-                        logger.error(f"Debug files saved to: {debug_dir}")
-                    except Exception as e:
-                        logger.error(f"Could not read/save tex file: {e}")
-                
-                raise RuntimeError(
-                    f"LaTeX compilation failed. Check logs for details. Log preview:\n{log_content[:2000]}..."
-                )
-            
-            # Read PDF file
-            pdf_content = pdf_path.read_bytes()
-            
-            return pdf_content
+                        if result.returncode != 0:
+                            logger.warning(f"{compiler} compilation failed code {result.returncode}")
+                            continue
 
-    def generate_pdf(
+                        pdf_path = temp_path / "main.pdf"
+                        if pdf_path.exists():
+                            break
+                    
+                    except subprocess.TimeoutExpired:
+                        logger.error(f"LaTeX compilation timed out with {compiler}")
+                        continue
+                    except Exception as e:
+                        logger.error(f"Error running {compiler}: {e}")
+                        continue
+                
+                if pdf_path is None or not pdf_path.exists():
+                    log_file = temp_path / "main.log"
+                    log_content = log_file.read_text(encoding='utf-8', errors='ignore') if log_file.exists() else "No log"
+                    raise RuntimeError(f"LaTeX compilation failed. Log:\n{log_content[:2000]}...")
+                
+                return pdf_path.read_bytes()
+
+        # Run the blocking compilation function in the default executor (thread pool)
+        return await loop.run_in_executor(None, _run_compilation)
+
+    async def generate_pdf(
         self,
         resume_data: Dict[str, Any],
         template_name: str = "resume_1"
     ) -> bytes:
         """
-        Complete PDF generation pipeline: render template + compile PDF.
+        Complete PDF generation pipeline: render template + compile PDF (Async).
         
         Args:
             resume_data: Resume data from Firestore
@@ -381,7 +329,7 @@ class LaTeXCompiler:
         additional_files = {k: v for k, v in rendered_files.items() if k != 'main.tex'}
         
         # Compile to PDF
-        pdf_content = self.compile_pdf(latex_source, template_name, additional_files)
+        pdf_content = await self.compile_pdf(latex_source, template_name, additional_files)
         
         return pdf_content
 

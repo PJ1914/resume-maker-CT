@@ -12,6 +12,7 @@ import logging
 import json
 from pathlib import Path
 from datetime import timedelta
+from app.services.rate_limiter import costly_limiter, standard_limiter
 
 from app.dependencies import get_current_user
 from app.services.firestore import get_merged_resume_data
@@ -37,7 +38,7 @@ class ExportResponse(BaseModel):
     message: str
 
 
-@router.post("/{resume_id}/export", response_model=ExportResponse)
+@router.post("/{resume_id}/export", response_model=ExportResponse, dependencies=[Depends(costly_limiter)])
 async def export_resume_pdf(
     resume_id: str,
     request: ExportRequest,
@@ -122,7 +123,7 @@ async def export_resume_pdf(
         
         # Generate PDF
         try:
-            pdf_content = latex_compiler.generate_pdf(
+            pdf_content = await latex_compiler.generate_pdf(
                 resume_data=resume_data,
                 template_name=request.template
             )
@@ -236,7 +237,7 @@ async def download_resume_pdf(
             )
         
         # Generate PDF
-        pdf_content = latex_compiler.generate_pdf(
+        pdf_content = await latex_compiler.generate_pdf(
             resume_data=resume_data,
             template_name=template
         )
@@ -377,7 +378,7 @@ async def list_templates():
             detail=f"Failed to list templates: {str(e)}"
         )
 
-@router.get("/{resume_id}/preview/{template_name}")
+@router.get("/{resume_id}/preview/{template_name}", dependencies=[Depends(costly_limiter)])
 async def preview_resume_with_template(
     resume_id: str,
     template_name: str,
@@ -430,7 +431,7 @@ async def preview_resume_with_template(
             additional_files = {k: v for k, v in rendered_files.items() if k != 'main.tex'}
             
             # Compile to PDF
-            pdf_content = latex_compiler.compile_pdf(latex_source, template_name, additional_files)
+            pdf_content = await latex_compiler.compile_pdf(latex_source, template_name, additional_files)
         except Exception as e:
             import traceback
             logger.error(f"PDF generation failed for preview: {str(e)}")
@@ -491,7 +492,7 @@ async def preview_resume_with_template(
             additional_files = {k: v for k, v in rendered_files.items() if k != 'main.tex'}
             
             # Compile to PDF
-            pdf_content = latex_compiler.compile_pdf(latex_source, template_name, additional_files)
+            pdf_content = await latex_compiler.compile_pdf(latex_source, template_name, additional_files)
         except Exception as e:
             import traceback
             logger.error(f"PDF generation failed for preview: {str(e)}")
@@ -521,7 +522,7 @@ async def preview_resume_with_template(
             detail=f"Preview generation failed: {str(e)}"
         )
 
-@router.get("/template-preview/{template_name}")
+@router.get("/template-preview/{template_name}", dependencies=[Depends(standard_limiter)])
 async def preview_template(template_name: str):
     """
     Generate a preview PDF for a specific template.
@@ -672,7 +673,7 @@ async def preview_template(template_name: str):
         # Compile to PDF with error handling
         logger.info(f"Compiling preview for {template_name}")
         try:
-            pdf_content = latex_compiler.compile_pdf(latex_source, template_name, additional_files)
+            pdf_content = await latex_compiler.compile_pdf(latex_source, template_name, additional_files)
         except RuntimeError as e:
             logger.error(f"Failed to compile template {template_name}: {str(e)}")
             raise HTTPException(

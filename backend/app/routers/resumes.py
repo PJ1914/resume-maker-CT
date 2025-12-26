@@ -4,6 +4,8 @@ Resume upload and management endpoints.
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, UploadFile, File
 from datetime import datetime
 from typing import List
+from pathlib import Path
+from app.services.rate_limiter import strict_limiter
 from app.dependencies import get_current_user
 from app.schemas.resume import (
     UploadUrlRequest,
@@ -168,7 +170,7 @@ async def upload_callback(
     return {"message": "Upload confirmed, processing started", "resume_id": request.resume_id}
 
 
-@router.post("/upload-direct")
+@router.post("/upload-direct", dependencies=[Depends(strict_limiter)])
 async def upload_direct(
     file: UploadFile = File(...),
     background_tasks: BackgroundTasks = BackgroundTasks(),
@@ -180,24 +182,31 @@ async def upload_direct(
     This endpoint receives the file from the frontend and uploads it
     to Firebase Storage server-side, eliminating CORS complications.
     """
-    # Validate file type
+    # Validate file type by extension and content-type
+    allowed_extensions = {'.pdf', '.docx', '.doc', '.tex', '.txt'}
+    file_ext = Path(file.filename).suffix.lower() if file.filename else ''
+    
+    if file_ext not in allowed_extensions:
+         raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file extension. Allowed: {', '.join(allowed_extensions)}"
+        )
+
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_CONTENT_TYPES)}"
+            detail=f"Invalid content type. Allowed: {', '.join(ALLOWED_CONTENT_TYPES)}"
         )
     
-    # Read file content
-    try:
-        content = await file.read()
-        file_size = len(content)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to read file: {str(e)}"
-        )
-    
-    # Validate file size
+    # Check file size without reading entirely into memory if possible
+    # Starlette's UploadFile doesn't expose size until read/spooled.
+    # We will rely on stream uploading, but we should check size if we can. 
+    # For now, we'll check it after upload or trust the stream limit if we had one.
+    # Actually, let's seek to end to get size, then seek back.
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -223,22 +232,32 @@ async def upload_direct(
     resume_id = generate_resume_id()
     storage_path = get_storage_path(user_id, resume_id, file.filename or "resume.pdf")
     
-    # Upload to Firebase Storage
-    try:
-        from app.firebase import resume_maker_app
-        from firebase_admin import storage
-        
-        bucket = storage.bucket(app=resume_maker_app)
-        blob = bucket.blob(storage_path)
-        blob.upload_from_string(
-            content,
-            content_type=file.content_type
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload file: {str(e)}"
-        )
+    # Upload to Firebase Storage (Async Wrapper)
+    import asyncio
+    loop = asyncio.get_running_loop()
+
+    def _upload_sync():
+        try:
+            from app.firebase import resume_maker_app
+            from firebase_admin import storage
+            
+            bucket = storage.bucket(app=resume_maker_app)
+            blob = bucket.blob(storage_path)
+            
+            # Use upload_from_file to stream directly
+            blob.upload_from_file(
+                file.file,
+                content_type=file.content_type,
+                size=file_size # strict checking by GCS
+            )
+        except Exception as e:
+            logger.error(f"Firebase upload failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to upload file: {str(e)}"
+            )
+
+    await loop.run_in_executor(None, _upload_sync)
     
     # Create metadata
     metadata = ResumeMetadata(
