@@ -47,6 +47,7 @@ class LaTeXCompiler:
         # Register filters
         self.jinja_env.filters['escape_tex'] = self.escape_latex
         self.jinja_env.filters['escape_tex_def'] = self.escape_latex_for_def
+        self.jinja_env.filters['escape_url'] = self.escape_url
     
     def escape_latex(self, s: Any) -> str:
         """
@@ -94,6 +95,21 @@ class LaTeXCompiler:
                      .replace('}', '\\}') \
                      .replace('~', '\\textasciitilde') \
                      .replace('^', '\\textasciicircum')
+
+    def escape_url(self, s: Any) -> str:
+        """
+        Escape URL for LaTeX - wraps in url command.
+        The url package handles special characters automatically.
+        
+        Args:
+            s: URL string
+            
+        Returns:
+            URL wrapped in url command
+        """
+        if not s:
+            return ""
+        return "\\url{" + str(s) + "}"
 
     def render_template(
         self,
