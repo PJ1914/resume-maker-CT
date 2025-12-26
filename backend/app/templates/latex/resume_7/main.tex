@@ -37,7 +37,6 @@
 \BLOCK{ if edu.gpa }
 \\ CGPA: \VAR{edu.gpa|escape_tex}
 \BLOCK{ endif }
-\smallskip \\
 \BLOCK{ endfor }
 
 \end{rSection} 
@@ -120,9 +119,9 @@
 
 \BLOCK{ if certifications and certifications|length > 0 }
 \begin{rSection}{Certifications}
-\begin{itemize}
+\begin{itemize}\itemsep-0.3em
     \BLOCK{ for cert in certifications }
-    \item {\bf \VAR{cert.name|escape_tex}} - \VAR{cert.issuer|escape_tex} \hfill {\em \VAR{cert.date|escape_tex}}
+    \item {\bf \VAR{cert.name|escape_tex}}\BLOCK{ if cert.issuer } - \VAR{cert.issuer|escape_tex}\BLOCK{ endif } \hfill {\em \VAR{cert.date|escape_tex}}
     \BLOCK{ endfor }
 \end{itemize}
 \end{rSection}
@@ -134,7 +133,7 @@
 
 \BLOCK{ if languages and languages|length > 0 }
 \begin{rSection}{Languages}
-\begin{itemize}
+\begin{itemize}\itemsep-0.3em
     \BLOCK{ for lang in languages }
     \item {\bf \VAR{lang.language|escape_tex}}: \VAR{lang.proficiency|escape_tex}
     \BLOCK{ endfor }
@@ -148,12 +147,9 @@
 
 \BLOCK{ if achievements and achievements|length > 0 }
 \begin{rSection}{Achievements} 
-\begin{itemize}
+\begin{itemize}\itemsep-0.3em
     \BLOCK{ for ach in achievements }
-    \item {\bf \VAR{ach.title|escape_tex}} \hfill {\em \VAR{ach.date|escape_tex}}
-    \BLOCK{ if ach.description }
-    \\ \VAR{ach.description|escape_tex}
-    \BLOCK{ endif }
+    \item {\bf \VAR{ach.title|escape_tex}}\BLOCK{ if ach.description } -- \VAR{ach.description|escape_tex}\BLOCK{ endif } \hfill {\em \VAR{ach.date|escape_tex}}
     \BLOCK{ endfor }
 \end{itemize}
 \end{rSection}
