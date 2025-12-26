@@ -30,28 +30,28 @@
 
 % Section formatting
 \titleformat{\section}{
-  \vspace{6pt}\scshape\raggedright\large
-}{}{0em}{}[\color{primaryColor}\titlerule \vspace{-4pt}]
+  \vspace{2pt}\scshape\raggedright\large
+}{}{0em}{}[\color{primaryColor}\titlerule \vspace{-6pt}]
 
 % ATS-Friendly Subheading commands
 \newcommand{\resumeSubheading}[4]{
   \item
     \textbf{#1} \hfill {\color{secondaryColor}\small #4} \\
     \textit{\small#3} \hfill {\color{secondaryColor}\small #2}
-    \vspace{2pt}
+    \vspace{-2pt}
 }
 
 \newcommand{\resumeProject}[3]{
   \item
     \textbf{#1} \hfill {\color{secondaryColor}\small #3} \\
     \textit{\small#2}
-    \vspace{2pt}
+    \vspace{-2pt}
 }
 
 \renewcommand{\labelitemi}{$\vcenter{\hbox{\tiny$\bullet$}}$}
-\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=12pt, itemsep=0pt, topsep=2pt, parsep=2pt]}
-\newcommand{\resumeItemListEnd}{\end{itemize}}
-\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0pt, itemsep=8pt, topsep=4pt]}
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=12pt, itemsep=0pt, topsep=0pt, parsep=0pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-4pt}}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0pt, itemsep=2pt, topsep=0pt, parsep=0pt]}
 \newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
 
 % Font
@@ -179,8 +179,7 @@
 \section{Achievements}
 \resumeSubHeadingListStart
     \BLOCK{ for ach in achievements }
-    \item \textbf{\VAR{ach.title|escape_tex}} \hfill {\color{secondaryColor}\small \VAR{ach.date|escape_tex}} \\
-    \textit{\small \VAR{ach.description|escape_tex}}
+    \item \textbf{\VAR{ach.title|escape_tex}}\BLOCK{ if ach.description } -- \textit{\small \VAR{ach.description|escape_tex}}\BLOCK{ endif } \hfill {\color{secondaryColor}\small \VAR{ach.date|escape_tex}}
     \BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }
