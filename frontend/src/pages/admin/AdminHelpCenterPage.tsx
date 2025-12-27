@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Edit2, Trash2, Search, Save, X, ChevronDown, ChevronRight, FileText, Folder } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { adminService } from '@/services/admin.service'
 
 interface Category {
@@ -295,7 +296,7 @@ export default function AdminHelpCenterPage() {
                                             placeholder="# Article Content..."
                                         />
                                         <div className="hidden md:block h-full bg-zinc-900 border border-white/10 rounded-lg p-4 overflow-y-auto prose prose-invert max-w-none">
-                                            <ReactMarkdown>{formData.content}</ReactMarkdown>
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{formData.content}</ReactMarkdown>
                                         </div>
                                     </div>
                                 </div>

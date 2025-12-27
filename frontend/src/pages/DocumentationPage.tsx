@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Book, ChevronRight, Menu, Search, X,
@@ -307,7 +308,7 @@ export default function DocumentationPage() {
                             </div>
 
 
-                            <ReactMarkdown>{article.content}</ReactMarkdown>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.content}</ReactMarkdown>
 
                             <div className="mt-12 pt-6 border-t border-gray-200 dark:border-white/10 text-sm text-gray-500 flex justify-between items-center">
                                 <span>Last updated: {article.updatedAt ? new Date(article.updatedAt).toLocaleDateString() : 'Recently'}</span>
