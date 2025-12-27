@@ -96,7 +96,7 @@ Prativeda is an all-in-one career platform that helps job seekers, students, and
     *   **GitHub** (Auto-imports projects)
     *   Email/Password
 
-> **Tip:** New users receive **10 free credits** immediately upon signup to explore all features."""
+> **Tip:** New users receive **10 free monthly credits** immediately upon signup to explore all features."""
         },
         {
             "slug": "complete-profile",
@@ -140,7 +140,7 @@ Upload your existing resume (PDF/DOCX), and our AI extracts all information auto
 *   Word Documents (.doc, .docx)
 *   Text files (.txt)
 
-**Cost:** 1 credit per upload"""
+**Cost:** 1 credit (AI Parsing)"""
         },
         {
             "slug": "real-time-ats-scoring",
@@ -206,7 +206,7 @@ See changes instantly as you type in a side-by-side view.
 *   Click **"AI Suggest"** on any bullet point
 *   Get professionally rewritten content
 *   Improved action verbs and impact
-*   **Cost:** 1 credit per enhancement
+*   **Cost:** 3 credits per enhancement
 
 ### Section Management
 Add/remove/reorder sections dynamically:
@@ -348,8 +348,8 @@ Transform your resume into a stunning personal website in one click.
             "content": """# Credit System & Pricing
 
 Prativeda uses a **pay-as-you-go** credit system.
-*   **10 Free Credits** on sign up.
-*   **Credits NEVER expire.**
+*   **10 Free Monthly Credits** for all users.
+*   **Purchased Credits NEVER expire.** Free credits reset monthly.
 
 ### Credit Packs
 
@@ -365,8 +365,8 @@ Prativeda uses a **pay-as-you-go** credit system.
 | Action | Cost |
 | :--- | :--- |
 | **Upload Resume** | 1 credit |
-| **AI Enhancement (Bullet)** | 1 credit |
-| **Export PDF** | 3 credits |
+| **AI Enhancement (Bullet)** | 3 credits |
+| **Export PDF** | 2 credits |
 | **ATS Check** | 5 credits |
 | **Interview Session** | 5 credits |
 | **Deploy Portfolio (GitHub)** | 3 credits |"""

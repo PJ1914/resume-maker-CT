@@ -33,6 +33,7 @@ import PortfolioMarketingPage from '../pages/PortfolioMarketingPage'
 import CoverLetterTipsPage from '../pages/CoverLetterTipsPage'
 import CareerBlogPage from '../pages/CareerBlogPage'
 import HelpCenterPage from '../pages/HelpCenterPage'
+import DocumentationPage from '../pages/DocumentationPage'
 
 // Admin Components
 import AdminGuard from '../components/admin/AdminGuard'
@@ -47,6 +48,7 @@ import PortfoliosPage from '../pages/admin/PortfoliosPage'
 import PaymentsPage from '../pages/admin/PaymentsPage'
 import AIMonitoringPage from '../pages/admin/AIMonitoringPage'
 import AnnouncementsPage from '../pages/admin/AnnouncementsPage'
+import AdminHelpCenterPage from '../pages/admin/AdminHelpCenterPage'
 import SettingsPage from '../pages/admin/SettingsPage'
 
 export default function AppRoutes() {
@@ -232,6 +234,7 @@ export default function AppRoutes() {
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="ai" element={<AIMonitoringPage />} />
           <Route path="announcements" element={<AnnouncementsPage />} />
+          <Route path="docs" element={<AdminHelpCenterPage />} />
           <Route path="support" element={<div className="p-8">Support Tickets (Coming Soon)</div>} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
@@ -246,6 +249,7 @@ export default function AppRoutes() {
       <Route path="/cover-letter-tips" element={<CoverLetterTipsPage />} />
       <Route path="/career-blog" element={<CareerBlogPage />} />
       <Route path="/help" element={<HelpCenterPage />} />
+      <Route path="/documentation" element={<DocumentationPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
