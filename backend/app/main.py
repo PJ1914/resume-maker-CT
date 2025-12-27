@@ -12,7 +12,7 @@ from app.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("resume_maker")
 # Router registration - includes testimonials endpoint v9 - robust stats
-from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, credits, payments, admin, portfolio, contact, interview
+from app.routers import auth, users, resumes, scoring, ai, pdf_export, templates, credits, payments, admin, portfolio, contact, interview, help
 
 # Print startup info
 logger.info("Resume Maker API - Starting...")
@@ -81,6 +81,7 @@ app.include_router(admin.router, prefix="/api", tags=["Admin"])
 app.include_router(portfolio.router, prefix="/api", tags=["Portfolio"])
 app.include_router(contact.router, prefix="/api", tags=["Contact"])
 app.include_router(interview.router, tags=["Interview Prep"])
+app.include_router(help.router, prefix="/api", tags=["Help Center"])
 
 @app.get("/")
 async def root():
