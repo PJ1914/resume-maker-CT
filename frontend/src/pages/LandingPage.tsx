@@ -236,7 +236,7 @@ export default function LandingPage() {
       <SEO
         title="Prativeda – AI Resume Builder | ATS-Optimized Resumes"
         description="Create ATS-optimized resumes with AI analysis. Get higher ATS scores, pass screening, land more interviews. Free templates + intelligent parsing."
-        keywords="resume builder, ATS scoring, AI resume, job application, resume optimization"
+        keywords="resume builder, ATS scoring, AI resume, job application, resume optimization, free resume maker, CV builder, best resume templates, ATS friendly resume, online resume creator, professional CV, resume download"
         url="https://prativeda.codetapasya.com"
       />
       <HomeSchema />

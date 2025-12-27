@@ -17,7 +17,7 @@ const DEFAULTS = {
   url: 'https://prativeda.codetapasya.com',
   image: 'https://prativeda.codetapasya.com/og-resume.jpg',
   keywords:
-    'resume maker, ATS resume, AI resume, free resume builder, resume templates, resume optimization, job application, career tools',
+    'resume maker, ATS resume, AI resume, free resume builder, resume templates, resume optimization, job application, career tools, best resume builder, online resume maker, CV maker, resume format, resume examples, professional resume, download resume, PDF resume',
   canonical: 'https://prativeda.codetapasya.com',
 }
 

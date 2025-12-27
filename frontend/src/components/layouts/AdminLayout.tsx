@@ -14,7 +14,8 @@ import {
     BarChart3,
     Megaphone,
     HelpCircle,
-    Globe
+    Globe,
+    BookOpen
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -47,6 +48,7 @@ export default function AdminLayout() {
         { name: 'Credits & Payments', href: '/admin/payments', icon: CreditCard },
         { name: 'AI Monitoring', href: '/admin/ai', icon: BarChart3 },
         { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
+        { name: 'Documentation', href: '/admin/docs', icon: BookOpen },
         { name: 'Support', href: '/admin/support', icon: HelpCircle },
         { name: 'Settings', href: '/admin/settings', icon: Settings },
     ]
@@ -57,7 +59,7 @@ export default function AdminLayout() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white flex font-sans">
+        <div className="h-screen overflow-hidden bg-black text-white flex font-sans">
             {/* Sidebar Overlay for Mobile */}
             <AnimatePresence>
                 {isSidebarOpen && (

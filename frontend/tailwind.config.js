@@ -147,6 +147,7 @@ export default {
     },
   },
   plugins: [
+    require('@tailwindcss/typography'),
     function ({ addUtilities }) {
       addUtilities({
         '.transform-style-3d': {

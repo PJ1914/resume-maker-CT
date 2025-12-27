@@ -1,4 +1,4 @@
- import axios from 'axios'
+import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -155,16 +155,16 @@ export const adminService = {
     }) => {
         const token = localStorage.getItem('authToken')
         const formData = new FormData()
-        
+
         if (files.indexHtml) formData.append('index_html', files.indexHtml)
         if (files.stylesCss) formData.append('styles_css', files.stylesCss)
         if (files.scriptJs) formData.append('script_js', files.scriptJs)
         if (files.metadataJson) formData.append('metadata_json', files.metadataJson)
         if (files.previewHtml) formData.append('preview_html', files.previewHtml)
         if (files.readmeMd) formData.append('readme_md', files.readmeMd)
-        
+
         const response = await axios.post(`${API_URL}/api/admin/templates/${templateId}/upload`, formData, {
-            headers: { 
+            headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data'
             }
@@ -257,6 +257,32 @@ export const adminService = {
     updateSettings: async (data: any) => {
         const token = localStorage.getItem('authToken')
         const response = await axios.put(`${API_URL}/api/admin/settings`, data, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        return response.data
+    },
+
+    getHelpStructure: async () => {
+        const response = await axios.get(`${API_URL}/api/help/structure`)
+        return response.data
+    },
+
+    getHelpArticle: async (slug: string) => {
+        const response = await axios.get(`${API_URL}/api/help/article/${slug}`)
+        return response.data
+    },
+
+    saveHelpArticle: async (data: any) => {
+        const token = localStorage.getItem('authToken')
+        const response = await axios.post(`${API_URL}/api/help/article`, data, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        return response.data
+    },
+
+    deleteHelpArticle: async (slug: string) => {
+        const token = localStorage.getItem('authToken')
+        const response = await axios.delete(`${API_URL}/api/help/article/${slug}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         return response.data

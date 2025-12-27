@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, Image as ImageIcon, Trash2, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { auth } from '../lib/firebase';
+import { API_URL } from '../config/firebase';
 
 interface PortfolioImageUploadModalProps {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export const PortfolioImageUploadModal: React.FC<PortfolioImageUploadModalProps>
     }
 
     setProfilePhoto(file);
-    
+
     // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -69,7 +70,7 @@ export const PortfolioImageUploadModal: React.FC<PortfolioImageUploadModalProps>
     }
 
     setProjectImages(prev => ({ ...prev, [projectId]: file }));
-    
+
     // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -98,7 +99,7 @@ export const PortfolioImageUploadModal: React.FC<PortfolioImageUploadModalProps>
 
   const handleUploadAndContinue = async () => {
     setUploading(true);
-    
+
     try {
       const uploadedImages: {
         profilePhoto: string | null;
@@ -114,7 +115,7 @@ export const PortfolioImageUploadModal: React.FC<PortfolioImageUploadModalProps>
         formData.append('file', profilePhoto);
         formData.append('type', 'profile');
 
-        const response = await fetch('/api/portfolio/upload-image', {
+        const response = await fetch(`${API_URL}/api/portfolio/upload-image`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`
@@ -134,7 +135,7 @@ export const PortfolioImageUploadModal: React.FC<PortfolioImageUploadModalProps>
         formData.append('type', 'project');
         formData.append('project_id', projectId);
 
-        const response = await fetch('/api/portfolio/upload-image', {
+        const response = await fetch(`${API_URL}/api/portfolio/upload-image`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`
@@ -207,13 +208,13 @@ export const PortfolioImageUploadModal: React.FC<PortfolioImageUploadModalProps>
           {/* Content */}
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
             <div className="space-y-8">
-              
+
               {/* Profile Photo Upload */}
               <div>
                 <label className="block text-sm font-semibold text-secondary-900 dark:text-white mb-3">
                   Profile Photo
                 </label>
-                
+
                 {profilePhotoPreview ? (
                   <div className="relative inline-block">
                     <img
@@ -256,12 +257,12 @@ export const PortfolioImageUploadModal: React.FC<PortfolioImageUploadModalProps>
                   <p className="text-xs text-secondary-500 dark:text-secondary-400 mb-4">
                     Add images to showcase your projects
                   </p>
-                  
+
                   <div className="space-y-4">
                     {projects.map((project, index) => {
                       const projectId = project.id || `project-${index}`;
                       const preview = projectImagePreviews[projectId];
-                      
+
                       return (
                         <div
                           key={projectId}
@@ -272,7 +273,7 @@ export const PortfolioImageUploadModal: React.FC<PortfolioImageUploadModalProps>
                               <h4 className="font-medium text-secondary-900 dark:text-white mb-2">
                                 {project.name}
                               </h4>
-                              
+
                               {preview ? (
                                 <div className="relative inline-block">
                                   <img

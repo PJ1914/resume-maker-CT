@@ -31,77 +31,73 @@ class GitHubDeployService:
         custom_domain: str = None
     ) -> Dict[str, Any]:
         """
-        Deploy portfolio to GitHub Pages
-        
-        Args:
-            user_id: Firebase user ID
-            session_id: Portfolio session ID
-            repo_name: Name for the GitHub repository
-            zip_url: URL to the portfolio ZIP file
-            github_token: GitHub Personal Access Token
-        
-        Returns:
-            Dict with repo_url, url (pages url), and status
+        Deploy portfolio to GitHub Pages (Async wrapper)
         """
-        try:
-            # Get GitHub username
-            username = self._get_github_username(github_token)
-            logger.info(f"🐙 Deploying for GitHub user: {username}")
-            
-            # Create repository
-            repo_full_name = self._create_repository(
-                username=username,
-                repo_name=repo_name,
-                github_token=github_token
-            )
-            logger.info(f"✅ Repository created: {repo_full_name}")
-            
-            # Download and extract ZIP
-            files_content = self._download_and_extract_zip(zip_url)
-            logger.info(f"📦 Extracted {len(files_content)} files from ZIP")
-            
-            # Upload files to repository
-            self._upload_files_to_repo(
-                repo_full_name=repo_full_name,
-                files_content=files_content,
-                github_token=github_token
-            )
-            logger.info(f"📤 Uploaded {len(files_content)} files to repository")
-            
-            # Enable GitHub Pages
-            pages_url = self._enable_github_pages(
-                repo_full_name=repo_full_name,
-                github_token=github_token
-            )
-            logger.info(f"🌐 GitHub Pages enabled: {pages_url}")
-            
-            # Create CNAME file if custom domain provided
-            dns_instructions = None
-            if custom_domain:
-                try:
-                    self._create_cname_file(repo_full_name, custom_domain, github_token)
-                    logger.info(f"✅ CNAME file created for: {custom_domain}")
-                    dns_instructions = self._get_dns_instructions(custom_domain, username, repo_name)
-                except Exception as cname_error:
-                    logger.warning(f"⚠️ Failed to create CNAME: {cname_error}")
-            
-            result = {
-                "repo_url": f"https://github.com/{repo_full_name}",
-                "url": pages_url,
-                "status": "deployed",
-                "message": f"Portfolio deployed successfully! GitHub Pages may take 1-2 minutes to become available."
-            }
-            
-            if dns_instructions:
-                result["custom_domain"] = custom_domain
-                result["dns_instructions"] = dns_instructions
-                result["message"] += f" CNAME file created for {custom_domain}. Please configure DNS settings."
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"❌ Deployment failed: {str(e)}")
-            raise Exception(f"Deployment failed: {str(e)}")
+        import asyncio
+        loop = asyncio.get_running_loop()
+        
+        def _deploy_sync():
+            try:
+                # Get GitHub username
+                username = self._get_github_username(github_token)
+                logger.info(f"🐙 Deploying for GitHub user: {username}")
+                
+                # Create repository
+                repo_full_name = self._create_repository(
+                    username=username,
+                    repo_name=repo_name,
+                    github_token=github_token
+                )
+                logger.info(f"✅ Repository created: {repo_full_name}")
+                
+                # Download and extract ZIP
+                files_content = self._download_and_extract_zip(zip_url)
+                logger.info(f"📦 Extracted {len(files_content)} files from ZIP")
+                
+                # Upload files to repository
+                self._upload_files_to_repo(
+                    repo_full_name=repo_full_name,
+                    files_content=files_content,
+                    github_token=github_token
+                )
+                logger.info(f"📤 Uploaded {len(files_content)} files to repository")
+                
+                # Enable GitHub Pages
+                pages_url = self._enable_github_pages(
+                    repo_full_name=repo_full_name,
+                    github_token=github_token
+                )
+                logger.info(f"🌐 GitHub Pages enabled: {pages_url}")
+                
+                # Create CNAME file if custom domain provided
+                dns_instructions = None
+                if custom_domain:
+                    try:
+                        self._create_cname_file(repo_full_name, custom_domain, github_token)
+                        logger.info(f"✅ CNAME file created for: {custom_domain}")
+                        dns_instructions = self._get_dns_instructions(custom_domain, username, repo_name)
+                    except Exception as cname_error:
+                        logger.warning(f"⚠️ Failed to create CNAME: {cname_error}")
+                
+                result = {
+                    "repo_url": f"https://github.com/{repo_full_name}",
+                    "url": pages_url,
+                    "status": "deployed",
+                    "message": f"Portfolio deployed successfully! GitHub Pages may take 1-2 minutes to become available."
+                }
+                
+                if dns_instructions:
+                    result["custom_domain"] = custom_domain
+                    result["dns_instructions"] = dns_instructions
+                    result["message"] += f" CNAME file created for {custom_domain}. Please configure DNS settings."
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"❌ Deployment failed: {str(e)}")
+                raise Exception(f"Deployment failed: {str(e)}")
+
+        return await loop.run_in_executor(None, _deploy_sync)
     
     def _get_github_username(self, github_token: str) -> str:
         """Get GitHub username from token"""

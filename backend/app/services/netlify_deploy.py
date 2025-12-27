@@ -30,76 +30,73 @@ class NetlifyDeployService:
         custom_domain: str = None
     ) -> Dict[str, Any]:
         """
-        Deploy portfolio to Netlify using PAT
-        
-        Args:
-            user_id: Firebase user ID
-            session_id: Portfolio session ID
-            site_name: Name for the Netlify site
-            zip_url: URL to the portfolio ZIP file
-            netlify_token: Netlify Personal Access Token
-        
-        Returns:
-            Dict with url, status, and deployment info
+        Deploy portfolio to Netlify (Async wrapper)
         """
-        try:
-            # Verify token and get user info
-            user_info = self._get_user_info(netlify_token)
-            username = user_info.get('slug') or user_info.get('email', 'user')
-            logger.info(f"🚀 Deploying to Netlify for user: {username}")
-            
-            # Download ZIP file
-            zip_path = self._download_zip(zip_url)
-            logger.info(f"📦 Downloaded ZIP file")
-            
-            # Create or get site
-            site = self._create_or_get_site(site_name, netlify_token)
-            site_id = site['id']
-            site_url = site.get('ssl_url') or site.get('url')
-            
-            logger.info(f"📍 Deploying to site: {site_id}")
-            
-            # Deploy ZIP to site
-            deployment = self._deploy_zip(
-                site_id=site_id,
-                zip_path=zip_path,
-                netlify_token=netlify_token
-            )
-            
-            # Clean up temp file
-            os.unlink(zip_path)
-            
-            deploy_url = deployment.get('ssl_url') or deployment.get('deploy_ssl_url') or site_url
-            
-            # Configure custom domain if provided
-            domain_configured = False
-            if custom_domain:
-                try:
-                    self._add_domain(site_id, custom_domain, netlify_token)
-                    domain_configured = True
-                    logger.info(f"✅ Custom domain configured: {custom_domain}")
-                except Exception as domain_error:
-                    logger.warning(f"⚠️ Failed to configure domain: {domain_error}")
-            
-            logger.info(f"✅ Netlify deployment successful: {deploy_url}")
-            
-            result = {
-                "url": deploy_url,
-                "status": "deployed",
-                "site_id": site_id,
-                "deployment_id": deployment.get('id'),
-                "message": f"Portfolio deployed successfully to Netlify! May take 1-2 minutes to become available."
-            }
-            
-            if domain_configured:
-                result["custom_domain"] = custom_domain
-                result["message"] += f" Custom domain {custom_domain} has been configured."
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"❌ Netlify deployment failed: {str(e)}")
-            raise Exception(f"Netlify deployment failed: {str(e)}")
+        import asyncio
+        loop = asyncio.get_running_loop()
+        
+        def _deploy_sync():
+            try:
+                # Verify token and get user info
+                user_info = self._get_user_info(netlify_token)
+                username = user_info.get('slug') or user_info.get('email', 'user')
+                logger.info(f"🚀 Deploying to Netlify for user: {username}")
+                
+                # Download ZIP file
+                zip_path = self._download_zip(zip_url)
+                logger.info(f"📦 Downloaded ZIP file")
+                
+                # Create or get site
+                site = self._create_or_get_site(site_name, netlify_token)
+                site_id = site['id']
+                site_url = site.get('ssl_url') or site.get('url')
+                
+                logger.info(f"📍 Deploying to site: {site_id}")
+                
+                # Deploy ZIP to site
+                deployment = self._deploy_zip(
+                    site_id=site_id,
+                    zip_path=zip_path,
+                    netlify_token=netlify_token
+                )
+                
+                # Clean up temp file
+                if os.path.exists(zip_path):
+                    os.unlink(zip_path)
+                
+                deploy_url = deployment.get('ssl_url') or deployment.get('deploy_ssl_url') or site_url
+                
+                # Configure custom domain if provided
+                domain_configured = False
+                if custom_domain:
+                    try:
+                        self._add_domain(site_id, custom_domain, netlify_token)
+                        domain_configured = True
+                        logger.info(f"✅ Custom domain configured: {custom_domain}")
+                    except Exception as domain_error:
+                        logger.warning(f"⚠️ Failed to configure domain: {domain_error}")
+                
+                logger.info(f"✅ Netlify deployment successful: {deploy_url}")
+                
+                result = {
+                    "url": deploy_url,
+                    "status": "deployed",
+                    "site_id": site_id,
+                    "deployment_id": deployment.get('id'),
+                    "message": f"Portfolio deployed successfully to Netlify! May take 1-2 minutes to become available."
+                }
+                
+                if domain_configured:
+                    result["custom_domain"] = custom_domain
+                    result["message"] += f" Custom domain {custom_domain} has been configured."
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"❌ Netlify deployment failed: {str(e)}")
+                raise Exception(f"Netlify deployment failed: {str(e)}")
+
+        return await loop.run_in_executor(None, _deploy_sync)
     
     def _get_user_info(self, netlify_token: str) -> Dict[str, Any]:
         """Get Netlify user information to verify token"""
