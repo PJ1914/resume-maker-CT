@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const token = await user.getIdToken()
           localStorage.setItem('authToken', token)
-          console.log('[AUTH] Stored Firebase ID token in localStorage')
+
 
           // Fetch user profile to get admin status (non-blocking with timeout)
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -57,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (response.ok) {
               const profile = await response.json()
               setIsAdmin(profile.isAdmin || false)
-              console.log('[AUTH] User admin status:', profile.isAdmin)
             } else {
               console.warn('[AUTH] /me endpoint returned status:', response.status)
               setIsAdmin(false)
@@ -129,15 +128,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider.setCustomParameters({
         allow_signup: 'true'
       })
-      
+
       const result = await signInWithPopup(auth, provider)
       const token = await result.user.getIdToken()
       localStorage.setItem('authToken', token)
-      
+
       // Get GitHub OAuth access token from credential
       const credential = GithubAuthProvider.credentialFromResult(result)
       const githubAccessToken = credential?.accessToken
-      
+
       if (githubAccessToken) {
         // Send GitHub token to backend to store in resume-maker Firestore
         try {
@@ -155,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               photo_url: result.user.photoURL
             })
           })
-          
+
           if (response.ok) {
             console.log('[AUTH] GitHub token stored in backend')
           } else {
@@ -166,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Don't fail the sign-in if token storage fails
         }
       }
-      
+
       console.log('[AUTH] Stored token after GitHub sign in')
       toast.success('Successfully signed in with GitHub!')
     } catch (error: any) {

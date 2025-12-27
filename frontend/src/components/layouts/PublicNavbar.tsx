@@ -1,15 +1,24 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { FileText, User, LogOut, ChevronDown, CheckCircle, Zap, Layout, Mic, Users, MessageSquare, PenTool, BookOpen, HelpCircle } from 'lucide-react'
+import { FileText, User, LogOut, ChevronDown, CheckCircle, Zap, Layout, Mic, Users, MessageSquare, PenTool, BookOpen, HelpCircle, Menu, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import toast from 'react-hot-toast'
 
-export function PublicNavbar() {
+export function PublicNavbar({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) {
     const navigate = useNavigate()
     const { user, signOut } = useAuth()
     const [hoveredProduct, setHoveredProduct] = useState(false)
     const [hoveredResources, setHoveredResources] = useState(false)
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+    const handleMenuClick = () => {
+        if (onMobileMenuClick) {
+            onMobileMenuClick()
+        } else {
+            setMobileMenuOpen(true)
+        }
+    }
 
     return (
         <motion.nav
@@ -18,15 +27,22 @@ export function PublicNavbar() {
             transition={{ duration: 0.6 }}
             className="fixed top-0 w-full bg-white/80 dark:bg-black/80 backdrop-blur-2xl z-50 border-b border-secondary-200 dark:border-white/10 overflow-visible transition-colors"
         >
-            <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-4 max-w-7xl flex items-center justify-between relative">
-                <div className="flex items-center gap-8 md:gap-12">
+            <div className="container mx-auto px-5 sm:px-7 py-4 sm:py-3 max-w-7xl flex items-center justify-between relative">
+                <div className="flex items-center gap-2 md:gap-12">
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        className="md:hidden p-1 text-secondary-900 dark:text-white hover:bg-secondary-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                        onClick={handleMenuClick}
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
                     <motion.div
                         whileHover={{ scale: 1.05 }}
                         onClick={() => navigate('/')}
                         className="flex items-center gap-1.5 sm:gap-3 cursor-pointer"
                     >
-                        <div className="relative h-7 w-7 sm:h-10 sm:w-10 bg-secondary-900 dark:bg-white rounded-lg flex items-center justify-center group text-white dark:text-black">
-                            <FileText className="h-4 w-4 sm:h-6 sm:w-6 relative z-10" />
+                        <div className="relative h-8 w-8 sm:h-8 sm:w-8 bg-secondary-900 dark:bg-white rounded-lg flex items-center justify-center group text-white dark:text-black">
+                            <FileText className="h-5 w-5 sm:h-5 sm:w-5 relative z-10" />
                         </div>
                         <span className="text-base sm:text-xl font-bold tracking-tight text-secondary-900 dark:text-white">
                             prativeda
@@ -166,7 +182,7 @@ export function PublicNavbar() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => navigate('/dashboard')}
-                                className="flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-2 hover:bg-secondary-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                className="flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-1.5 hover:bg-secondary-100 dark:hover:bg-white/10 rounded-lg transition-colors"
                                 title={user.email || 'Dashboard'}
                             >
                                 {user.photoURL ? (
@@ -211,7 +227,7 @@ export function PublicNavbar() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => navigate('/login')}
-                                className="px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-base text-secondary-600 dark:text-white/70 hover:text-secondary-900 dark:hover:text-white font-medium transition-colors"
+                                className="px-2 py-1.5 sm:px-4 sm:py-1.5 text-xs sm:text-base text-secondary-600 dark:text-white/70 hover:text-secondary-900 dark:hover:text-white font-medium transition-colors"
                             >
                                 Sign In
                             </motion.button>
@@ -219,7 +235,7 @@ export function PublicNavbar() {
                                 whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255,255,255,0.3)' }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => navigate('/login')}
-                                className="relative px-3 py-1.5 sm:px-6 sm:py-2.5 bg-secondary-900 dark:bg-white text-white dark:text-black rounded-lg font-semibold overflow-hidden group text-xs sm:text-base"
+                                className="relative px-3 py-2 sm:px-6 sm:py-2 bg-secondary-900 dark:bg-white text-white dark:text-black rounded-lg font-semibold overflow-hidden group text-xs sm:text-base"
                             >
                                 <div className="absolute inset-0 bg-secondary-800 dark:bg-white blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
                                 <span className="relative z-10">Get Started</span>
@@ -228,6 +244,76 @@ export function PublicNavbar() {
                     )}
                 </div>
             </div>
+
+            {/* Mobile Menu Drawer */}
+            <AnimatePresence>
+                {mobileMenuOpen && !onMobileMenuClick && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="fixed inset-0 bg-black/60 z-[60] md:hidden"
+                        />
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                            className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-black border-l border-secondary-200 dark:border-white/10 shadow-2xl z-[70] p-6 overflow-y-auto md:hidden"
+                        >
+                            <div className="flex items-center justify-between mb-8">
+                                <span className="text-xl font-bold text-secondary-900 dark:text-white">Menu</span>
+                                <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-secondary-100 dark:hover:bg-white/10 rounded-full transition-colors">
+                                    <X className="w-6 h-6 text-secondary-900 dark:text-white" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-8">
+                                <div>
+                                    <div className="font-bold text-sm text-secondary-400 dark:text-white/40 uppercase tracking-wider mb-4">Products</div>
+                                    <div className="space-y-3">
+                                        <button onClick={() => { navigate('/resume/create'); setMobileMenuOpen(false) }} className="flex items-center gap-3 text-secondary-700 dark:text-white/80 font-medium">
+                                            <FileText className="w-5 h-5" /> Resume Builder
+                                        </button>
+                                        <button onClick={() => { navigate('/ats-checker'); setMobileMenuOpen(false) }} className="flex items-center gap-3 text-secondary-700 dark:text-white/80 font-medium">
+                                            <CheckCircle className="w-5 h-5" /> ATS Checker
+                                        </button>
+                                        <button onClick={() => { navigate('/product/interview-prep'); setMobileMenuOpen(false) }} className="flex items-center gap-3 text-secondary-700 dark:text-white/80 font-medium">
+                                            <Mic className="w-5 h-5" /> Interview Prep
+                                        </button>
+                                        <button onClick={() => { navigate('/product/portfolio'); setMobileMenuOpen(false) }} className="flex items-center gap-3 text-secondary-700 dark:text-white/80 font-medium">
+                                            <Layout className="w-5 h-5" /> Portfolio Builder
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="font-bold text-sm text-secondary-400 dark:text-white/40 uppercase tracking-wider mb-4">Resources</div>
+                                    <div className="space-y-3">
+                                        <button onClick={() => { navigate('/features'); setMobileMenuOpen(false) }} className="flex items-center gap-3 text-secondary-700 dark:text-white/80 font-medium">
+                                            <Zap className="w-5 h-5" /> Features
+                                        </button>
+                                        <button onClick={() => { navigate('/career-blog'); setMobileMenuOpen(false) }} className="flex items-center gap-3 text-secondary-700 dark:text-white/80 font-medium">
+                                            <BookOpen className="w-5 h-5" /> Blog
+                                        </button>
+                                        <button onClick={() => { navigate('/help'); setMobileMenuOpen(false) }} className="flex items-center gap-3 text-secondary-700 dark:text-white/80 font-medium">
+                                            <HelpCircle className="w-5 h-5" /> Help Center
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-secondary-200 dark:border-white/10">
+                                    <button onClick={() => { navigate('/pricing'); setMobileMenuOpen(false) }} className="w-full py-3 bg-secondary-900 dark:bg-white text-white dark:text-black rounded-xl font-bold">
+                                        View Pricing
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </motion.nav>
     )
 }

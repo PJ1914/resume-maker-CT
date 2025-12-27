@@ -65,82 +65,78 @@ class VercelDeployService:
         custom_domain: str = None
     ) -> Dict[str, Any]:
         """
-        Deploy portfolio to Vercel using PAT
-        
-        Args:
-            user_id: Firebase user ID
-            session_id: Portfolio session ID
-            project_name: Name for the Vercel project
-            zip_url: URL to the portfolio ZIP file
-            vercel_token: Vercel Personal Access Token
-        
-        Returns:
-            Dict with url, status, and deployment info
+        Deploy portfolio to Vercel (Async wrapper)
         """
-        try:
-            # Sanitize project name for Vercel requirements
-            sanitized_project_name = self._sanitize_project_name(project_name)
-            logger.info(f"📝 Sanitized project name: {project_name} → {sanitized_project_name}")
-            
-            # Verify token and get user info
-            user_info = self._get_user_info(vercel_token)
-            username = user_info.get('username') or user_info.get('name', 'user')
-            logger.info(f"🚀 Deploying to Vercel for user: {username}")
-            
-            # Download and extract ZIP
-            files_content = self._download_and_extract_zip(zip_url)
-            logger.info(f"📦 Extracted {len(files_content)} files from ZIP")
-            
-            # Prepare deployment payload
-            deployment_payload = {
-                "name": sanitized_project_name,
-                "files": files_content,
-                "projectSettings": {
-                    "framework": None,  # Static site
-                    "buildCommand": None,
-                    "outputDirectory": None
-                },
-                "target": "production"
-            }
-            
-            # Create deployment
-            deployment_result = self._create_deployment(
-                payload=deployment_payload,
-                vercel_token=vercel_token
-            )
-            
-            deployment_url = deployment_result.get('url')
-            if not deployment_url.startswith('https://'):
-                deployment_url = f"https://{deployment_url}"
-            
-            logger.info(f"✅ Vercel deployment successful: {deployment_url}")
-            
-            # Configure custom domain if provided
-            domain_configured = False
-            if custom_domain:
-                try:
-                    self._add_domain(sanitized_project_name, custom_domain, vercel_token)
-                    domain_configured = True
-                    logger.info(f"✅ Custom domain configured: {custom_domain}")
-                except Exception as domain_error:
-                    logger.warning(f"⚠️ Failed to configure domain: {domain_error}")
-            
-            result = {
-                "url": deployment_url,
-                "status": "deployed",
-                "deployment_id": deployment_result.get('id'),
-                "message": f"Portfolio deployed successfully to Vercel! May take 1-2 minutes to become available."
-            }
-            
-            if domain_configured:
-                result["custom_domain"] = custom_domain
-                result["message"] += f" Custom domain {custom_domain} has been configured."
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"❌ Vercel deployment failed: {str(e)}")
-            raise Exception(f"Vercel deployment failed: {str(e)}")
+        import asyncio
+        loop = asyncio.get_running_loop()
+        
+        def _deploy_sync():
+            try:
+                # Sanitize project name for Vercel requirements
+                sanitized_project_name = self._sanitize_project_name(project_name)
+                logger.info(f"📝 Sanitized project name: {project_name} -> {sanitized_project_name}")
+                
+                # Verify token and get user info
+                user_info = self._get_user_info(vercel_token)
+                username = user_info.get('username') or user_info.get('name', 'user')
+                logger.info(f"🚀 Deploying to Vercel for user: {username}")
+                
+                # Download and extract ZIP
+                files_content = self._download_and_extract_zip(zip_url)
+                logger.info(f"📦 Extracted {len(files_content)} files from ZIP")
+                
+                # Prepare deployment payload
+                deployment_payload = {
+                    "name": sanitized_project_name,
+                    "files": files_content,
+                    "projectSettings": {
+                        "framework": None,  # Static site
+                        "buildCommand": None,
+                        "outputDirectory": None
+                    },
+                    "target": "production"
+                }
+                
+                # Create deployment
+                deployment_result = self._create_deployment(
+                    payload=deployment_payload,
+                    vercel_token=vercel_token
+                )
+                
+                deployment_url = deployment_result.get('url')
+                if not deployment_url.startswith('https://'):
+                    deployment_url = f"https://{deployment_url}"
+                
+                logger.info(f"✅ Vercel deployment successful: {deployment_url}")
+                
+                # Configure custom domain if provided
+                domain_configured = False
+                if custom_domain:
+                    try:
+                        self._add_domain(sanitized_project_name, custom_domain, vercel_token)
+                        domain_configured = True
+                        logger.info(f"✅ Custom domain configured: {custom_domain}")
+                    except Exception as domain_error:
+                        logger.warning(f"⚠️ Failed to configure domain: {domain_error}")
+                
+                result = {
+                    "url": deployment_url,
+                    "status": "deployed",
+                    "deployment_id": deployment_result.get('id'),
+                    "message": f"Portfolio deployed successfully to Vercel! May take 1-2 minutes to become available."
+                }
+                
+                if domain_configured:
+                    result["custom_domain"] = custom_domain
+                    result["message"] += f" Custom domain {custom_domain} has been configured."
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"❌ Vercel deployment failed: {str(e)}")
+                raise Exception(f"Vercel deployment failed: {str(e)}")
+
+        return await loop.run_in_executor(None, _deploy_sync)
     
     def _get_user_info(self, vercel_token: str) -> Dict[str, Any]:
         """Get Vercel user information to verify token"""

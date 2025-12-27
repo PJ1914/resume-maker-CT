@@ -7,12 +7,23 @@
     "ATS scoring",
     "Template rendering (LaTeX)",
     "PDF export",
-    "Job description matching"
+    "Job description matching",
+    "Comprehensive Documentation",
+    "Help Center"
   ],
   "features": [
-    { "title": "AI Resume Builder", "summary": "Turn your details into an ATS-ready resume instantly." },
-    { "title": "ATS Score", "summary": "Get a score and improvement tips vs job description." },
-    { "title": "LaTeX Templates", "summary": "Modern, minimalist, and classic designs that compile cleanly." }
+    {
+      "title": "AI Resume Builder",
+      "summary": "Turn your details into an ATS-ready resume instantly."
+    },
+    {
+      "title": "ATS Score",
+      "summary": "Get a score and improvement tips vs job description."
+    },
+    {
+      "title": "LaTeX Templates",
+      "summary": "Modern, minimalist, and classic designs that compile cleanly."
+    }
   ],
   "contact": {
     "email": "support@codetapasya.com"

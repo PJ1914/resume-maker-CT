@@ -100,7 +100,7 @@ export default function HelpCenterPage() {
             title: 'Documentation',
             description: 'Detailed feature guides',
             icon: Book,
-            link: '/features'
+            link: '/documentation'
         },
         {
             title: 'Contact Support',

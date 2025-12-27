@@ -5,6 +5,8 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
+import { API_URL } from '../config/firebase';
+
 interface GitHubTokenModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,7 +27,7 @@ export default function GitHubTokenModal({ isOpen, onClose, onTokenSaved }: GitH
     setSaving(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/portfolio/github-token', {
+      const response = await fetch(`${API_URL}/api/portfolio/github-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +67,7 @@ export default function GitHubTokenModal({ isOpen, onClose, onTokenSaved }: GitH
             ✕
           </button>
         </div>
-        
+
         <div className="p-6 space-y-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-sm text-blue-900 dark:text-blue-300 mb-2">
