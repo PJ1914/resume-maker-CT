@@ -306,6 +306,7 @@ export default function DocumentationPage() {
                                 </span>
                             </div>
 
+
                             <ReactMarkdown>{article.content}</ReactMarkdown>
 
                             <div className="mt-12 pt-6 border-t border-gray-200 dark:border-white/10 text-sm text-gray-500 flex justify-between items-center">

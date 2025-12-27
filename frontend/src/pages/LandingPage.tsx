@@ -1,3 +1,4 @@
+// Landing Page - Updated 2024-12-28
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import PublicLayout from '../components/layouts/PublicLayout'
