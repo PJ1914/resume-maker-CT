@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Copy, Check, Download, RefreshCw, MessageSquare } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Copy, Check, Download, RefreshCw, MessageSquare, Volume2, VolumeX, Square } from 'lucide-react';
 import { GenerateInterviewResponse } from '@/types/interview';
 import { interviewService } from '@/services/interview.service';
 import { jsPDF } from 'jspdf';
@@ -12,6 +12,134 @@ interface InterviewResultsProps {
 export function InterviewResults({ data, onClose }: InterviewResultsProps) {
     const [activeTab, setActiveTab] = useState<'technical' | 'hr'>(data.technical.length > 0 ? 'technical' : 'hr');
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+    const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+    const [speakingCharIndex, setSpeakingCharIndex] = useState<number>(0);
+    const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+    const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+    // Pre-load voices on mount to eliminate delay
+    useEffect(() => {
+        if (!('speechSynthesis' in window)) return;
+
+        const loadVoices = () => {
+            const availableVoices = window.speechSynthesis.getVoices();
+            if (availableVoices.length > 0) {
+                setVoices(availableVoices);
+            }
+        };
+
+        // Load voices immediately
+        loadVoices();
+
+        // Also listen for voiceschanged event (needed for Chrome)
+        window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+
+        // Cleanup
+        return () => {
+            window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+            window.speechSynthesis.cancel();
+        };
+    }, []);
+
+    // Stop speaking when tab changes
+    useEffect(() => {
+        handleStopSpeaking();
+    }, [activeTab]);
+
+    const handleSpeak = (text: string, index: number) => {
+        // Check if browser supports speech synthesis
+        if (!('speechSynthesis' in window)) {
+            alert('Sorry, your browser does not support Text-to-Speech.');
+            return;
+        }
+
+        // If already speaking this one, stop it
+        if (speakingIndex === index) {
+            handleStopSpeaking();
+            return;
+        }
+
+        // Stop any current speech
+        window.speechSynthesis.cancel();
+
+        // Set speaking index immediately for instant visual feedback
+        setSpeakingIndex(index);
+        setSpeakingCharIndex(0);
+
+        // Create new utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0; // Normal speed
+        utterance.pitch = 1;
+        utterance.volume = 1;
+
+        // Use pre-loaded voices for faster start
+        if (voices.length > 0) {
+            const preferredVoice = voices.find(voice =>
+                voice.lang.startsWith('en') && (
+                    voice.name.includes('Google') ||
+                    voice.name.includes('Natural') ||
+                    voice.name.includes('Premium') ||
+                    voice.name.includes('Microsoft')
+                )
+            ) || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+        }
+
+        // Handle word boundary events for highlighting
+        utterance.onboundary = (event) => {
+            if (event.name === 'word') {
+                setSpeakingCharIndex(event.charIndex);
+            }
+        };
+
+        // Handle events
+        utterance.onend = () => {
+            setSpeakingIndex(null);
+            setSpeakingCharIndex(0);
+        };
+        utterance.onerror = () => {
+            setSpeakingIndex(null);
+            setSpeakingCharIndex(0);
+        };
+
+        speechSynthesisRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+    };
+
+    const handleStopSpeaking = () => {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+        setSpeakingIndex(null);
+        setSpeakingCharIndex(0);
+    };
+
+    // Helper function to render text with word highlighting
+    const renderHighlightedText = (text: string, questionIndex: number) => {
+        if (speakingIndex !== questionIndex) {
+            return text;
+        }
+
+        // Find the current word boundaries
+        const beforeHighlight = text.substring(0, speakingCharIndex);
+        const remainingText = text.substring(speakingCharIndex);
+
+        // Find the end of the current word
+        const wordEndMatch = remainingText.match(/^[\w'-]+/);
+        const currentWord = wordEndMatch ? wordEndMatch[0] : '';
+        const afterHighlight = remainingText.substring(currentWord.length);
+
+        return (
+            <>
+                <span className="text-secondary-400 dark:text-secondary-500">{beforeHighlight}</span>
+                <span className="bg-primary-200 dark:bg-primary-800 text-primary-900 dark:text-primary-100 px-0.5 rounded font-medium">{currentWord}</span>
+                <span>{afterHighlight}</span>
+            </>
+        );
+    };
 
     const handleCopy = (text: string, index: number) => {
         navigator.clipboard.writeText(text);
@@ -143,10 +271,30 @@ export function InterviewResults({ data, onClose }: InterviewResultsProps) {
 
                                         <div className="flex-1">
                                             <div className="prose dark:prose-invert max-w-none text-secondary-600 dark:text-secondary-300 text-sm leading-relaxed whitespace-pre-line">
-                                                {qa.a}
+                                                {renderHighlightedText(qa.a, index)}
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-secondary-100 dark:border-secondary-700/50">
+                                                {/* Listen Button - TTS */}
+                                                <button
+                                                    onClick={() => handleSpeak(qa.a, index)}
+                                                    className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${speakingIndex === index
+                                                        ? 'text-primary-600 dark:text-primary-400'
+                                                        : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400'
+                                                        }`}
+                                                    title={speakingIndex === index ? 'Stop listening' : 'Listen to answer'}
+                                                >
+                                                    {speakingIndex === index ? (
+                                                        <>
+                                                            <Square className="h-3.5 w-3.5 fill-current" /> Stop
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Volume2 className="h-3.5 w-3.5" /> Listen
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <div className="hidden sm:block w-px h-3 bg-secondary-200 dark:bg-secondary-700" />
                                                 <button
                                                     onClick={() => handleCopy(qa.a, index)}
                                                     className="flex items-center gap-1.5 text-xs font-medium text-secondary-500 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
