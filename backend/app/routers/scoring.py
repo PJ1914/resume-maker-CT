@@ -69,7 +69,185 @@ async def score_resume(
         if isinstance(sections, list):
             sections = {}  # Convert to empty dict if it's a list
         
-        if not parsed_text:
+        # Build comprehensive parsed_text from structured data if missing or minimal
+        # This is crucial for wizard-created resumes which only store summary in parsed_text
+        def build_comprehensive_text(resume_data: Dict, contact_info: Dict, sections: Dict) -> str:
+            """Build a complete text representation of the resume for ATS scoring."""
+            text_parts = []
+            
+            # Contact Information
+            if contact_info:
+                name = contact_info.get('name', '')
+                email = contact_info.get('email', '')
+                phone = contact_info.get('phone', '')
+                location = contact_info.get('location', '')
+                
+                contact_line = f"{name}"
+                if email:
+                    contact_line += f" | {email}"
+                if phone:
+                    contact_line += f" | {phone}"
+                if location:
+                    contact_line += f" | {location}"
+                
+                text_parts.append(contact_line)
+                
+                # Social/Portfolio links
+                links = []
+                if contact_info.get('linkedin'):
+                    links.append(f"LinkedIn: {contact_info['linkedin']}")
+                if contact_info.get('github'):
+                    links.append(f"GitHub: {contact_info['github']}")
+                if contact_info.get('website'):
+                    links.append(f"Website: {contact_info['website']}")
+                if links:
+                    text_parts.append(' | '.join(links))
+            
+            # Professional Summary
+            summary = sections.get('summary') or resume_data.get('professional_summary', '')
+            if summary:
+                text_parts.append("\nPROFESSIONAL SUMMARY")
+                text_parts.append(summary)
+            
+            # Skills
+            skills = resume_data.get('skills', {})
+            if skills:
+                text_parts.append("\nSKILLS")
+                if isinstance(skills, dict):
+                    technical = skills.get('technical', [])
+                    soft = skills.get('soft', [])
+                    if technical:
+                        text_parts.append(f"Technical Skills: {', '.join(technical)}")
+                    if soft:
+                        text_parts.append(f"Soft Skills: {', '.join(soft)}")
+                elif isinstance(skills, list):
+                    for skill_cat in skills:
+                        if isinstance(skill_cat, dict):
+                            cat_name = skill_cat.get('category', 'Skills')
+                            items = skill_cat.get('items', [])
+                            if items:
+                                text_parts.append(f"{cat_name}: {', '.join(items)}")
+            
+            # Experience
+            experience = resume_data.get('experience', [])
+            if experience:
+                text_parts.append("\nEXPERIENCE")
+                for exp in experience:
+                    if isinstance(exp, dict):
+                        company = exp.get('company', '')
+                        position = exp.get('position', '') or exp.get('title', '')
+                        location = exp.get('location', '')
+                        start_date = exp.get('startDate', '')
+                        end_date = exp.get('endDate', 'Present')
+                        description = exp.get('description', '')
+                        
+                        exp_line = f"{position} at {company}"
+                        if location:
+                            exp_line += f", {location}"
+                        if start_date:
+                            exp_line += f" ({start_date} - {end_date})"
+                        text_parts.append(exp_line)
+                        
+                        if description:
+                            # Handle both string and list descriptions
+                            if isinstance(description, list):
+                                for bullet in description:
+                                    text_parts.append(f"• {bullet}")
+                            else:
+                                text_parts.append(description)
+            
+            # Education
+            education = resume_data.get('education', [])
+            if education:
+                text_parts.append("\nEDUCATION")
+                for edu in education:
+                    if isinstance(edu, dict):
+                        school = edu.get('school', '') or edu.get('institution', '')
+                        degree = edu.get('degree', '')
+                        field = edu.get('field', '')
+                        gpa = edu.get('gpa', '')
+                        start_date = edu.get('startDate', '')
+                        end_date = edu.get('endDate', '')
+                        
+                        edu_line = f"{degree}"
+                        if field:
+                            edu_line += f" in {field}"
+                        edu_line += f" from {school}"
+                        if start_date or end_date:
+                            edu_line += f" ({start_date or ''} - {end_date or ''})"
+                        if gpa:
+                            edu_line += f" | GPA: {gpa}"
+                        text_parts.append(edu_line)
+            
+            # Projects
+            projects = resume_data.get('projects', [])
+            if projects:
+                text_parts.append("\nPROJECTS")
+                for proj in projects:
+                    if isinstance(proj, dict):
+                        name = proj.get('name', '')
+                        description = proj.get('description', '')
+                        technologies = proj.get('technologies', [])
+                        
+                        text_parts.append(f"{name}")
+                        if description:
+                            text_parts.append(description)
+                        if technologies:
+                            tech_str = ', '.join(technologies) if isinstance(technologies, list) else technologies
+                            text_parts.append(f"Technologies: {tech_str}")
+            
+            # Certifications
+            certifications = resume_data.get('certifications', [])
+            if certifications:
+                text_parts.append("\nCERTIFICATIONS")
+                for cert in certifications:
+                    if isinstance(cert, dict):
+                        name = cert.get('name', '')
+                        issuer = cert.get('issuer', '')
+                        date = cert.get('date', '')
+                        cert_line = name
+                        if issuer:
+                            cert_line += f" - {issuer}"
+                        if date:
+                            cert_line += f" ({date})"
+                        text_parts.append(cert_line)
+            
+            # Achievements
+            achievements = resume_data.get('achievements', [])
+            if achievements:
+                text_parts.append("\nACHIEVEMENTS")
+                for ach in achievements:
+                    if isinstance(ach, dict):
+                        title = ach.get('title', '')
+                        description = ach.get('description', '')
+                        text_parts.append(f"• {title}: {description}" if description else f"• {title}")
+            
+            # Languages
+            languages = resume_data.get('languages', [])
+            if languages:
+                text_parts.append("\nLANGUAGES")
+                lang_items = []
+                for lang in languages:
+                    if isinstance(lang, dict):
+                        name = lang.get('language', '') or lang.get('name', '')
+                        proficiency = lang.get('proficiency', '')
+                        if name:
+                            lang_items.append(f"{name} ({proficiency})" if proficiency else name)
+                if lang_items:
+                    text_parts.append(', '.join(lang_items))
+            
+            return '\n'.join(text_parts)
+        
+        # Check if parsed_text is missing or too short (only summary)
+        has_structured_data = bool(resume_data.get('experience') or resume_data.get('education') or resume_data.get('projects'))
+        is_parsed_text_minimal = not parsed_text or len(parsed_text) < 500
+        
+        if is_parsed_text_minimal and has_structured_data:
+            # Build comprehensive text from structured data
+            logger.info(f"Building comprehensive parsed_text from structured data for resume {resume_id}")
+            parsed_text = build_comprehensive_text(resume_data, contact_info, sections)
+            logger.debug(f"Built parsed_text length: {len(parsed_text)} characters")
+        elif not parsed_text:
             # For wizard-created resumes, check if we have contact info or sections as fallback
             if not contact_info and not sections:
                 # Provide helpful error message based on status

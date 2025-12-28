@@ -436,7 +436,7 @@ def update_resume_parsed_data_sync(
                 'location': exp.get('location', ''),
                 'startDate': exp.get('startDate', ''),
                 'endDate': exp.get('endDate', ''),
-                'current': exp.get('endDate', '').lower() in ['present', 'current', 'now', ''],
+                'current': (exp.get('endDate') or '').lower() in ['present', 'current', 'now', ''],
                 'description': exp.get('description', ''),
                 'highlights': exp.get('highlights', []) if isinstance(exp.get('highlights'), list) else [],
             })
