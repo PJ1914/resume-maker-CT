@@ -1,5 +1,6 @@
-import { User, Mail, Phone, MapPin, Linkedin, Globe, Github, Code2, Trophy } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Linkedin, Globe, Github, Code2, Trophy, AlertCircle } from 'lucide-react'
 import { InfoTooltip } from '../ui/info-tooltip'
+import { useState } from 'react'
 
 interface ContactData {
   name: string
@@ -19,9 +20,62 @@ interface ContactStepFormProps {
   onChange: (data: ContactData) => void
 }
 
+// Validation helpers
+const validateName = (name: string): string | null => {
+  if (!name.trim()) return null; // Empty is okay, required check happens elsewhere
+  // Allow letters (including Unicode letters for international names), spaces, hyphens, and apostrophes
+  const nameRegex = /^[\p{L}\s\-'\.]+$/u;
+  if (!nameRegex.test(name)) {
+    return 'Name can only contain letters, spaces, hyphens, and apostrophes';
+  }
+  return null;
+};
+
+const validatePhone = (phone: string): string | null => {
+  if (!phone.trim()) return null; // Empty is okay
+  // Allow digits, +, -, spaces, parentheses
+  const phoneRegex = /^[\d\s\+\-\(\)]+$/;
+  if (!phoneRegex.test(phone)) {
+    return 'Phone number can only contain digits, +, -, spaces, and parentheses';
+  }
+  // Check minimum length (at least 7 digits)
+  const digitsOnly = phone.replace(/\D/g, '');
+  if (digitsOnly.length < 7) {
+    return 'Phone number must have at least 7 digits';
+  }
+  if (digitsOnly.length > 15) {
+    return 'Phone number is too long';
+  }
+  return null;
+};
+
 export default function ContactStepForm({ data, onChange }: ContactStepFormProps) {
+  const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
+
   const handleChange = (field: keyof ContactData, value: string) => {
+    // Validate on change
+    if (field === 'name') {
+      const error = validateName(value);
+      setErrors(prev => ({ ...prev, name: error || undefined }));
+    } else if (field === 'phone') {
+      const error = validatePhone(value);
+      setErrors(prev => ({ ...prev, phone: error || undefined }));
+    }
     onChange({ ...data, [field]: value })
+  }
+
+  // Filter name input to only allow valid characters
+  const handleNameChange = (value: string) => {
+    // Remove emojis, numbers, and special characters (except allowed ones)
+    const filteredValue = value.replace(/[^\p{L}\s\-'\.]/gu, '');
+    handleChange('name', filteredValue);
+  }
+
+  // Filter phone input to only allow valid characters
+  const handlePhoneChange = (value: string) => {
+    // Remove anything that's not a digit, +, -, space, or parentheses
+    const filteredValue = value.replace(/[^\d\s\+\-\(\)]/g, '');
+    handleChange('phone', filteredValue);
   }
 
   return (
@@ -45,12 +99,18 @@ export default function ContactStepForm({ data, onChange }: ContactStepFormProps
             <input
               type="text"
               value={data.name}
-              onChange={(e) => handleChange('name', e.target.value)}
+              onChange={(e) => handleNameChange(e.target.value)}
               placeholder="John Doe"
-              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border ${errors.name ? 'border-danger-500 dark:border-danger-400' : 'border-secondary-300 dark:border-secondary-700'} rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-danger-500' : 'focus:ring-primary-500'} focus:border-transparent`}
               required
             />
           </div>
+          {errors.name && (
+            <p className="mt-1.5 text-sm text-danger-600 dark:text-danger-400 flex items-center gap-1">
+              <AlertCircle className="h-4 w-4" />
+              {errors.name}
+            </p>
+          )}
         </div>
 
         {/* Email */}
@@ -82,11 +142,17 @@ export default function ContactStepForm({ data, onChange }: ContactStepFormProps
             <input
               type="tel"
               value={data.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
+              onChange={(e) => handlePhoneChange(e.target.value)}
               placeholder="+1 (555) 123-4567"
-              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border ${errors.phone ? 'border-danger-500 dark:border-danger-400' : 'border-secondary-300 dark:border-secondary-700'} rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 ${errors.phone ? 'focus:ring-danger-500' : 'focus:ring-primary-500'} focus:border-transparent`}
             />
           </div>
+          {errors.phone && (
+            <p className="mt-1.5 text-sm text-danger-600 dark:text-danger-400 flex items-center gap-1">
+              <AlertCircle className="h-4 w-4" />
+              {errors.phone}
+            </p>
+          )}
         </div>
 
         {/* Location */}

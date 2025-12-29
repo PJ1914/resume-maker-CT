@@ -2,8 +2,35 @@
  * Contact Information Section Component
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ContactInfo } from '../../types/resume';
+import { AlertCircle } from 'lucide-react';
+
+// Validation helpers
+const validateName = (name: string): string | null => {
+  if (!name.trim()) return null;
+  const nameRegex = /^[\p{L}\s\-'\.]+$/u;
+  if (!nameRegex.test(name)) {
+    return 'Name can only contain letters, spaces, hyphens, and apostrophes';
+  }
+  return null;
+};
+
+const validatePhone = (phone: string): string | null => {
+  if (!phone.trim()) return null;
+  const phoneRegex = /^[\d\s\+\-\(\)]+$/;
+  if (!phoneRegex.test(phone)) {
+    return 'Phone number can only contain digits, +, -, spaces, and parentheses';
+  }
+  const digitsOnly = phone.replace(/\D/g, '');
+  if (digitsOnly.length < 7) {
+    return 'Phone number must have at least 7 digits';
+  }
+  if (digitsOnly.length > 15) {
+    return 'Phone number is too long';
+  }
+  return null;
+};
 
 interface ContactSectionProps {
   contact: ContactInfo;
@@ -14,8 +41,26 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
   contact,
   onChange,
 }) => {
+  const [errors, setErrors] = useState<{ fullName?: string; phone?: string }>({});
+
   const handleChange = (field: keyof ContactInfo, value: string) => {
     onChange({ ...contact, [field]: value });
+  };
+
+  // Filter name input to only allow valid characters
+  const handleNameChange = (value: string) => {
+    const filteredValue = value.replace(/[^\p{L}\s\-'\.]/gu, '');
+    const error = validateName(filteredValue);
+    setErrors(prev => ({ ...prev, fullName: error || undefined }));
+    handleChange('fullName', filteredValue);
+  };
+
+  // Filter phone input to only allow valid characters
+  const handlePhoneChange = (value: string) => {
+    const filteredValue = value.replace(/[^\d\s\+\-\(\)]/g, '');
+    const error = validatePhone(filteredValue);
+    setErrors(prev => ({ ...prev, phone: error || undefined }));
+    handleChange('phone', filteredValue);
   };
 
   return (
@@ -30,12 +75,18 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           <label className="label">Full Name *</label>
           <input
             type="text"
-            className="input"
+            className={`input ${errors.fullName ? 'border-danger-500 dark:border-danger-400 focus:ring-danger-500' : ''}`}
             value={contact.fullName || ''}
-            onChange={(e) => handleChange('fullName', e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value)}
             placeholder="John Doe"
             required
           />
+          {errors.fullName && (
+            <p className="mt-1 text-sm text-danger-600 dark:text-danger-400 flex items-center gap-1">
+              <AlertCircle className="h-4 w-4" />
+              {errors.fullName}
+            </p>
+          )}
         </div>
 
         {/* Email */}
@@ -56,12 +107,18 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           <label className="label">Phone *</label>
           <input
             type="tel"
-            className="input"
+            className={`input ${errors.phone ? 'border-danger-500 dark:border-danger-400 focus:ring-danger-500' : ''}`}
             value={contact.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
+            onChange={(e) => handlePhoneChange(e.target.value)}
             placeholder="+1 (555) 123-4567"
             required
           />
+          {errors.phone && (
+            <p className="mt-1 text-sm text-danger-600 dark:text-danger-400 flex items-center gap-1">
+              <AlertCircle className="h-4 w-4" />
+              {errors.phone}
+            </p>
+          )}
         </div>
 
         {/* Location */}
