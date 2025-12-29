@@ -47,7 +47,7 @@ export default function AISummaryStepForm({ data, onChange, resumeData }: AISumm
       }
     } catch (error: any) {
       console.error('Generate summary error:', error)
-      
+
       // Handle insufficient credits (402 Payment Required)
       if (error?.response?.status === 402) {
         const errorData = error.response.data
@@ -59,8 +59,11 @@ export default function AISummaryStepForm({ data, onChange, resumeData }: AISumm
         setShowCreditsModal(true)
         return
       }
-      
-      const errorMsg = error.response?.data?.detail || 'Failed to generate summary'
+
+      const errorDetail = error.response?.data?.detail
+      const errorMsg = typeof errorDetail === 'string'
+        ? errorDetail
+        : (errorDetail?.message || 'Failed to generate summary')
       toast.error(errorMsg)
     } finally {
       setIsGenerating(false)
@@ -279,7 +282,7 @@ export default function AISummaryStepForm({ data, onChange, resumeData }: AISumm
           </motion.div>
         </AnimatePresence>
       )}
-      
+
       {/* Insufficient Credits Modal */}
       <InsufficientCreditsModal
         isOpen={showCreditsModal}

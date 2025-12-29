@@ -76,10 +76,35 @@ class EducationEntry(BaseModel):
     gpa: Optional[str] = None
     description: Optional[str] = None
 
+class SkillCategory(BaseModel):
+    """Skill category with items"""
+    category: str
+    items: List[str] = []
+
 class SkillsData(BaseModel):
-    """Skills data"""
-    technical: List[str] = []
-    soft: List[str] = []
+    """Skills data - supports both old {technical, soft} and new [{category, items}] format"""
+    # Old format fields (optional)
+    technical: Optional[List[str]] = None
+    soft: Optional[List[str]] = None
+    # New format: list of categories 
+    categories: Optional[List[SkillCategory]] = None
+    
+    @classmethod
+    def from_list(cls, skills_list: List[dict]) -> 'SkillsData':
+        """Convert list format to SkillsData"""
+        categories = [SkillCategory(**s) for s in skills_list if 'category' in s]
+        return cls(categories=categories)
+    
+    def to_list(self) -> List[dict]:
+        """Convert to list format for storage/template"""
+        result = []
+        if self.categories:
+            result.extend([{'category': c.category, 'items': c.items} for c in self.categories])
+        if self.technical:
+            result.append({'category': 'Technical', 'items': self.technical})
+        if self.soft:
+            result.append({'category': 'Soft Skills', 'items': self.soft})
+        return result
 
 class ProjectEntry(BaseModel):
     """Project entry"""
@@ -120,11 +145,33 @@ class CreateResumeRequest(BaseModel):
     summary: str
     experience: List[ExperienceEntry] = []
     education: List[EducationEntry] = []
-    skills: SkillsData
+    skills: Union[SkillsData, List[SkillCategory], List[dict]] = []
     projects: List[ProjectEntry] = []
     certifications: List[CertificationEntry] = []
     languages: List[LanguageEntry] = []
     achievements: List[AchievementEntry] = []
+    
+    @field_validator('skills', mode='before')
+    @classmethod
+    def normalize_skills(cls, v):
+        """Accept both old format and new list format for skills"""
+        if v is None:
+            return []
+        if isinstance(v, list):
+            # New format: list of {category, items}
+            return v
+        if isinstance(v, dict):
+            # Old format: {technical: [], soft: []}
+            # Convert to new format
+            result = []
+            if v.get('technical'):
+                result.append({'category': 'Technical', 'items': v['technical']})
+            if v.get('soft'):
+                result.append({'category': 'Soft Skills', 'items': v['soft']})
+            if v.get('categories'):
+                result.extend(v['categories'])
+            return result
+        return v
 
 class ResumeMetadata(BaseModel):
     """Resume metadata stored in Firestore"""
@@ -144,7 +191,7 @@ class ResumeMetadata(BaseModel):
     # Parsing results (populated after parsing)
     parsed_text: Optional[str] = None
     contact_info: Optional[dict] = None
-    skills: Optional[dict] = None  # Changed from Optional[list] to Optional[dict]
+    skills: Optional[Any] = None  # Can be list [{category, items}] or dict {technical, soft}
     sections: Optional[Any] = None  # Dynamic sections - can be list or dict for backwards compatibility
     experience: Optional[List[dict]] = None
     projects: Optional[List[dict]] = None
@@ -203,7 +250,7 @@ class ResumeDetailResponse(BaseModel):
     updated_at: datetime
     parsed_text: Optional[str] = None
     contact_info: Optional[dict] = None
-    skills: Optional[dict] = None  # Changed from Optional[list] to Optional[dict]
+    skills: Optional[Any] = None  # Can be list [{category, items}] or dict {technical, soft}
     sections: Optional[Any] = None  # Dynamic sections - can be list or dict for backwards compatibility
     experience: Optional[List[dict]] = None
     projects: Optional[List[dict]] = None

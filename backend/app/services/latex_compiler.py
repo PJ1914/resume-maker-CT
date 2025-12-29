@@ -262,24 +262,23 @@ class LaTeXCompiler:
                             env['MIKTEX_TEMP'] = str(temp_path)
                             env['MIKTEX_ENABLE_INSTALLER'] = 't'
                             
-                            for run_num in range(2):
-                                cmd = [
-                                    compiler,
-                                    '-interaction=nonstopmode',
-                                    '-halt-on-error',
-                                    '-file-line-error',
-                                    "main.tex"
-                                ]
-                                result = subprocess.run(
-                                    cmd,
-                                    cwd=temp_path,
-                                    capture_output=True,
-                                    text=True,
-                                    timeout=240,
-                                    env=env
-                                )
-                                if result.stdout: logger.debug(f"{compiler} stdout: {result.stdout[-500:]}")
-                                if result.stderr: logger.debug(f"{compiler} stderr: {result.stderr[-500:]}")
+                            # Single run is sufficient for resumes (no cross-references/TOC)
+                            cmd = [
+                                compiler,
+                                '-interaction=nonstopmode',
+                                '-halt-on-error',
+                                "main.tex"
+                            ]
+                            result = subprocess.run(
+                                cmd,
+                                cwd=temp_path,
+                                capture_output=True,
+                                text=True,
+                                timeout=60,  # Reduced timeout for faster feedback
+                                env=env
+                            )
+                            if result.stdout: logger.debug(f"{compiler} stdout: {result.stdout[-500:]}")
+                            if result.stderr: logger.debug(f"{compiler} stderr: {result.stderr[-500:]}")
                         
                         if result.returncode != 0:
                             logger.warning(f"{compiler} compilation failed code {result.returncode}")

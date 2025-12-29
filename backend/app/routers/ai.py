@@ -6,7 +6,7 @@ Provides AI-powered content improvement suggestions using Gemini
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 import google.generativeai as genai
-from typing import Optional
+from typing import Optional, Union
 from app.config import settings
 from app.dependencies import get_current_user
 from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
@@ -264,8 +264,20 @@ async def extract_resume_data(
 RESUME:
 {resume_text}
 
+CRITICAL INSTRUCTIONS FOR SKILLS EXTRACTION:
+1. Extract skills from EVERYWHERE in the resume - not just a "Skills" section
+2. Look for skills in: "Technologies:" fields, project descriptions, experience descriptions, tools mentioned, etc.
+3. Categorize skills properly:
+   - "Languages": Python, Java, C++, JavaScript, SQL, PHP, C, TypeScript, Go, Rust, etc.
+   - "Frameworks": React, Angular, Node.js, Django, FastAPI, Flask, Express.js, TensorFlow, PyTorch, Keras, Spring Boot, MEAN Stack, etc.
+   - "Databases": MySQL, MongoDB, PostgreSQL, Redis, Firebase, SQLite, etc.
+   - "ML/AI": TensorFlow, PyTorch, Keras, scikit-learn, LightGBM, FAISS, Hugging Face, OpenCV, CNN, NLP, OCR, etc.
+   - "Tools": Git, Docker, Postman, Jupyter, VS Code, Google Colab, Render, etc.
+   - "Cloud": AWS, Azure, GCP, Firebase, Heroku, Render, etc.
+4. NEVER return empty skills array - always extract at least some skills from the resume content
+
 Return valid JSON:
-{{"contact": {{"name": "Full Name", "email": "email@example.com", "phone": "+1234567890", "location": "City, State", "linkedin": "url", "github": "url", "leetcode": "url", "codechef": "url", "hackerrank": "url", "website": "url"}}, "summary": "summary text", "experience": [{{"company": "Company", "position": "Title", "startDate": "2020", "endDate": "2021", "description": "desc"}}], "education": [{{"school": "University", "degree": "Bachelor", "field": "Field", "year": "2020", "gpa": "3.8"}}], "skills": {{"technical": ["skill1", "skill2"], "soft": ["skill3"]}}, "projects": [{{"name": "Project", "description": "desc", "link": "url", "technologies": ["tech1", "tech2"]}}], "certifications": [{{"name": "Cert", "issuer": "Org", "date": "2024"}}], "achievements": [{{"title": "Title", "description": "desc", "date": "2024"}}]}}"""
+{{"contact": {{"name": "Full Name", "email": "email@example.com", "phone": "+1234567890", "location": "City, State", "linkedin": "url", "github": "url", "leetcode": "url", "codechef": "url", "hackerrank": "url", "website": "url"}}, "summary": "summary text", "experience": [{{"company": "Company", "position": "Title", "startDate": "2020", "endDate": "2021", "description": "desc"}}], "education": [{{"school": "University", "degree": "Bachelor", "field": "Field", "year": "2020", "gpa": "3.8"}}], "skills": [{{"category": "Languages", "items": ["Python", "Java"]}}, {{"category": "Frameworks", "items": ["React", "TensorFlow"]}}, {{"category": "Databases", "items": ["MySQL"]}}, {{"category": "ML/AI", "items": ["Keras", "CNN"]}}, {{"category": "Tools", "items": ["Git", "Docker"]}}], "projects": [{{"name": "Project", "description": "desc", "link": "url", "technologies": ["tech1", "tech2"]}}], "certifications": [{{"name": "Cert", "issuer": "Org", "date": "2024"}}], "achievements": [{{"title": "Title", "description": "desc", "date": "2024"}}]}}"""
 
         logger.info("Calling Gemini API for resume extraction")
         model = genai.GenerativeModel(settings.GEMINI_MODEL)
@@ -315,6 +327,29 @@ Return valid JSON:
         extracted_data = json.loads(response_text)
         logger.info(f"Successfully extracted resume data with keys: {list(extracted_data.keys())}")
         
+        # FALLBACK: If skills are empty, extract from project technologies
+        skills = extracted_data.get('skills', [])
+        if not skills or (isinstance(skills, list) and len(skills) == 0):
+            logger.warning("AI returned empty skills, extracting from project technologies")
+            all_techs = []
+            projects = extracted_data.get('projects', [])
+            for proj in projects:
+                if isinstance(proj, dict):
+                    techs = proj.get('technologies', [])
+                    if isinstance(techs, list):
+                        all_techs.extend(techs)
+                    elif isinstance(techs, str):
+                        all_techs.extend([t.strip() for t in techs.split(',') if t.strip()])
+            
+            if all_techs:
+                # Deduplicate
+                unique_techs = list(dict.fromkeys(all_techs))
+                extracted_data['skills'] = [{'category': 'Technical', 'items': unique_techs}]
+                logger.info(f"Extracted {len(unique_techs)} skills from projects: {unique_techs}")
+        
+        # Log skills for debugging
+        logger.info(f"Final skills data: {extracted_data.get('skills', [])}")
+        
         return {
             "success": True,
             **extracted_data
@@ -342,7 +377,7 @@ class GenerateSummaryRequest(BaseModel):
     contact: dict
     experience: list
     education: list
-    skills: dict
+    skills: Union[dict, list] = []  # Accept both old dict format and new list format
     projects: list = []
     certifications: list = []
     achievements: list = []
@@ -400,12 +435,22 @@ async def generate_professional_summary(
             if degree and field:
                 context_parts.append(f"Education: {degree} in {field}")
         
-        # Skills
+        # Skills (handle both dict and list formats)
         if request.skills:
-            technical_skills = request.skills.get('technical', [])
-            if technical_skills:
-                top_skills = technical_skills[:5]  # Get top 5 skills
-                context_parts.append(f"Key technical skills: {', '.join(top_skills)}")
+            all_skills = []
+            if isinstance(request.skills, dict):
+                # Old format: {technical: [], soft: []}
+                technical_skills = request.skills.get('technical', [])
+                all_skills = technical_skills[:5]
+            elif isinstance(request.skills, list):
+                # New format: [{category: '...', items: [...]}]
+                for cat in request.skills:
+                    if isinstance(cat, dict) and cat.get('items'):
+                        all_skills.extend(cat['items'][:3])  # Get top 3 from each category
+                all_skills = all_skills[:5]  # Limit to top 5 overall
+            
+            if all_skills:
+                context_parts.append(f"Key technical skills: {', '.join(all_skills)}")
         
         # Projects
         if request.projects:

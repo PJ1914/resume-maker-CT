@@ -146,22 +146,40 @@ def split_date_range(start_date: str, end_date: str) -> tuple:
     Returns:
         Tuple of (clean_start_date, clean_end_date)
     """
-    # Range separators to look for
-    separators = [' – ', ' - ', '–', '-', ' to ']
+    # Range separators to look for - only dash with spaces indicates a range, not YYYY-MM
+    separators = [' – ', ' - ', '–', ' to ']
     
     # Check if start_date contains a range
     clean_start = str(start_date).strip() if start_date else ''
     clean_end = str(end_date).strip() if end_date else ''
+    
+    # Helper to check if it looks like a YYYY-MM date format (not a range)
+    def is_yyyy_mm_format(s):
+        import re
+        return bool(re.match(r'^\d{4}-\d{1,2}$', s.strip()))
+    
+    # Don't split if it looks like YYYY-MM format
+    if is_yyyy_mm_format(clean_start):
+        return (clean_start, clean_end)
     
     # If start_date contains a range separator, split it
     for sep in separators:
         if sep in clean_start:
             parts = clean_start.split(sep)
             if len(parts) == 2:
-                clean_start = parts[0].strip()
-                # Only use the second part as end_date if end_date is empty or same as start_date
-                if not clean_end or clean_end == start_date:
-                    clean_end = parts[1].strip()
+                # Make sure both parts look like valid dates (contain years)
+                part0 = parts[0].strip()
+                part1 = parts[1].strip()
+                # Check if both parts have years (4-digit numbers)
+                import re
+                has_year_0 = bool(re.search(r'\d{4}', part0))
+                has_year_1 = bool(re.search(r'\d{4}', part1)) or part1.lower() in ['present', 'current', 'now']
+                
+                if has_year_0 and has_year_1:
+                    clean_start = part0
+                    # Only use the second part as end_date if end_date is empty or same as start_date
+                    if not clean_end or clean_end == start_date:
+                        clean_end = part1
             break
     
     # If end_date contains a range separator, extract just the end part
@@ -306,24 +324,35 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for edu in edu_data:
             if not isinstance(edu, dict): continue
             
-            # Clean up date ranges - handle combined dates like "2024 – 2028-01"
-            raw_start = edu.get('startDate', '')
-            raw_end = edu.get('endDate', '')
-            clean_start, clean_end = split_date_range(raw_start, raw_end)
+            # Helper to extract just the year from a date
+            def extract_year(date_str):
+                if not date_str:
+                    return ''
+                import re
+                # Find 4-digit year
+                match = re.search(r'\d{4}', str(date_str))
+                return match.group(0) if match else str(date_str)
             
-            # Handle empty end_date
-            if clean_end:
-                end_date = escape_latex(format_date(clean_end))
-            else:
-                end_date = 'Present'
+            # Get start and end dates (just years for education)
+            raw_start = edu.get('startDate', '')
+            raw_end = edu.get('endDate', '') or edu.get('year', '')  # Also check 'year' field
+            
+            start_year = extract_year(raw_start)
+            end_year = extract_year(raw_end)
+            
+            # Handle empty end_date - for education, show expected graduation year or Present
+            if not end_year and not start_year:
+                end_year = ''
+            elif not end_year:
+                end_year = 'Present'
             
             education.append(SimpleNamespace(
                 degree=escape_latex(edu.get('degree', '')),
                 field=escape_latex(edu.get('field', '')),
                 institution=escape_latex(edu.get('institution', '')),
                 location=escape_latex(edu.get('location', '')),
-                start_date=escape_latex(format_date(clean_start)),
-                end_date=end_date,
+                start_date=start_year,
+                end_date=end_year,
                 gpa=escape_latex(edu.get('gpa', '')),
                 honors=escape_latex(edu.get('honors', '')),
             ))
@@ -400,6 +429,7 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     # Structure skills (convert to SimpleNamespace for dot notation to avoid dict.items() conflict)
     skills = []
     skills_data = data.get('skills', [])
+    print(f"[DEBUG prepare_template_data] skills_data type: {type(skills_data)}, content: {skills_data}")
     
     if isinstance(skills_data, dict):
         # Format: {technical: [...], soft: [...]}

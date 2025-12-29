@@ -69,10 +69,7 @@ export default function ResumeWizardPage() {
     summary: '',
     experience: [] as any[],
     education: [] as any[],
-    skills: {
-      technical: [] as string[],
-      soft: [] as string[],
-    },
+    skills: [] as { category: string; items: string[] }[],
     projects: [] as any[],
     certifications: [] as any[],
     languages: [] as any[],

@@ -19,10 +19,7 @@ interface ReviewStepProps {
     summary: string
     experience: any[]
     education: any[]
-    skills: {
-      technical: string[]
-      soft: string[]
-    }
+    skills: { category: string; items: string[] }[]
     projects: any[]
     certifications?: any[]
     languages?: any[]
@@ -39,10 +36,8 @@ export default function ReviewStep({ data, onThemeChange, onJumpToStep }: Review
   const summary = data?.summary || ''
   const experience = Array.isArray(data?.experience) ? data.experience : []
   const education = Array.isArray(data?.education) ? data.education : []
-  const skills = {
-    technical: Array.isArray(data?.skills?.technical) ? data.skills.technical : [],
-    soft: Array.isArray(data?.skills?.soft) ? data.skills.soft : [],
-  }
+  // Handle new array format for skills
+  const skills = Array.isArray(data?.skills) ? data.skills : []
   const projects = Array.isArray(data?.projects) ? data.projects : []
   const certifications = Array.isArray(data?.certifications) ? data.certifications : []
   const languages = Array.isArray(data?.languages) ? data.languages : []
@@ -91,8 +86,8 @@ export default function ReviewStep({ data, onThemeChange, onJumpToStep }: Review
       id: 5,
       icon: Code,
       title: 'Skills',
-      complete: skills.technical.length > 0 || skills.soft.length > 0,
-      items: skills.technical.length + skills.soft.length,
+      complete: skills.length > 0 && skills.some(cat => cat.items?.length > 0),
+      items: skills.reduce((total, cat) => total + (cat.items?.length || 0), 0),
       color: 'cyan',
       required: true,
     },

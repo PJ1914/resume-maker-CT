@@ -88,7 +88,7 @@ export default function ResumeDumpStep({ onDataExtracted, isLoading = false }: R
           gpa: edu.gpa || '',
           description: edu.description || '',
         })),
-        skills: (response as any).skills || { technical: [], soft: [] },
+        skills: Array.isArray((response as any).skills) ? (response as any).skills : [],
         projects: ((response as any).projects || []).map((proj: any, idx: number) => ({
           id: `proj-${idx}-${Date.now()}`,
           name: proj.name || '',

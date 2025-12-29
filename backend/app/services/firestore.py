@@ -762,33 +762,34 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
             result['projects'] = edited_data['projects']
             
         if has_content(edited_data.get('skills')):
-            # Edited skills are usually a list of categories
-            # Metadata skills are {technical: [], soft: []}
-            # We need to adapt if structure differs, but for now let's assume
-            # the consumer handles the structure or we map it here.
-            # The editor uses {category: string, items: string[]}[]
-            # The scorer expects {technical: [], soft: []}
-            
+            # Keep skills in list format for templates: [{category: string, items: string[]}]
+            # Also create flat technical/soft for scorer compatibility
             editor_skills = edited_data['skills']
+            
             if isinstance(editor_skills, list):
-                # Convert editor format to scorer format
+                # Already in list format - keep it for templates
+                result['skills'] = editor_skills
+                
+                # Also create flat technical/soft for scorer
                 technical = []
                 soft = []
-                
                 for cat in editor_skills:
                     if isinstance(cat, dict) and 'items' in cat and isinstance(cat['items'], list):
-                        # Add all items to technical for now, or try to classify
-                        # If category name contains "Soft", put in soft
                         cat_name = cat.get('category', '').lower()
                         if 'soft' in cat_name or 'personal' in cat_name:
                             soft.extend(cat['items'])
                         else:
                             technical.extend(cat['items'])
-                            
-                result['skills'] = {
-                    'technical': technical,
-                    'soft': soft
-                }
+                result['skills_flat'] = {'technical': technical, 'soft': soft}
+            elif isinstance(editor_skills, dict):
+                # Old dict format - convert to list for templates
+                skills_list = []
+                if editor_skills.get('technical'):
+                    skills_list.append({'category': 'Technical', 'items': editor_skills['technical']})
+                if editor_skills.get('soft'):
+                    skills_list.append({'category': 'Soft Skills', 'items': editor_skills['soft']})
+                result['skills'] = skills_list
+                result['skills_flat'] = editor_skills
         
         # Handle certifications from edited data
         if has_content(edited_data.get('certifications')):
@@ -811,6 +812,24 @@ def get_merged_resume_data(resume_id: str, user_id: str) -> Optional[Dict]:
         result['contact'] = result['contact_info']
     if 'summary' not in result and 'professional_summary' in result:
         result['summary'] = result['professional_summary']
+    
+    # CRITICAL: Ensure skills are in proper format for templates
+    # Convert dict format to list format if needed
+    if 'skills' in result:
+        skills_data = result['skills']
+        if isinstance(skills_data, dict):
+            # Old format {technical: [], soft: []} - convert to list
+            skills_list = []
+            if skills_data.get('technical'):
+                skills_list.append({'category': 'Technical', 'items': skills_data['technical']})
+            if skills_data.get('soft'):
+                skills_list.append({'category': 'Soft Skills', 'items': skills_data['soft']})
+            result['skills'] = skills_list
+            print(f"[DEBUG] Converted skills from dict to list: {skills_list}")
+        elif isinstance(skills_data, list):
+            print(f"[DEBUG] Skills already in list format: {skills_data}")
+    else:
+        print(f"[DEBUG] No skills found in result")
     
     return result
 

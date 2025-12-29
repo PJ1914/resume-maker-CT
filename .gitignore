@@ -188,6 +188,7 @@ temp/
 # Batch files and scripts
 start.bat
 start-backend.bat
+startup.bat
 to-do.txt
 
 # Python cache

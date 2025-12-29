@@ -64,27 +64,55 @@
 \begin{center}
     {\Huge\textbf{\VAR{full_name|escape_tex}}} \\
     \vspace{2pt}
-    \BLOCK{ set has_contact = phone or email or linkedin or github }
+    \BLOCK{ set has_contact = phone or email or linkedin or github or website or leetcode or codechef or hackerrank }
     \BLOCK{ if has_contact }
     \small{
         \BLOCK{ if phone }
-        \faPhone\ \VAR{phone|escape_tex}\BLOCK{ if email or linkedin or github } \textbar{}\BLOCK{ endif }
+        \faPhone\ \VAR{phone|escape_tex} \textbar{}
         \BLOCK{ endif }
         \BLOCK{ if email }
-        \faEnvelope\ \href{mailto:\VAR{email}}{\VAR{email|escape_tex}}\BLOCK{ if linkedin or github } \textbar{}\BLOCK{ endif }
+        \faEnvelope\ \href{mailto:\VAR{email}}{\VAR{email|escape_tex}} \textbar{}
         \BLOCK{ endif }
         \BLOCK{ if linkedin }
-        \faLinkedin\ \href{\VAR{linkedin}}{LinkedIn}\BLOCK{ if github } \textbar{}\BLOCK{ endif }
+        \faLinkedin\ \href{https://\VAR{linkedin|replace('https://', '')|replace('http://', '')}}{\VAR{linkedin|replace('https://', '')|replace('http://', '')|escape_tex}}
         \BLOCK{ endif }
         \BLOCK{ if github }
-        \faGithub\ \href{\VAR{github}}{GitHub}
+        \textbar{} \faGithub\ \href{https://\VAR{github|replace('https://', '')|replace('http://', '')}}{\VAR{github|replace('https://', '')|replace('http://', '')|escape_tex}}
         \BLOCK{ endif }
     } \\
+    \BLOCK{ if website or leetcode or codechef or hackerrank }
+    \small{
+        \BLOCK{ if website }
+        \faGlobe\ \href{https://\VAR{website|replace('https://', '')|replace('http://', '')}}{\VAR{website|replace('https://', '')|replace('http://', '')|escape_tex}}
+        \BLOCK{ endif }
+        \BLOCK{ if leetcode }
+        \textbar{} \faCode\ \href{https://\VAR{leetcode|replace('https://', '')|replace('http://', '')}}{LeetCode}
+        \BLOCK{ endif }
+        \BLOCK{ if codechef }
+        \textbar{} \faUtensils\ \href{https://\VAR{codechef|replace('https://', '')|replace('http://', '')}}{CodeChef}
+        \BLOCK{ endif }
+        \BLOCK{ if hackerrank }
+        \textbar{} \faHackerrank\ \href{https://\VAR{hackerrank|replace('https://', '')|replace('http://', '')}}{HackerRank}
+        \BLOCK{ endif }
+    } \\
+    \BLOCK{ endif }
     \BLOCK{ endif }
     \BLOCK{ if location }
     \small{\VAR{location|escape_tex}}
     \BLOCK{ endif }
 \end{center}
+
+% --- EDUCATION ---
+\BLOCK{ if education }
+\section{Education}
+\resumeSubHeadingListStart
+\BLOCK{ for edu in education }
+    \resumeSubheading
+        {\VAR{edu.institution|escape_tex}}{\VAR{edu.location|escape_tex}}
+        {\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex} \BLOCK{ if edu.gpa }, GPA: \VAR{edu.gpa|escape_tex}\BLOCK{ endif }}{\VAR{edu.end_date|escape_tex}}
+\BLOCK{ endfor }
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
 
 % --- SUMMARY ---
 \BLOCK{ if summary }
@@ -135,7 +163,7 @@
             \item \VAR{highlight|escape_tex}
             \BLOCK{ endfor }
             \BLOCK{ if proj.link }
-            \item \href{\VAR{proj.link}}{Project Link}
+            \item \href{https://\VAR{proj.link|replace('https://', '')|replace('http://', '')}}{Project Link}
             \BLOCK{ endif }
         \resumeItemListEnd
         \BLOCK{ endif }
@@ -181,18 +209,6 @@
     \BLOCK{ for ach in achievements }
     \item \textbf{\VAR{ach.title|escape_tex}}\BLOCK{ if ach.description } -- \textit{\small \VAR{ach.description|escape_tex}}\BLOCK{ endif } \hfill {\color{secondaryColor}\small \VAR{ach.date|escape_tex}}
     \BLOCK{ endfor }
-\resumeSubHeadingListEnd
-\BLOCK{ endif }
-
-% --- EDUCATION ---
-\BLOCK{ if education }
-\section{Education}
-\resumeSubHeadingListStart
-\BLOCK{ for edu in education }
-    \resumeSubheading
-        {\VAR{edu.institution|escape_tex}}{\VAR{edu.location|escape_tex}}
-        {\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex} \BLOCK{ if edu.gpa }, GPA: \VAR{edu.gpa|escape_tex}\BLOCK{ endif }}{\VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } -- \BLOCK{ endif }\VAR{edu.end_date|escape_tex}}
-\BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }
 

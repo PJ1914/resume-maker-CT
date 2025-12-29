@@ -8,7 +8,7 @@ interface ResumeStrengthMeterProps {
         summary: string
         experience: any[]
         education: any[]
-        skills: { technical: string[]; soft: string[] }
+        skills: { category: string; items: string[] }[]
         projects: any[]
         certifications: any[]
         languages: any[]
@@ -45,8 +45,10 @@ export default function ResumeStrengthMeter({ data }: ResumeStrengthMeterProps) 
             suggestions.push('Add work experience')
         }
 
-        // Skills (15 points)
-        const totalSkills = (data.skills.technical?.length || 0) + (data.skills.soft?.length || 0)
+        // Skills (15 points) - handle array format
+        const totalSkills = Array.isArray(data.skills)
+            ? data.skills.reduce((total, cat) => total + (cat.items?.length || 0), 0)
+            : 0
         if (totalSkills >= 5) {
             score += 15
         } else {

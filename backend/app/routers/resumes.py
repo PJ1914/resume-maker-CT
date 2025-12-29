@@ -59,6 +59,37 @@ ALLOWED_CONTENT_TYPES = [
     ResumeFileType.PLAIN.value,  # For .tex files
 ]
 
+def normalize_skills_to_list(skills):
+    """Convert skills to list format [{category, items}]"""
+    if skills is None:
+        return []
+    if isinstance(skills, list):
+        # Already in list format, validate structure
+        result = []
+        for s in skills:
+            # Handle dict format
+            if isinstance(s, dict) and s.get('items'):
+                result.append({'category': s.get('category', 'Technical'), 'items': s.get('items', [])})
+            # Handle SkillCategory Pydantic model objects
+            elif hasattr(s, 'category') and hasattr(s, 'items') and s.items:
+                result.append({'category': s.category, 'items': list(s.items)})
+        return result
+    if isinstance(skills, dict):
+        # Old format or SkillsData object
+        result = []
+        if hasattr(skills, 'categories') and skills.categories:
+            result.extend([{'category': c.category, 'items': list(c.items)} for c in skills.categories])
+        if hasattr(skills, 'technical') and skills.technical:
+            result.append({'category': 'Technical', 'items': list(skills.technical)})
+        elif 'technical' in skills and skills.get('technical'):
+            result.append({'category': 'Technical', 'items': skills['technical']})
+        if hasattr(skills, 'soft') and skills.soft:
+            result.append({'category': 'Soft Skills', 'items': list(skills.soft)})
+        elif 'soft' in skills and skills.get('soft'):
+            result.append({'category': 'Soft Skills', 'items': skills['soft']})
+        return result
+    return []
+
 @router.get("/health")
 async def resume_health_check():
     """Health check for resume router"""
@@ -332,6 +363,9 @@ async def create_resume(
     
     try:
         logging.info("Creating resume for user: %s (resume_id=%s, template=%s)", user_id, resume_id, request.template)
+        logging.info("Skills received: %s (type=%s)", request.skills, type(request.skills))
+        normalized_skills = normalize_skills_to_list(request.skills)
+        logging.info("Skills normalized: %s", normalized_skills)
         
         # Build sections dict safely
         sections = {
@@ -441,10 +475,7 @@ async def create_resume(
                 'hackerrank': request.contact.hackerrank,
                 'website': request.contact.website,
             },
-            skills={
-                'technical': request.skills.technical,
-                'soft': request.skills.soft,
-            },
+            skills=normalize_skills_to_list(request.skills),
             sections=sections,
             # Also set individual fields for easier access
             experience=[
@@ -518,6 +549,100 @@ async def create_resume(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to save resume data to Firestore"
             )
+        
+        # Also save to resume_data collection for consistency with editor format
+        try:
+            from app.firebase import resume_maker_app
+            if resume_maker_app:
+                from firebase_admin import firestore
+                db = firestore.client(app=resume_maker_app)
+                
+                # Build resume_data format
+                resume_data_doc = {
+                    'id': resume_id,
+                    'userId': user_id,
+                    'contact': {
+                        'fullName': request.contact.name,
+                        'email': request.contact.email,
+                        'phone': request.contact.phone,
+                        'location': request.contact.location,
+                        'linkedin': request.contact.linkedin,
+                        'github': request.contact.github,
+                        'portfolio': request.contact.website,
+                    },
+                    'summary': request.summary,
+                    'experience': [
+                        {
+                            'id': f'exp-{i}',
+                            'company': e.company,
+                            'position': e.position,
+                            'title': e.title or e.position,
+                            'location': e.location,
+                            'startDate': e.startDate,
+                            'endDate': e.endDate,
+                            'description': e.description,
+                        }
+                        for i, e in enumerate(request.experience)
+                    ],
+                    'education': [
+                        {
+                            'id': f'edu-{i}',
+                            'institution': e.school,
+                            'degree': e.degree,
+                            'field': e.field,
+                            'location': e.location,
+                            'startDate': e.startDate,
+                            'endDate': e.endDate,
+                            'gpa': e.gpa,
+                        }
+                        for i, e in enumerate(request.education)
+                    ],
+                    'skills': normalize_skills_to_list(request.skills),
+                    'projects': [
+                        {
+                            'id': f'proj-{i}',
+                            'name': p.name,
+                            'description': p.description,
+                            'technologies': p.technologies.split(',') if isinstance(p.technologies, str) else (p.technologies or []),
+                            'link': p.url,
+                        }
+                        for i, p in enumerate(request.projects)
+                    ],
+                    'certifications': [
+                        {
+                            'name': c.name,
+                            'issuer': c.issuer,
+                            'date': c.date,
+                        }
+                        for c in request.certifications
+                    ],
+                    'languages': [
+                        {
+                            'language': l.name,
+                            'proficiency': l.proficiency,
+                        }
+                        for l in request.languages
+                    ],
+                    'achievements': [
+                        {
+                            'title': a.title,
+                            'description': a.description,
+                            'date': a.date,
+                        }
+                        for a in request.achievements
+                    ],
+                    'template': request.template,
+                    'updatedAt': datetime.utcnow(),
+                }
+                
+                # Save to resume_data collection
+                db.collection('users').document(user_id)\
+                  .collection('resume_data').document(resume_id)\
+                  .set(resume_data_doc, merge=True)
+                
+                logging.info("Saved resume_data for wizard-created resume %s", resume_id)
+        except Exception as e:
+            logging.warning("Failed to save resume_data for %s: %s", resume_id, str(e))
         
         logging.info("Resume saved successfully: %s", resume_id)
         
