@@ -1,6 +1,7 @@
-import { User, Mail, Phone, MapPin, Linkedin, Globe, Github, Code2, Trophy, AlertCircle } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Linkedin, Globe, Github, Code2, Trophy, AlertCircle, Locate, Loader2 } from 'lucide-react'
 import { InfoTooltip } from '../ui/info-tooltip'
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 
 interface ContactData {
   name: string
@@ -51,6 +52,80 @@ const validatePhone = (phone: string): string | null => {
 
 export default function ContactStepForm({ data, onChange }: ContactStepFormProps) {
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
+  // GPS Location Detection
+  const detectLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setIsDetectingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+
+          // Use OpenStreetMap Nominatim for reverse geocoding (free, no API key needed)
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`,
+            {
+              headers: {
+                'Accept-Language': 'en',
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error('Failed to get location');
+          }
+
+          const data = await response.json();
+
+          // Extract city, state, and country
+          const address = data.address;
+          const city = address.city || address.town || address.village || address.municipality || '';
+          const state = address.state || address.region || '';
+          const country = address.country || '';
+
+          // Format location string: City, State, Country
+          const parts = [city, state, country].filter(part => part.trim() !== '');
+          const locationString = parts.join(', ') || 'Location detected';
+
+          handleChange('location', locationString);
+          toast.success(`Location detected: ${locationString}`);
+        } catch (error) {
+          console.error('Reverse geocoding error:', error);
+          toast.error('Could not determine your city. Please enter manually.');
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        setIsDetectingLocation(false);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            toast.error('Location permission denied. Please allow location access.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            toast.error('Location information unavailable.');
+            break;
+          case error.TIMEOUT:
+            toast.error('Location request timed out.');
+            break;
+          default:
+            toast.error('An error occurred while detecting location.');
+        }
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000, // Cache for 5 minutes
+      }
+    );
+  };
 
   const handleChange = (field: keyof ContactData, value: string) => {
     // Validate on change
@@ -159,17 +234,38 @@ export default function ContactStepForm({ data, onChange }: ContactStepFormProps
         <div className="md:col-span-2">
           <label className="flex items-center text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
             Location
-            <InfoTooltip content="City and State/Country is usually sufficient. Full address is rarely needed nowadays." />
+            <InfoTooltip content="City and State/Country is usually sufficient. Click the GPS button to auto-detect your location." />
           </label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
-            <input
-              type="text"
-              value={data.location}
-              onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="San Francisco, CA"
-              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
+          <div className="relative flex gap-2">
+            <div className="relative flex-1">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400" />
+              <input
+                type="text"
+                value={data.location}
+                onChange={(e) => handleChange('location', e.target.value)}
+                placeholder="San Francisco, CA"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={detectLocation}
+              disabled={isDetectingLocation}
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              title="Detect my location"
+            >
+              {isDetectingLocation ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="hidden sm:inline">Detecting...</span>
+                </>
+              ) : (
+                <>
+                  <Locate className="h-5 w-5" />
+                  <span className="hidden sm:inline">Detect Location</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 

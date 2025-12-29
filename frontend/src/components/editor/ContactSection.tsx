@@ -4,7 +4,8 @@
 
 import React, { useState } from 'react';
 import { ContactInfo } from '../../types/resume';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Locate, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // Validation helpers
 const validateName = (name: string): string | null => {
@@ -61,6 +62,68 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     const error = validatePhone(filteredValue);
     setErrors(prev => ({ ...prev, phone: error || undefined }));
     handleChange('phone', filteredValue);
+  };
+
+  // GPS Location Detection
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
+  const detectLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setIsDetectingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+
+          if (!response.ok) throw new Error('Failed to get location');
+
+          const data = await response.json();
+          const address = data.address;
+          const city = address.city || address.town || address.village || address.municipality || '';
+          const state = address.state || address.region || '';
+          const country = address.country || '';
+
+          // Format: City, State, Country
+          const parts = [city, state, country].filter(part => part.trim() !== '');
+          const locationString = parts.join(', ') || 'Location detected';
+
+          handleChange('location', locationString);
+          toast.success(`Location detected: ${locationString}`);
+        } catch (error) {
+          console.error('Reverse geocoding error:', error);
+          toast.error('Could not determine your city. Please enter manually.');
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        setIsDetectingLocation(false);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            toast.error('Location permission denied. Please allow location access.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            toast.error('Location information unavailable.');
+            break;
+          case error.TIMEOUT:
+            toast.error('Location request timed out.');
+            break;
+          default:
+            toast.error('An error occurred while detecting location.');
+        }
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
   };
 
   return (
@@ -124,13 +187,29 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         {/* Location */}
         <div className="md:col-span-2">
           <label className="label">Location</label>
-          <input
-            type="text"
-            className="input"
-            value={contact.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="San Francisco, CA"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              className="input flex-1"
+              value={contact.location}
+              onChange={(e) => handleChange('location', e.target.value)}
+              placeholder="San Francisco, CA"
+            />
+            <button
+              type="button"
+              onClick={detectLocation}
+              disabled={isDetectingLocation}
+              className="flex items-center gap-2 px-3 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white text-sm font-medium rounded-lg transition-colors"
+              title="Detect my location"
+            >
+              {isDetectingLocation ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Locate className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">{isDetectingLocation ? 'Detecting...' : 'Detect'}</span>
+            </button>
+          </div>
         </div>
 
         {/* LinkedIn */}
