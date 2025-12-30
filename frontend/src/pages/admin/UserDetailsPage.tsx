@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminService } from '@/services/admin.service'
 import {
@@ -35,6 +35,7 @@ export default function UserDetailsPage() {
         onSuccess: () => {
             toast.success('User banned successfully')
             queryClient.invalidateQueries({ queryKey: ['admin-user', uid] })
+            queryClient.invalidateQueries({ queryKey: ['admin-users'], exact: false })
         }
     })
 
@@ -43,6 +44,25 @@ export default function UserDetailsPage() {
         onSuccess: () => {
             toast.success('User unbanned successfully')
             queryClient.invalidateQueries({ queryKey: ['admin-user', uid] })
+            queryClient.invalidateQueries({ queryKey: ['admin-users'], exact: false })
+        }
+    })
+
+    const makeAdminMutation = useMutation({
+        mutationFn: adminService.makeAdmin,
+        onSuccess: () => {
+            toast.success('User is now an admin')
+            queryClient.invalidateQueries({ queryKey: ['admin-user', uid] })
+            queryClient.invalidateQueries({ queryKey: ['admin-users'], exact: false })
+        }
+    })
+
+    const removeAdminMutation = useMutation({
+        mutationFn: adminService.removeAdmin,
+        onSuccess: () => {
+            toast.success('Admin role removed')
+            queryClient.invalidateQueries({ queryKey: ['admin-user', uid] })
+            queryClient.invalidateQueries({ queryKey: ['admin-users'], exact: false })
         }
     })
 
@@ -88,7 +108,7 @@ export default function UserDetailsPage() {
     return (
         <div className="space-y-6">
             <button
-                onClick={() => navigate('/admin/users')}
+                onClick={() => navigate(-1)}
                 className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
             >
                 <ArrowLeft className="h-4 w-4" /> Back to Users
@@ -126,6 +146,21 @@ export default function UserDetailsPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {user.custom_claims?.admin ? (
+                            <button
+                                onClick={() => removeAdminMutation.mutate(user.uid)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 font-medium text-sm transition-colors"
+                            >
+                                <Shield className="h-4 w-4" /> Remove Admin
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => makeAdminMutation.mutate(user.uid)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 font-medium text-sm transition-colors"
+                            >
+                                <Shield className="h-4 w-4" /> Make Admin
+                            </button>
+                        )}
                         {user.disabled ? (
                             <button
                                 onClick={() => unbanMutation.mutate(user.uid)}
@@ -197,7 +232,7 @@ export default function UserDetailsPage() {
                             {user.credit_history?.map((tx: any, i: number) => (
                                 <div key={i} className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
                                     <div>
-                                        <p className="font-medium text-gray-900 dark:text-white capitalize">{tx.action.replace('_', ' ')}</p>
+                                        <p className="font-medium text-gray-900 dark:text-white capitalize">{tx.action?.replace('_', ' ') || 'Unknown'}</p>
                                         <p className="text-xs text-gray-500">{format(new Date(tx.timestamp), 'PP p')}</p>
                                     </div>
                                     <span className={`font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>

@@ -67,6 +67,21 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 
+# Auto-sync middleware - ensures users appear in admin view on first request
+@app.middleware("http")
+async def auto_sync_user_middleware(request: Request, call_next):
+    """
+    Auto-sync authenticated users to users_admin_view collection.
+    
+    Solves cross-project issue:
+    - Auth in CodeTapasya project
+    - Firestore in Resume-Maker-CT project
+    - New users auto-sync on first API request
+    """
+    from app.middleware.admin_view_sync import ensure_user_in_admin_view
+    return await ensure_user_in_admin_view(request, call_next)
+
+
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, tags=["Users"])

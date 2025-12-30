@@ -56,9 +56,26 @@ export const adminService = {
         return response.data
     },
 
-    getUsers: async (page: number = 1, limit: number = 50) => {
+    getUsers: async (page: number = 1, limit: number = 50, filters?: {
+        status?: string
+        role?: string
+        credits?: string
+        joined?: string
+        search?: string
+    }) => {
         const token = localStorage.getItem('authToken')
-        const response = await axios.get(`${API_URL}/api/admin/users?page=${page}&limit=${limit}`, {
+        const params = new URLSearchParams({
+            page: page.toString(),
+            limit: limit.toString()
+        })
+        
+        if (filters?.status && filters.status !== 'all') params.append('status', filters.status)
+        if (filters?.role && filters.role !== 'all') params.append('role', filters.role)
+        if (filters?.credits && filters.credits !== 'all') params.append('credits', filters.credits)
+        if (filters?.joined && filters.joined !== 'all') params.append('joined', filters.joined)
+        if (filters?.search) params.append('search', filters.search)
+        
+        const response = await axios.get(`${API_URL}/api/admin/users?${params.toString()}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         return response.data
@@ -83,6 +100,22 @@ export const adminService = {
     unbanUser: async (uid: string) => {
         const token = localStorage.getItem('authToken')
         const response = await axios.post(`${API_URL}/api/admin/users/${uid}/unban`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        return response.data
+    },
+
+    makeAdmin: async (uid: string) => {
+        const token = localStorage.getItem('authToken')
+        const response = await axios.post(`${API_URL}/api/admin/users/${uid}/make-admin`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        return response.data
+    },
+
+    removeAdmin: async (uid: string) => {
+        const token = localStorage.getItem('authToken')
+        const response = await axios.post(`${API_URL}/api/admin/users/${uid}/remove-admin`, {}, {
             headers: { Authorization: `Bearer ${token}` }
         })
         return response.data

@@ -94,14 +94,19 @@ def is_admin_user(user_id: str, user_email: str = None) -> bool:
         from firebase_admin import firestore
         db = firestore.client(app=resume_maker_app)
         
-        # Check if user is in admins collection
-        admin_doc = db.collection('admins').document(user_id).get()
-        
-        if admin_doc.exists:
-            data = admin_doc.to_dict()
-            return data.get('is_admin', False) and data.get('active', True)
-        
-        return False
+        # Check if user is in admins collection with shorter timeout
+        import google.api_core.exceptions
+        try:
+            admin_doc = db.collection('admins').document(user_id).get(timeout=5.0)
+            
+            if admin_doc.exists:
+                data = admin_doc.to_dict()
+                return data.get('is_admin', False) and data.get('active', True)
+            
+            return False
+        except google.api_core.exceptions.ServiceUnavailable:
+            logging.warning("Firestore unavailable for admin check - assuming not admin")
+            return False
     except Exception as e:
         logging.exception("Error checking admin status for credits")
         return False
