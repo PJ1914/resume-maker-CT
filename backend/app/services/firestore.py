@@ -3,7 +3,56 @@ Firestore service for managing resume metadata.
 """
 from typing import List, Optional, Dict
 from datetime import datetime
+import time
+import threading
 from app.schemas.resume import ResumeMetadata, ResumeStatus, ResumeListItem
+
+
+# =============================================================================
+# SIMPLE IN-MEMORY CACHE
+# =============================================================================
+# This cache stores frequently accessed data to avoid hitting Firestore every time.
+# Data expires after TTL (time-to-live) seconds.
+
+class SimpleCache:
+    """Thread-safe in-memory cache with TTL expiration."""
+    
+    def __init__(self):
+        self._cache: Dict[str, tuple] = {}  # key -> (value, expiry_time)
+        self._lock = threading.Lock()
+    
+    def get(self, key: str):
+        """Get value from cache. Returns None if not found or expired."""
+        with self._lock:
+            if key not in self._cache:
+                return None
+            value, expiry = self._cache[key]
+            if time.time() > expiry:
+                del self._cache[key]
+                return None
+            return value
+    
+    def set(self, key: str, value, ttl_seconds: int = 300):
+        """Set value in cache with TTL (default 5 minutes)."""
+        with self._lock:
+            expiry = time.time() + ttl_seconds
+            self._cache[key] = (value, expiry)
+    
+    def clear(self, key: str = None):
+        """Clear specific key or entire cache."""
+        with self._lock:
+            if key:
+                self._cache.pop(key, None)
+            else:
+                self._cache.clear()
+
+# Global cache instance
+_cache = SimpleCache()
+
+# Cache TTL settings (in seconds)
+CACHE_TTL_STATS = 300       # 5 minutes for platform stats
+CACHE_TTL_TESTIMONIALS = 300  # 5 minutes for testimonials
+
 
 def save_resume_metadata(metadata: ResumeMetadata) -> bool:
     """Save resume metadata to Firestore"""
@@ -996,7 +1045,15 @@ def get_top_performing_resumes(limit: int = 10) -> List[Dict]:
     """
     Get top performing resumes based on ATS score.
     Returns basic info for testimonials.
+    
+    CACHED for 5 minutes to improve performance.
     """
+    # Check cache first
+    cache_key = f"testimonials_{limit}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+    
     from app.firebase import resume_maker_app
     
     if not resume_maker_app:
@@ -1133,6 +1190,10 @@ def get_top_performing_resumes(limit: int = 10) -> List[Dict]:
                 "rating": rating,
                 "text": f"Scored {data.get('ats_score', 0)}% on Prativeda. {selected_msg}"
             })
+        
+        # Cache successful results
+        if results:
+            _cache.set(cache_key, results, CACHE_TTL_TESTIMONIALS)
             
         return results
     except Exception as e:
@@ -1145,7 +1206,15 @@ def get_platform_stats():
     """
     Get platform statistics for the landing page.
     Uses efficient aggregation queries where possible.
+    
+    CACHED for 5 minutes to improve performance.
     """
+    # Check cache first
+    cache_key = "platform_stats"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+    
     fallback_stats = {
         "resumes_created": "1,250+",
         "ats_pass_rate": "92%",
@@ -1179,11 +1248,12 @@ def get_platform_stats():
             print(f"Stats count error: {e}")
             
         # 2. Average Score
+        # Note: Order by ats_score to avoid needing a composite index with the where clause
         try:
             recent_scores = []
             docs = db.collection('resumes')\
                    .where('ats_score', '>', 0)\
-                   .order_by('updated_at', direction=firestore.Query.DESCENDING)\
+                   .order_by('ats_score', direction=firestore.Query.DESCENDING)\
                    .limit(100)\
                    .stream()
                    
@@ -1207,12 +1277,17 @@ def get_platform_stats():
             ats_pass_rate = "90%"
             print(f"Stats score error: {e}")
             
-        return {
+        result = {
             "resumes_created": display_count,
             "ats_pass_rate": ats_pass_rate,
             "avg_score": avg_score,
             "user_rating": "4.9/5"
         }
+        
+        # Cache the result
+        _cache.set(cache_key, result, CACHE_TTL_STATS)
+        
+        return result
         
     except Exception as e:
         print(f"CRITICAL ERROR in get_platform_stats: {e}")

@@ -185,6 +185,9 @@ temp/
 !frontend/README.md
 !PROJECT_DOCUMENTATION.md
 
+# Stress tests (local testing only)
+stress_tests/
+
 # Batch files and scripts
 start.bat
 start-backend.bat
