@@ -60,6 +60,9 @@ class GeminiResumeParser:
             return self._fallback_parse(text, metadata, hyperlinks)
         
         try:
+            # Preprocess text to handle missing spaces (common in PDF extractions)
+            text = self._preprocess_text(text)
+            
             # Build context with hyperlinks if available
             hyperlink_context = ""
             if hyperlinks:
@@ -95,6 +98,34 @@ class GeminiResumeParser:
         except Exception as e:
             logging.exception("Gemini parsing failed")
             return self._fallback_parse(text, metadata, hyperlinks)
+    
+    def _preprocess_text(self, text: str) -> str:
+        """
+        Preprocess text to handle missing spaces (common when copying from PDFs).
+        
+        Examples:
+            "TKRCollegeofEngineeringandTechnology" -> "TKR College of Engineering and Technology"
+            "May2024" -> "May 2024"
+        """
+        import re
+        
+        # Add space before capital letters that follow lowercase letters
+        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+        
+        # Add space after numbers followed by letters
+        text = re.sub(r'(\d)([A-Za-z])', r'\1 \2', text)
+        
+        # Add space after letters followed by 4-digit numbers (years)
+        text = re.sub(r'([A-Za-z])(\d{4})', r'\1 \2', text)
+        
+        # Clean up multiple spaces
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Add space after certain punctuation if missing
+        text = re.sub(r'([|,;])([^\s])', r'\1 \2', text)
+        
+        return text.strip()
+
     
     def _post_process_result(self, result: Dict) -> Dict:
         """Post-process parsed result to clean up dates and transform to flat format."""
@@ -400,6 +431,9 @@ class GeminiResumeParser:
     def _build_parsing_prompt(self, text: str) -> str:
         """Build the prompt for Gemini to parse the resume."""
         return f'''You are an expert resume parser. Parse this resume and return PERFECTLY STRUCTURED JSON.
+
+⚠️ NOTE: This text may have been extracted from a PDF and might have missing spaces between words.
+Use capital letters, numbers, and punctuation as word boundaries to parse correctly.
 
 ═══════════════════════════════════════════════════════════════════════════════
 🚨 MOST CRITICAL RULE - READ CAREFULLY 🚨

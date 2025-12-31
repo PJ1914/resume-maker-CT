@@ -250,18 +250,57 @@ async def extract_resume_data(
         Extracted structured resume data
     """
     import json
+    import re
+    
+    def preprocess_resume_text(text: str) -> str:
+        """
+        Preprocess resume text to handle cases where spaces are missing.
+        This happens when text is copied from PDFs or other sources.
+        """
+        # Add space before capital letters that follow lowercase letters
+        # E.g., "TKRCollegeofEngineeringandTechnology" -> "TKRCollege of Engineering and Technology"
+        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+        
+        # Add space after numbers followed by letters
+        # E.g., "May2024" -> "May 2024"
+        text = re.sub(r'(\d)([A-Za-z])', r'\1 \2', text)
+        
+        # Add space after letters followed by numbers (for dates)
+        # E.g., "July2025" -> "July 2025"
+        text = re.sub(r'([A-Za-z])(\d{4})', r'\1 \2', text)
+        
+        # Clean up multiple spaces
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Add space after certain punctuation if missing
+        # E.g., "email@example.com|linkedin.com" -> "email@example.com | linkedin.com"
+        text = re.sub(r'([|,;])([^\s])', r'\1 \2', text)
+        
+        return text
     
     try:
         logger.info(f"Starting resume extraction for user: {current_user.get('uid')}")
         logger.info(f"Resume text length: {len(request.resume_text)} characters")
         
+        # Preprocess the text to handle missing spaces
+        preprocessed_text = preprocess_resume_text(request.resume_text)
+        logger.info(f"Preprocessed text length: {len(preprocessed_text)} characters")
+        
         # Truncate resume if too long to speed up processing
         max_chars = 5000
-        resume_text = request.resume_text[:max_chars]
+        resume_text = preprocessed_text[:max_chars]
         
         prompt = f"""Extract resume data as JSON only (no markdown).
 
-RESUME:
+⚠️ IMPORTANT: This resume text may have been copied from a PDF and might have MISSING SPACES between words.
+For example:
+- "TKRCollegeofEngineeringandTechnology" should be parsed as "TKR College of Engineering and Technology"
+- "May2024–Jul2024" should be parsed as "May 2024 – Jul 2024"
+- "📞+919550654884|✉️email@example.com" should extract phone and email correctly
+
+Your task is to intelligently parse this text even if spacing is poor. Look for capital letters, numbers, and punctuation to identify word boundaries.
+
+RESUME TEXT:
 {resume_text}
 
 CRITICAL INSTRUCTIONS FOR SKILLS EXTRACTION:
@@ -275,6 +314,14 @@ CRITICAL INSTRUCTIONS FOR SKILLS EXTRACTION:
    - "Tools": Git, Docker, Postman, Jupyter, VS Code, Google Colab, Render, etc.
    - "Cloud": AWS, Azure, GCP, Firebase, Heroku, Render, etc.
 4. NEVER return empty skills array - always extract at least some skills from the resume content
+
+PARSING GUIDELINES FOR POOR SPACING:
+- Use capital letters as word boundaries (e.g., "DataScience" = "Data Science")
+- Numbers often indicate dates or GPAs
+- Punctuation like |, –, •, can separate items
+- Email patterns: look for @ symbol
+- Phone patterns: look for + and digit sequences
+- URLs: look for linkedin.com, github.com, etc.
 
 Return valid JSON:
 {{"contact": {{"name": "Full Name", "email": "email@example.com", "phone": "+1234567890", "location": "City, State", "linkedin": "url", "github": "url", "leetcode": "url", "codechef": "url", "hackerrank": "url", "website": "url"}}, "summary": "summary text", "experience": [{{"company": "Company", "position": "Title", "startDate": "2020", "endDate": "2021", "description": "desc"}}], "education": [{{"school": "University", "degree": "Bachelor", "field": "Field", "year": "2020", "gpa": "3.8"}}], "skills": [{{"category": "Languages", "items": ["Python", "Java"]}}, {{"category": "Frameworks", "items": ["React", "TensorFlow"]}}, {{"category": "Databases", "items": ["MySQL"]}}, {{"category": "ML/AI", "items": ["Keras", "CNN"]}}, {{"category": "Tools", "items": ["Git", "Docker"]}}], "projects": [{{"name": "Project", "description": "desc", "link": "url", "technologies": ["tech1", "tech2"]}}], "certifications": [{{"name": "Cert", "issuer": "Org", "date": "2024"}}], "achievements": [{{"title": "Title", "description": "desc", "date": "2024"}}]}}"""

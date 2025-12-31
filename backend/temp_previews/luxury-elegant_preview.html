@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nadukula Hemanth - Executive Portfolio</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                fontFamily: {
+                    serif: ['Playfair Display', 'serif'],
+                    elegant: ['Cormorant Garamond', 'serif'],
+                    sans: ['Montserrat', 'sans-serif'],
+                },
+                extend: {
+                    colors: {
+                        luxury: {
+                            gold: '#d4af37',
+                            lightGold: '#f4e4bc',
+                            bronze: '#cd7f32',
+                            dark: '#0d0d0d',
+                            darker: '#080808',
+                            charcoal: '#1a1a1a',
+                            cream: '#fffef9',
+                        }
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Elegant Background Pattern */
+        .luxury-bg {
+            background-color: #0d0d0d;
+            background-image:
+                radial-gradient(ellipse at top, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom, rgba(212, 175, 55, 0.02) 0%, transparent 50%);
+        }
+
+        /* Gold Shimmer Effect */
+        @keyframes gold-shimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        .gold-shimmer {
+            background: linear-gradient(90deg,
+                    #d4af37 0%,
+                    #f4e4bc 25%,
+                    #d4af37 50%,
+                    #f4e4bc 75%,
+                    #d4af37 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gold-shimmer 4s linear infinite;
+        }
+
+        /* Elegant Border */
+        .elegant-border {
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            position: relative;
+        }
+
+        .elegant-border::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+        }
+
+        /* Luxury Card */
+        .luxury-card {
+            background: linear-gradient(135deg,
+                    rgba(26, 26, 26, 0.9) 0%,
+                    rgba(13, 13, 13, 0.95) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .luxury-card:hover {
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(212, 175, 55, 0.1);
+            transform: translateY(-5px);
+        }
+
+        /* Gold Accent Line */
+        .gold-line {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, #d4af37, #f4e4bc, #d4af37);
+        }
+
+        /* Elegant Divider */
+        .elegant-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .elegant-divider::before,
+        .elegant-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+        }
+
+        /* Profile Frame */
+        .profile-frame {
+            position: relative;
+            padding: 8px;
+            background: linear-gradient(135deg, #d4af37, #f4e4bc, #d4af37);
+        }
+
+        .profile-frame::before {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            background: #0d0d0d;
+        }
+
+        /* Fade In Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0d0d0d;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #d4af37, #cd7f32);
+            border-radius: 4px;
+        }
+
+        /* Section Title Decoration */
+        .section-title {
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .text-7xl {
+                font-size: 2.5rem !important;
+            }
+
+            .text-6xl {
+                font-size: 2rem !important;
+            }
+
+            .text-5xl {
+                font-size: 1.75rem !important;
+            }
+
+            .text-4xl {
+                font-size: 1.5rem !important;
+            }
+        }
+
+        /* Parallax Effect */
+        .parallax-section {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .parallax-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg,
+                    rgba(13, 13, 13, 0.9) 0%,
+                    rgba(13, 13, 13, 0.7) 50%,
+                    rgba(13, 13, 13, 0.9) 100%);
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body class="luxury-bg text-white min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-luxury-darker/90 backdrop-blur-lg border-b border-luxury-gold/20">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <a href="#home" class="font-serif text-2xl font-bold text-luxury-gold">
+                    Nadukula Hemanth
+                </a>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8 font-sans text-sm tracking-widest uppercase">
+                    <a href="#home" class="hover:text-luxury-gold transition-colors duration-300">Home</a>
+                    <a href="#about" class="hover:text-luxury-gold transition-colors duration-300">About</a>
+                    
+                    <a href="#education" class="hover:text-luxury-gold transition-colors duration-300">Education</a>
+                    
+                    
+                    <a href="#experience" class="hover:text-luxury-gold transition-colors duration-300">Experience</a>
+                    
+                    
+                    <a href="#projects" class="hover:text-luxury-gold transition-colors duration-300">Portfolio</a>
+                    
+                    <a href="#contact" class="hover:text-luxury-gold transition-colors duration-300">Contact</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-luxury-gold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu"
+                class="hidden md:hidden mt-4 pb-4 space-y-2 font-sans text-sm tracking-widest uppercase border-t border-luxury-gold/20 pt-4">
+                <a href="#home"
+                    class="block py-3 px-4 hover:text-luxury-gold hover:bg-luxury-gold/5 rounded transition-all">Home</a>
+                <a href="#about"
+                    class="block py-3 px-4 hover:text-luxury-gold hover:bg-luxury-gold/5 rounded transition-all">About</a>
+                
+                <a href="#education"
+                    class="block py-3 px-4 hover:text-luxury-gold hover:bg-luxury-gold/5 rounded transition-all">Education</a>
+                
+                
+                <a href="#experience"
+                    class="block py-3 px-4 hover:text-luxury-gold hover:bg-luxury-gold/5 rounded transition-all">Experience</a>
+                
+                
+                <a href="#projects"
+                    class="block py-3 px-4 hover:text-luxury-gold hover:bg-luxury-gold/5 rounded transition-all">Portfolio</a>
+                
+                <a href="#contact"
+                    class="block py-3 px-4 hover:text-luxury-gold hover:bg-luxury-gold/5 rounded transition-all">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center px-6 pt-20">
+        <div class="max-w-5xl mx-auto text-center">
+            <!-- Decorative Element -->
+            <div class="elegant-divider mb-8">
+                <span class="text-luxury-gold text-2xl">✦</span>
+            </div>
+
+            <!-- Profile Photo -->
+            
+            <div class="mb-10">
+                <div
+                    class="w-48 h-48 md:w-64 md:h-64 mx-auto rounded-full border-2 border-luxury-gold flex items-center justify-center bg-luxury-charcoal">
+                    <span class="font-serif text-7xl md:text-8xl text-luxury-gold">
+                        N
+                    </span>
+                </div>
+            </div>
+            
+
+            <h1 class="font-serif text-5xl md:text-7xl font-bold mb-6">
+                <span class="gold-shimmer">Nadukula Hemanth</span>
+            </h1>
+
+            
+            <p class="font-elegant text-2xl md:text-3xl text-gray-300 italic mb-8 tracking-wide">
+                Building the Future with Code
+            </p>
+            
+
+            
+            <p class="font-sans text-gray-400 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+                Passionate full-stack developer with expertise in Python, JavaScript, and modern web technologies. I love building innovative solutions that make a difference. With a strong foundation in machine lear...
+            </p>
+            
+
+            <div class="flex flex-wrap gap-6 justify-center">
+                <a href="#contact"
+                    class="px-10 py-4 bg-luxury-gold text-luxury-dark font-sans font-semibold tracking-wider uppercase hover:bg-luxury-lightGold transition-all duration-300 rounded-sm">
+                    Get In Touch
+                </a>
+                <a href="#projects"
+                    class="px-10 py-4 border border-luxury-gold text-luxury-gold font-sans font-semibold tracking-wider uppercase hover:bg-luxury-gold/10 transition-all duration-300 rounded-sm">
+                    View Portfolio
+                </a>
+            </div>
+
+            <!-- Social Links -->
+            
+            <div class="flex gap-6 justify-center mt-12">
+                
+                
+                <a href="https://linkedin.com/in/hemanth" target="_blank"
+                    class="p-3 border border-luxury-gold/30 rounded-full hover:border-luxury-gold hover:bg-luxury-gold/10 transition-all duration-300">
+                    <svg class="w-5 h-5 text-luxury-gold" fill="currentColor" viewBox="0 0 24 24">
+                        
+                        <path
+                            d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        
+                    </svg>
+                </a>
+                
+                
+                
+                <a href="https://github.com/hemanth" target="_blank"
+                    class="p-3 border border-luxury-gold/30 rounded-full hover:border-luxury-gold hover:bg-luxury-gold/10 transition-all duration-300">
+                    <svg class="w-5 h-5 text-luxury-gold" fill="currentColor" viewBox="0 0 24 24">
+                        
+                        <path
+                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        
+                    </svg>
+                </a>
+                
+                
+            </div>
+            
+
+            <!-- Decorative Element -->
+            <div class="elegant-divider mt-16">
+                <span class="text-luxury-gold text-2xl">✦</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 px-6">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-serif text-4xl md:text-5xl font-bold text-center mb-16 section-title">
+                <span class="text-luxury-gold">About</span>
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="luxury-card rounded-lg p-10">
+                    <h3 class="font-serif text-2xl text-luxury-gold mb-6">Profile</h3>
+                    <div class="gold-line mb-6"></div>
+                    
+                    <p class="font-elegant text-xl text-gray-300 leading-relaxed italic">
+                        "Passionate full-stack developer with expertise in Python, JavaScript, and modern web technologies. I love building innovative solutions that make a difference. With a strong foundation in machine learning and AI, I create intelligent applications that solve real-world problems."
+                    </p>
+                    
+
+                    <div class="mt-10 space-y-4">
+                        
+                        <div class="flex items-center gap-4">
+                            <span class="w-24 font-sans text-sm text-luxury-gold uppercase tracking-wider">Email</span>
+                            <span class="font-sans text-gray-300">hemanth@example.com</span>
+                        </div>
+                        
+                        
+                        <div class="flex items-center gap-4">
+                            <span
+                                class="w-24 font-sans text-sm text-luxury-gold uppercase tracking-wider">Location</span>
+                            <span class="font-sans text-gray-300">Hyderabad, Telangana, India</span>
+                        </div>
+                        
+                        
+                        <div class="flex items-center gap-4">
+                            <span class="w-24 font-sans text-sm text-luxury-gold uppercase tracking-wider">Phone</span>
+                            <span class="font-sans text-gray-300">+91 7780658357</span>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <div class="luxury-card rounded-lg p-10">
+                    <h3 class="font-serif text-2xl text-luxury-gold mb-6">Expertise</h3>
+                    <div class="gold-line mb-6"></div>
+                    <div class="grid grid-cols-2 gap-6">
+                        
+                        <div class="text-center p-6 border border-luxury-gold/20 rounded-lg">
+                            <div class="font-serif text-4xl text-luxury-gold mb-2">2+</div>
+                            <div class="font-sans text-sm text-gray-400 uppercase tracking-wider">Positions</div>
+                        </div>
+                        
+                        
+                        <div class="text-center p-6 border border-luxury-gold/20 rounded-lg">
+                            <div class="font-serif text-4xl text-luxury-gold mb-2">3+</div>
+                            <div class="font-sans text-sm text-gray-400 uppercase tracking-wider">Projects</div>
+                        </div>
+                        
+                        
+                        <div class="text-center p-6 border border-luxury-gold/20 rounded-lg">
+                            <div class="font-serif text-4xl text-luxury-gold mb-2">8+</div>
+                            <div class="font-sans text-sm text-gray-400 uppercase tracking-wider">Skills</div>
+                        </div>
+                        
+                        
+                        <div class="text-center p-6 border border-luxury-gold/20 rounded-lg">
+                            <div class="font-serif text-4xl text-luxury-gold mb-2">3+</div>
+                            <div class="font-sans text-sm text-gray-400 uppercase tracking-wider">Certifications</div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Education Section -->
+    
+    <section id="education" class="py-24 px-6 bg-luxury-charcoal/50">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-serif text-4xl md:text-5xl font-bold text-center mb-16 section-title">
+                <span class="text-luxury-gold">Education</span>
+            </h2>
+
+            <div class="space-y-8">
+                
+                <div class="luxury-card rounded-lg p-8 md:p-10">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
+                        <div>
+                            <h3 class="font-serif text-2xl text-white mb-2">
+                                Bachelor of Technology
+                                
+                                <span class="text-luxury-gold">in Computer Science</span>
+                                
+                            </h3>
+                            <p class="font-elegant text-xl text-gray-300 italic">Anurag University</p>
+                            
+                            <p class="font-sans text-gray-500 text-sm mt-1">Hyderabad, India</p>
+                            
+                        </div>
+                        
+                        <div class="font-sans text-luxury-gold mt-4 md:mt-0 text-sm tracking-wider">
+                            2023 — 
+                            2027
+                        </div>
+                        
+                    </div>
+
+                    
+                    <div
+                        class="inline-block px-6 py-2 bg-luxury-gold/10 border border-luxury-gold/30 rounded font-sans text-luxury-gold text-sm">
+                        GPA: 8.5
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </div>
+    </section>
+    
+
+    <!-- Experience Section -->
+    
+    <section id="experience" class="py-24 px-6">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-serif text-4xl md:text-5xl font-bold text-center mb-16 section-title">
+                <span class="text-luxury-gold">Experience</span>
+            </h2>
+
+            <div class="space-y-8">
+                
+                <div class="luxury-card rounded-lg p-8 md:p-10">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
+                        <div>
+                            <h3 class="font-serif text-2xl text-white">Software Developer Intern</h3>
+                            <p class="font-elegant text-xl text-luxury-gold italic mt-2">Tech Solutions Pvt Ltd</p>
+                        </div>
+                        
+                        <div class="font-sans text-gray-400 mt-4 md:mt-0 text-sm tracking-wider">
+                            Jun 2024 — Present
+                        </div>
+                        
+                    </div>
+
+                    
+                    <p class="font-sans text-gray-300 mb-6 leading-relaxed">Working on full-stack web applications using React and FastAPI</p>
+                    
+
+                    
+                    <ul class="space-y-3">
+                        
+                        <li class="flex items-start gap-3 font-sans text-gray-400">
+                            <span class="text-luxury-gold mt-1">✦</span>
+                            <span>Developed RESTful APIs using FastAPI and Python</span>
+                        </li>
+                        
+                        <li class="flex items-start gap-3 font-sans text-gray-400">
+                            <span class="text-luxury-gold mt-1">✦</span>
+                            <span>Built responsive UI components with React and Tailwind CSS</span>
+                        </li>
+                        
+                        <li class="flex items-start gap-3 font-sans text-gray-400">
+                            <span class="text-luxury-gold mt-1">✦</span>
+                            <span>Implemented authentication and authorization systems</span>
+                        </li>
+                        
+                    </ul>
+                    
+                </div>
+                
+                <div class="luxury-card rounded-lg p-8 md:p-10">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
+                        <div>
+                            <h3 class="font-serif text-2xl text-white">ML Research Assistant</h3>
+                            <p class="font-elegant text-xl text-luxury-gold italic mt-2">University AI Lab</p>
+                        </div>
+                        
+                        <div class="font-sans text-gray-400 mt-4 md:mt-0 text-sm tracking-wider">
+                            Jan 2024 — May 2024
+                        </div>
+                        
+                    </div>
+
+                    
+                    <p class="font-sans text-gray-300 mb-6 leading-relaxed">Research on computer vision and deep learning models</p>
+                    
+
+                    
+                    <ul class="space-y-3">
+                        
+                        <li class="flex items-start gap-3 font-sans text-gray-400">
+                            <span class="text-luxury-gold mt-1">✦</span>
+                            <span>Trained CNN models for image classification</span>
+                        </li>
+                        
+                        <li class="flex items-start gap-3 font-sans text-gray-400">
+                            <span class="text-luxury-gold mt-1">✦</span>
+                            <span>Implemented OCR systems using TensorFlow</span>
+                        </li>
+                        
+                    </ul>
+                    
+                </div>
+                
+            </div>
+        </div>
+    </section>
+    
+
+    <!-- Projects Section -->
+    
+    <section id="projects" class="py-24 px-6 bg-luxury-charcoal/50">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-serif text-4xl md:text-5xl font-bold text-center mb-16 section-title">
+                <span class="text-luxury-gold">Portfolio</span>
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <div class="luxury-card rounded-lg overflow-hidden group">
+                    
+                    <div
+                        class="h-56 bg-gradient-to-br from-luxury-charcoal to-luxury-dark flex items-center justify-center border-b border-luxury-gold/20">
+                        <span class="font-serif text-5xl text-luxury-gold/30">R</span>
+                    </div>
+                    
+
+                    <div class="p-8">
+                        <h3
+                            class="font-serif text-xl text-white mb-3 group-hover:text-luxury-gold transition-colors duration-300">
+                            Resume Maker Pro
+                        </h3>
+
+                        
+                        <p class="font-sans text-gray-400 text-sm mb-4 leading-relaxed">AI-powered resume builder with ATS scoring, multiple templates, and PDF export functionality....</p>
+                        
+
+                        
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">React</span>
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">FastAPI</span>
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">Python</span>
+                            
+                        </div>
+                        
+
+                        
+                        <div class="flex gap-3">
+                            
+                            <a href="https://resume-maker.com"
+                                target="_blank"
+                                class="flex-1 px-4 py-2 bg-luxury-gold text-luxury-dark text-center font-sans text-sm font-semibold tracking-wider hover:bg-luxury-lightGold transition-colors rounded-sm">
+                                View
+                            </a>
+                            
+                            
+                            <a href="https://github.com/hemanth/resume-maker"
+                                target="_blank"
+                                class="px-4 py-2 border border-luxury-gold text-luxury-gold font-sans text-sm tracking-wider hover:bg-luxury-gold/10 transition-colors rounded-sm">
+                                Code
+                            </a>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <div class="luxury-card rounded-lg overflow-hidden group">
+                    
+                    <div
+                        class="h-56 bg-gradient-to-br from-luxury-charcoal to-luxury-dark flex items-center justify-center border-b border-luxury-gold/20">
+                        <span class="font-serif text-5xl text-luxury-gold/30">C</span>
+                    </div>
+                    
+
+                    <div class="p-8">
+                        <h3
+                            class="font-serif text-xl text-white mb-3 group-hover:text-luxury-gold transition-colors duration-300">
+                            CivicPulse
+                        </h3>
+
+                        
+                        <p class="font-sans text-gray-400 text-sm mb-4 leading-relaxed">Citizen complaint management system with real-time tracking and analytics dashboard....</p>
+                        
+
+                        
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">MERN Stack</span>
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">MongoDB</span>
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">Express</span>
+                            
+                        </div>
+                        
+
+                        
+                        <div class="flex gap-3">
+                            
+                            <a href="https://civicpulse.com"
+                                target="_blank"
+                                class="flex-1 px-4 py-2 bg-luxury-gold text-luxury-dark text-center font-sans text-sm font-semibold tracking-wider hover:bg-luxury-lightGold transition-colors rounded-sm">
+                                View
+                            </a>
+                            
+                            
+                            <a href="https://github.com/hemanth/civicpulse"
+                                target="_blank"
+                                class="px-4 py-2 border border-luxury-gold text-luxury-gold font-sans text-sm tracking-wider hover:bg-luxury-gold/10 transition-colors rounded-sm">
+                                Code
+                            </a>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <div class="luxury-card rounded-lg overflow-hidden group">
+                    
+                    <div
+                        class="h-56 bg-gradient-to-br from-luxury-charcoal to-luxury-dark flex items-center justify-center border-b border-luxury-gold/20">
+                        <span class="font-serif text-5xl text-luxury-gold/30">A</span>
+                    </div>
+                    
+
+                    <div class="p-8">
+                        <h3
+                            class="font-serif text-xl text-white mb-3 group-hover:text-luxury-gold transition-colors duration-300">
+                            AI Interview Prep
+                        </h3>
+
+                        
+                        <p class="font-sans text-gray-400 text-sm mb-4 leading-relaxed">AI-powered interview preparation tool with personalized questions and TTS feedback....</p>
+                        
+
+                        
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">Python</span>
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">Gemini AI</span>
+                            
+                            <span
+                                class="px-3 py-1 bg-luxury-gold/10 text-luxury-gold text-xs font-sans tracking-wider border border-luxury-gold/20 rounded">React</span>
+                            
+                        </div>
+                        
+
+                        
+                        <div class="flex gap-3">
+                            
+                            
+                            <a href="https://github.com/hemanth/interview-prep"
+                                target="_blank"
+                                class="px-4 py-2 border border-luxury-gold text-luxury-gold font-sans text-sm tracking-wider hover:bg-luxury-gold/10 transition-colors rounded-sm">
+                                Code
+                            </a>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+    
+
+    <!-- Skills Section -->
+    
+    <section id="skills" class="py-24 px-6">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-serif text-4xl md:text-5xl font-bold text-center mb-16 section-title">
+                <span class="text-luxury-gold">Skills</span>
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                
+                
+                <div class="luxury-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-serif text-lg text-white">Python</span>
+                        <span class="font-sans text-luxury-gold text-sm">90%</span>
+                    </div>
+                    <div class="w-full bg-luxury-darker rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-luxury-bronze to-luxury-gold"
+                            style="width: 90%"></div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="luxury-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-serif text-lg text-white">JavaScript</span>
+                        <span class="font-sans text-luxury-gold text-sm">85%</span>
+                    </div>
+                    <div class="w-full bg-luxury-darker rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-luxury-bronze to-luxury-gold"
+                            style="width: 85%"></div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="luxury-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-serif text-lg text-white">React.js</span>
+                        <span class="font-sans text-luxury-gold text-sm">85%</span>
+                    </div>
+                    <div class="w-full bg-luxury-darker rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-luxury-bronze to-luxury-gold"
+                            style="width: 85%"></div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="luxury-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-serif text-lg text-white">FastAPI</span>
+                        <span class="font-sans text-luxury-gold text-sm">80%</span>
+                    </div>
+                    <div class="w-full bg-luxury-darker rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-luxury-bronze to-luxury-gold"
+                            style="width: 80%"></div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="luxury-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-serif text-lg text-white">Machine Learning</span>
+                        <span class="font-sans text-luxury-gold text-sm">75%</span>
+                    </div>
+                    <div class="w-full bg-luxury-darker rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-luxury-bronze to-luxury-gold"
+                            style="width: 75%"></div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="luxury-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-serif text-lg text-white">TensorFlow</span>
+                        <span class="font-sans text-luxury-gold text-sm">70%</span>
+                    </div>
+                    <div class="w-full bg-luxury-darker rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-luxury-bronze to-luxury-gold"
+                            style="width: 70%"></div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="luxury-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-serif text-lg text-white">MongoDB</span>
+                        <span class="font-sans text-luxury-gold text-sm">75%</span>
+                    </div>
+                    <div class="w-full bg-luxury-darker rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-luxury-bronze to-luxury-gold"
+                            style="width: 75%"></div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="luxury-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-serif text-lg text-white">Git & GitHub</span>
+                        <span class="font-sans text-luxury-gold text-sm">85%</span>
+                    </div>
+                    <div class="w-full bg-luxury-darker rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-luxury-bronze to-luxury-gold"
+                            style="width: 85%"></div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+    
+
+    <!-- Certifications Section -->
+    
+    <section id="certifications" class="py-24 px-6 bg-luxury-charcoal/50">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-serif text-4xl md:text-5xl font-bold text-center mb-16 section-title">
+                <span class="text-luxury-gold">Certifications</span>
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div class="luxury-card rounded-lg p-6 text-center">
+                    <div class="text-luxury-gold text-3xl mb-4">✦</div>
+                    <h3 class="font-serif text-lg text-white mb-2">AWS Cloud Practitioner</h3>
+                    
+                    <p class="font-elegant text-luxury-gold italic">Amazon Web Services</p>
+                    
+                    
+                    <p class="font-sans text-gray-500 text-sm mt-2">2024</p>
+                    
+                </div>
+                
+                <div class="luxury-card rounded-lg p-6 text-center">
+                    <div class="text-luxury-gold text-3xl mb-4">✦</div>
+                    <h3 class="font-serif text-lg text-white mb-2">Python for Data Science</h3>
+                    
+                    <p class="font-elegant text-luxury-gold italic">Coursera</p>
+                    
+                    
+                    <p class="font-sans text-gray-500 text-sm mt-2">2023</p>
+                    
+                </div>
+                
+                <div class="luxury-card rounded-lg p-6 text-center">
+                    <div class="text-luxury-gold text-3xl mb-4">✦</div>
+                    <h3 class="font-serif text-lg text-white mb-2">Full Stack Development</h3>
+                    
+                    <p class="font-elegant text-luxury-gold italic">Udemy</p>
+                    
+                    
+                    <p class="font-sans text-gray-500 text-sm mt-2">2023</p>
+                    
+                </div>
+                
+            </div>
+        </div>
+    </section>
+    
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-24 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="elegant-divider mb-12">
+                <span class="text-luxury-gold text-2xl">✦</span>
+            </div>
+
+            <h2 class="font-serif text-4xl md:text-5xl font-bold mb-8 section-title">
+                <span class="text-luxury-gold">Get In Touch</span>
+            </h2>
+
+            <p class="font-elegant text-xl text-gray-300 italic mb-12 max-w-2xl mx-auto">
+                I'm always open to discussing new opportunities and creative collaborations.
+            </p>
+
+            <div class="luxury-card rounded-lg p-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <a href="mailto:hemanth@example.com"
+                        class="flex items-center gap-4 p-6 border border-luxury-gold/20 rounded-lg hover:border-luxury-gold hover:bg-luxury-gold/5 transition-all duration-300">
+                        <div class="w-12 h-12 rounded-full bg-luxury-gold/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-sans text-xs text-luxury-gold tracking-wider uppercase mb-1">Email</div>
+                            <div class="font-sans text-white text-sm break-all">hemanth@example.com</div>
+                        </div>
+                    </a>
+                    
+
+                    
+                    <a href="tel:+91 7780658357"
+                        class="flex items-center gap-4 p-6 border border-luxury-gold/20 rounded-lg hover:border-luxury-gold hover:bg-luxury-gold/5 transition-all duration-300">
+                        <div class="w-12 h-12 rounded-full bg-luxury-gold/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-sans text-xs text-luxury-gold tracking-wider uppercase mb-1">Phone</div>
+                            <div class="font-sans text-white text-sm">+91 7780658357</div>
+                        </div>
+                    </a>
+                    
+                </div>
+            </div>
+
+            <div class="elegant-divider mt-16">
+                <span class="text-luxury-gold text-2xl">✦</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-10 border-t border-luxury-gold/20 bg-luxury-darker">
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <p class="font-sans text-gray-500 text-sm tracking-wider">
+                &copy; 2025 Nadukula Hemanth. All rights reserved.
+            </p>
+            <p class="font-elegant text-luxury-gold/50 text-sm italic mt-2">
+                Crafted with elegance
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Menu Toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function () {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // Close mobile menu on link click
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('mobile-menu').classList.add('hidden');
+            });
+        });
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.utils.toArray('.luxury-card').forEach(card => {
+            gsap.from(card, {
+                scrollTrigger: {
+                    trigger: card,
+                    start: 'top 85%',
+                },
+                y: 40,
+                opacity: 0,
+                duration: 1,
+                ease: 'power3.out'
+            });
+        });
+
+        // Parallax effect for section titles
+        gsap.utils.toArray('.section-title').forEach(title => {
+            gsap.from(title, {
+                scrollTrigger: {
+                    trigger: title,
+                    start: 'top 80%',
+                },
+                y: 30,
+                opacity: 0,
+                duration: 0.8,
+                ease: 'power2.out'
+            });
+        });
+    </script>
+</body>
+
+</html>

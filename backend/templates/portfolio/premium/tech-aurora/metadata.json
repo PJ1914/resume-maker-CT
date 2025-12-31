@@ -1,0 +1,62 @@
+{
+    "id": "tech-aurora",
+    "name": "Tech Aurora",
+    "description": "Stunning portfolio with mesmerizing aurora background effects, smooth 3D animations, glassmorphism cards, and a premium developer-focused design. Perfect for showcasing technical excellence.",
+    "tier": "premium",
+    "price_inr": 999,
+    "price_credits": 650,
+    "thumbnail_url": "https://storage.googleapis.com/resume-maker-firebase.appspot.com/templates/portfolio/premium/tech-aurora/thumbnail.png",
+    "preview_url": "https://storage.googleapis.com/resume-maker-firebase.appspot.com/templates/portfolio/premium/tech-aurora/preview.html",
+    "features": [
+        "Aurora Background Animation",
+        "3D Card Transforms",
+        "Glassmorphism Design",
+        "Smooth Scroll Animations",
+        "Interactive Timeline",
+        "Skill Progress Animations",
+        "Modern Typography",
+        "Gradient Accents",
+        "Mobile Responsive",
+        "Dark Theme Optimized"
+    ],
+    "tags": [
+        "premium",
+        "aurora",
+        "modern",
+        "developer",
+        "animated",
+        "professional",
+        "tech"
+    ],
+    "technologies": [
+        "Tailwind CSS",
+        "GSAP",
+        "Custom CSS Animations",
+        "Jinja2"
+    ],
+    "sections": [
+        "hero",
+        "about",
+        "experience",
+        "education",
+        "projects",
+        "skills",
+        "certifications",
+        "contact"
+    ],
+    "customizable": {
+        "colors": true,
+        "fonts": true,
+        "theme": true,
+        "profile_photo": true,
+        "project_images": true
+    },
+    "requirements": {
+        "min_sections": 3,
+        "recommended_projects": 3,
+        "supports_images": true
+    },
+    "version": "1.0.0",
+    "created_at": "2025-12-29",
+    "updated_at": "2025-12-29"
+}

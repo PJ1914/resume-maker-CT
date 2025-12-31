@@ -1,0 +1,62 @@
+{
+  "id": "neon-cyberpunk",
+  "name": "Neon Cyberpunk",
+  "description": "Futuristic portfolio with neon glowing effects, cyber aesthetics, animated grid backgrounds, and high-tech vibes. Perfect for tech professionals and creative developers.",
+  "tier": "premium",
+  "price_inr": 899,
+  "price_credits": 580,
+  "thumbnail_url": "https://storage.googleapis.com/resume-maker-firebase.appspot.com/templates/portfolio/premium/neon-cyberpunk/thumbnail.png",
+  "preview_url": "https://storage.googleapis.com/resume-maker-firebase.appspot.com/templates/portfolio/premium/neon-cyberpunk/preview.html",
+  "features": [
+    "Neon Glow Effects",
+    "Animated Cyber Grid",
+    "Glitch Text Animations",
+    "Holographic Cards",
+    "Terminal Style Elements",
+    "Typing Animation Effects",
+    "Smooth Scroll Animations",
+    "Interactive Hover Effects",
+    "Mobile Responsive",
+    "Dark Theme Optimized"
+  ],
+  "tags": [
+    "premium",
+    "cyberpunk",
+    "neon",
+    "futuristic",
+    "tech",
+    "creative",
+    "animated"
+  ],
+  "technologies": [
+    "Tailwind CSS",
+    "GSAP",
+    "Custom Animations",
+    "Jinja2"
+  ],
+  "sections": [
+    "hero",
+    "about",
+    "experience",
+    "education",
+    "projects",
+    "skills",
+    "certifications",
+    "contact"
+  ],
+  "customizable": {
+    "colors": true,
+    "fonts": true,
+    "theme": true,
+    "profile_photo": true,
+    "project_images": true
+  },
+  "requirements": {
+    "min_sections": 3,
+    "recommended_projects": 3,
+    "supports_images": true
+  },
+  "version": "1.0.0",
+  "created_at": "2025-12-29",
+  "updated_at": "2025-12-29"
+}
