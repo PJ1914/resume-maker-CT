@@ -11,7 +11,18 @@ import {
     Activity,
     CheckCircle,
     Trash2,
-    Code
+    Code,
+    Mail,
+    Phone,
+    MapPin,
+    Linkedin,
+    Github,
+    GraduationCap,
+    Briefcase,
+    FolderOpen,
+    Wrench,
+    Globe,
+    ExternalLink
 } from 'lucide-react'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
@@ -25,7 +36,9 @@ export default function ResumeDetailsPage() {
 
     const { data: resume, isLoading } = useQuery({
         queryKey: ['admin-resume', id],
-        queryFn: () => adminService.getResumeDetails(id!)
+        queryFn: () => adminService.getResumeDetails(id!),
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+        refetchOnWindowFocus: false
     })
 
     const deleteMutation = useMutation({
@@ -148,6 +161,183 @@ export default function ResumeDetailsPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Contact Information */}
+                    {resume.contact && Object.keys(resume.contact).length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <User className="h-5 w-5 text-blue-500" />
+                                Contact Information
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {resume.contact.email && (
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="h-4 w-4 text-gray-400" />
+                                        <span className="text-sm text-gray-900 dark:text-white">{resume.contact.email}</span>
+                                    </div>
+                                )}
+                                {resume.contact.phone && (
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="h-4 w-4 text-gray-400" />
+                                        <span className="text-sm text-gray-900 dark:text-white">{resume.contact.phone}</span>
+                                    </div>
+                                )}
+                                {resume.contact.location && (
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-gray-400" />
+                                        <span className="text-sm text-gray-900 dark:text-white">{resume.contact.location}</span>
+                                    </div>
+                                )}
+                                {resume.contact.linkedin && (
+                                    <div className="flex items-center gap-2">
+                                        <Linkedin className="h-4 w-4 text-blue-500" />
+                                        <a href={resume.contact.linkedin.startsWith('http') ? resume.contact.linkedin : `https://${resume.contact.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                                            LinkedIn
+                                        </a>
+                                    </div>
+                                )}
+                                {resume.contact.github && (
+                                    <div className="flex items-center gap-2">
+                                        <Github className="h-4 w-4 text-gray-600" />
+                                        <a href={resume.contact.github.startsWith('http') ? resume.contact.github : `https://${resume.contact.github}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                                            GitHub
+                                        </a>
+                                    </div>
+                                )}
+                                {resume.contact.portfolio && (
+                                    <div className="flex items-center gap-2">
+                                        <Globe className="h-4 w-4 text-gray-400" />
+                                        <a href={resume.contact.portfolio.startsWith('http') ? resume.contact.portfolio : `https://${resume.contact.portfolio}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                                            Portfolio
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Education */}
+                    {resume.education?.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <GraduationCap className="h-5 w-5 text-purple-500" />
+                                Education ({resume.education.length})
+                            </h3>
+                            <div className="space-y-4">
+                                {resume.education.map((edu: any, i: number) => (
+                                    <div key={i} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border-l-4 border-purple-500">
+                                        <div className="font-medium text-gray-900 dark:text-white">{edu.degree || 'Degree'}</div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-300">{edu.school || edu.institution}</div>
+                                        {edu.field && <div className="text-xs text-gray-500">{edu.field}</div>}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {edu.startDate} - {edu.endDate || 'Present'}
+                                            {edu.gpa && <span className="ml-2">• GPA: {edu.gpa}</span>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Experience */}
+                    {resume.experience?.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <Briefcase className="h-5 w-5 text-green-500" />
+                                Experience ({resume.experience.length})
+                            </h3>
+                            <div className="space-y-4">
+                                {resume.experience.map((exp: any, i: number) => (
+                                    <div key={i} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border-l-4 border-green-500">
+                                        <div className="font-medium text-gray-900 dark:text-white">{exp.position || exp.title}</div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-300">{exp.company}</div>
+                                        {exp.location && <div className="text-xs text-gray-500">{exp.location}</div>}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {exp.startDate} - {exp.endDate || 'Present'}
+                                        </div>
+                                        {exp.description && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 whitespace-pre-line">{exp.description}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Projects */}
+                    {resume.projects?.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <FolderOpen className="h-5 w-5 text-orange-500" />
+                                Projects ({resume.projects.length})
+                            </h3>
+                            <div className="space-y-4">
+                                {resume.projects.map((proj: any, i: number) => (
+                                    <div key={i} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border-l-4 border-orange-500">
+                                        <div className="flex items-start justify-between">
+                                            <div className="font-medium text-gray-900 dark:text-white">{proj.name}</div>
+                                            {proj.link && (
+                                                <a href={proj.link.startsWith('http') ? proj.link : `https://${proj.link}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600">
+                                                    <ExternalLink className="h-4 w-4" />
+                                                </a>
+                                            )}
+                                        </div>
+                                        {proj.technologies && (
+                                            <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">{proj.technologies}</div>
+                                        )}
+                                        {(proj.startDate || proj.endDate) && (
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                {proj.startDate} {proj.endDate && `- ${proj.endDate}`}
+                                            </div>
+                                        )}
+                                        {proj.description && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 whitespace-pre-line">{proj.description}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Skills */}
+                    {resume.skills && (typeof resume.skills === 'object' && Object.keys(resume.skills).length > 0 || Array.isArray(resume.skills) && resume.skills.length > 0) && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <Wrench className="h-5 w-5 text-cyan-500" />
+                                Skills
+                            </h3>
+                            <div className="space-y-4">
+                                {/* Handle skills as dict {category: [items]} */}
+                                {typeof resume.skills === 'object' && !Array.isArray(resume.skills) &&
+                                    Object.entries(resume.skills).map(([category, items]: [string, any]) => (
+                                        <div key={category}>
+                                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{category}</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {Array.isArray(items) && items.map((skill: string, i: number) => (
+                                                    <span key={i} className="px-2 py-1 text-xs rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400">
+                                                        {skill}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))
+                                }
+                                {/* Handle skills as list [{category, items}] */}
+                                {Array.isArray(resume.skills) && resume.skills.map((skillCat: any, i: number) => (
+                                    <div key={i}>
+                                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{skillCat.category}</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {skillCat.items?.map((skill: string, j: number) => (
+                                                <span key={j} className="px-2 py-1 text-xs rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400">
+                                                    {skill}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* ATS History */}
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">

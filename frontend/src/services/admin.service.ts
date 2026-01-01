@@ -56,6 +56,30 @@ export const adminService = {
         return response.data
     },
 
+    getLiveUsers: async (minutes: number = 5): Promise<{
+        live_users: Array<{
+            uid: string
+            email: string
+            display_name: string | null
+            photo_url: string | null
+            last_active: string
+            minutes_ago: number
+            credits_balance: number
+            current_page: string | null
+            provider: string
+        }>
+        count: number
+        time_window_minutes: number
+        checked_at: string
+    }> => {
+        const token = localStorage.getItem('authToken')
+        const response = await axios.get(`${API_URL}/api/admin/live-users`, {
+            params: { minutes },
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        return response.data
+    },
+
     getUsers: async (page: number = 1, limit: number = 50, filters?: {
         status?: string
         role?: string
@@ -68,13 +92,13 @@ export const adminService = {
             page: page.toString(),
             limit: limit.toString()
         })
-        
+
         if (filters?.status && filters.status !== 'all') params.append('status', filters.status)
         if (filters?.role && filters.role !== 'all') params.append('role', filters.role)
         if (filters?.credits && filters.credits !== 'all') params.append('credits', filters.credits)
         if (filters?.joined && filters.joined !== 'all') params.append('joined', filters.joined)
         if (filters?.search) params.append('search', filters.search)
-        
+
         const response = await axios.get(`${API_URL}/api/admin/users?${params.toString()}`, {
             headers: { Authorization: `Bearer ${token}` }
         })

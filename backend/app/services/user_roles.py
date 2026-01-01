@@ -9,7 +9,8 @@ import logging
 # For now, we'll use Firestore to store admin list
 SYSTEM_ADMINS = [
     # Add system admin emails here as fallback
-    # "admin@codetapasya.com",
+    "admin@codetapasya.com",
+    # Add your email here for local development
 ]
 
 def is_user_admin(user_email: str, user_id: str) -> bool:
@@ -23,10 +24,19 @@ def is_user_admin(user_email: str, user_id: str) -> bool:
     Returns:
         True if user is admin, False otherwise
     """
+    from app.config import settings
     from app.firebase import resume_maker_app
     
+    logging.info("[ADMIN CHECK] Checking admin for email=%s, uid=%s, environment=%s", 
+                 user_email, user_id, settings.ENVIRONMENT)
+    
+    # In development mode, grant admin access to everyone for testing
+    if settings.ENVIRONMENT == "development":
+        logging.info("[DEV] Admin check for %s: True (DEV MODE)", user_email)
+        return True
+    
     # Check system admin list first
-    if user_email.lower() in SYSTEM_ADMINS:
+    if user_email.lower() in [e.lower() for e in SYSTEM_ADMINS]:
         return True
     
     if not resume_maker_app:

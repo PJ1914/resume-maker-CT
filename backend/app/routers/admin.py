@@ -311,6 +311,97 @@ async def get_dashboard_stats():
     
     return DashboardStats(**stats)
 
+
+@router.get("/live-users")
+async def get_live_users(minutes: int = 5):
+    """
+    Get users who are currently active (signed in within the last X minutes).
+    
+    Args:
+        minutes: Time window to consider user as "live" (default: 5 minutes)
+    
+    Returns:
+        List of active users with their details
+    """
+    from firebase_admin import auth, firestore
+    from app.firebase import codetapasya_app, resume_maker_app
+    from datetime import datetime, timedelta
+    
+    live_users = []
+    
+    try:
+        if not codetapasya_app:
+            return {"live_users": [], "count": 0, "time_window_minutes": minutes}
+        
+        # Calculate threshold timestamp (X minutes ago)
+        now = datetime.utcnow()
+        threshold = now - timedelta(minutes=minutes)
+        threshold_ts = int(threshold.timestamp() * 1000)  # Firebase uses milliseconds
+        
+        # Get Firestore for additional user data
+        db = None
+        if resume_maker_app:
+            db = firestore.client(app=resume_maker_app)
+        
+        # Iterate through all users and find active ones
+        page = auth.list_users(max_results=1000, app=codetapasya_app)
+        
+        while page:
+            for user in page.users:
+                last_sign_in = user.user_metadata.last_sign_in_timestamp
+                
+                # Check if user signed in within the time window
+                if last_sign_in and last_sign_in >= threshold_ts:
+                    # Get additional info from Firestore if available
+                    credits_balance = 0
+                    current_page = None
+                    
+                    if db:
+                        try:
+                            user_doc = db.collection('users').document(user.uid).get()
+                            if user_doc.exists:
+                                user_data = user_doc.to_dict()
+                                credits_balance = user_data.get('credits_balance', 0)
+                                current_page = user_data.get('current_page', None)
+                        except:
+                            pass
+                    
+                    # Calculate how long ago they signed in
+                    last_active_dt = datetime.utcfromtimestamp(last_sign_in / 1000)
+                    minutes_ago = int((now - last_active_dt).total_seconds() / 60)
+                    
+                    live_users.append({
+                        "uid": user.uid,
+                        "email": user.email,
+                        "display_name": user.display_name,
+                        "photo_url": user.photo_url,
+                        "last_active": last_active_dt.isoformat() + "Z",
+                        "minutes_ago": minutes_ago,
+                        "credits_balance": credits_balance,
+                        "current_page": current_page,
+                        "provider": user.provider_data[0].provider_id if user.provider_data else "email"
+                    })
+            
+            page = page.get_next_page()
+        
+        # Sort by most recently active
+        live_users.sort(key=lambda x: x["minutes_ago"])
+        
+        print(f"✓ Found {len(live_users)} live users (last {minutes} mins)")
+        
+    except Exception as e:
+        print(f"✗ Error fetching live users: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return {
+        "live_users": live_users,
+        "count": len(live_users),
+        "time_window_minutes": minutes,
+        "checked_at": datetime.utcnow().isoformat() + "Z"
+    }
+
+
 @router.get("/logs")
 async def get_admin_logs():
     """
@@ -1123,84 +1214,269 @@ async def remove_admin(uid: str):
 # --- Resume Management ---
 
 @router.get("/resumes", response_model=List[dict])
-async def list_all_resumes(limit: int = 20, page_token: str = None):
+async def list_all_resumes(limit: int = 50, page_token: str = None):
     """
     List all resumes across all users.
+    Fetches real data from Firestore.
     """
-    # Mock data for now
-    return [
-        {
-            "id": "res_123",
-            "user_id": "user_456",
-            "user_email": "john@example.com",
-            "title": "Senior Frontend Developer",
-            "created_at": "2025-12-01T10:00:00Z",
-            "updated_at": "2025-12-06T15:30:00Z",
-            "score": 85,
-            "version": 3
-        },
-        {
-            "id": "res_789",
-            "user_id": "user_999",
-            "user_email": "jane@example.com",
-            "title": "Product Manager",
-            "created_at": "2025-11-20T09:00:00Z",
-            "updated_at": "2025-12-05T11:20:00Z",
-            "score": 92,
-            "version": 5
-        },
-        {
-            "id": "res_456",
-            "user_id": "user_456",
-            "user_email": "john@example.com",
-            "title": "Full Stack Engineer",
-            "created_at": "2025-12-02T14:00:00Z",
-            "updated_at": "2025-12-02T14:00:00Z",
-            "score": 78,
-            "version": 1
-        }
-    ]
+    from firebase_admin import firestore
+    from app.firebase import resume_maker_app
+    from datetime import datetime
+    
+    resumes = []
+    
+    if not resume_maker_app:
+        return []
+    
+    try:
+        db = firestore.client(app=resume_maker_app)
+        
+        # Query resumes collection with pagination
+        query = db.collection('resumes')\
+            .order_by('updated_at', direction=firestore.Query.DESCENDING)\
+            .limit(limit)
+        
+        docs = query.stream()
+        
+        for doc in docs:
+            data = doc.to_dict()
+            
+            # Get user email from owner_uid (correct field name from ResumeMetadata)
+            user_id = data.get('owner_uid', '') or data.get('user_id', '')
+            user_email = data.get('user_email', '')
+            
+            # If no email stored, try to get from users collection
+            if not user_email and user_id:
+                try:
+                    user_doc = db.collection('users').document(user_id).get()
+                    if user_doc.exists:
+                        user_data = user_doc.to_dict()
+                        user_email = user_data.get('email', 'Unknown')
+                except:
+                    user_email = 'Unknown'
+            
+            # Parse dates
+            created_at = data.get('created_at')
+            updated_at = data.get('updated_at')
+            
+            # Convert Firestore timestamps to ISO strings
+            if hasattr(created_at, 'isoformat'):
+                created_at = created_at.isoformat()
+            elif hasattr(created_at, 'timestamp'):
+                created_at = datetime.utcfromtimestamp(created_at.timestamp()).isoformat() + 'Z'
+            else:
+                created_at = str(created_at) if created_at else datetime.utcnow().isoformat() + 'Z'
+                
+            if hasattr(updated_at, 'isoformat'):
+                updated_at = updated_at.isoformat()
+            elif hasattr(updated_at, 'timestamp'):
+                updated_at = datetime.utcfromtimestamp(updated_at.timestamp()).isoformat() + 'Z'
+            else:
+                updated_at = str(updated_at) if updated_at else datetime.utcnow().isoformat() + 'Z'
+            
+            # Get a meaningful title from contact_info (correct field name)
+            contact_info = data.get('contact_info', {}) or data.get('contact', {})
+            if isinstance(contact_info, dict):
+                name = contact_info.get('name', '')
+            else:
+                name = ''
+            
+            # Also try original_filename as fallback for uploaded resumes
+            original_filename = data.get('original_filename', '')
+            title = name or original_filename or 'Untitled Resume'
+            
+            # Get template (correct field name) and score (latest_score)
+            template = data.get('template', 'resume_1') or data.get('template_id', 'resume_1')
+            score = data.get('latest_score') or data.get('ats_score', 0) or 0
+            
+            resumes.append({
+                "id": doc.id,
+                "user_id": user_id,
+                "user_email": user_email or 'Unknown',
+                "title": title,
+                "created_at": created_at,
+                "updated_at": updated_at,
+                "score": int(score) if score else 0,
+                "template_id": template,
+                "version": data.get('version', 1)
+            })
+        
+        print(f"✓ Fetched {len(resumes)} resumes from Firestore")
+        
+    except Exception as e:
+        print(f"✗ Error fetching resumes: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return resumes
 
 @router.get("/resumes/{resume_id}", response_model=dict)
 async def get_admin_resume_details(resume_id: str):
     """
-    Get full details of a specific resume.
+    Get full details of a specific resume including contact info, experience, etc.
     """
-    # Mock data
-    return {
-        "id": resume_id,
-        "user_id": "user_456",
-        "user_email": "john@example.com",
-        "title": "Senior Frontend Developer",
-        "created_at": "2025-12-01T10:00:00Z",
-        "updated_at": "2025-12-06T15:30:00Z",
-        "score": 85,
-        "version": 3,
-        "template_id": "modern_classic",
-        "content_summary": {
-            "experience_count": 4,
-            "education_count": 2,
-            "skills_count": 15,
-            "projects_count": 3
-        },
-        "ai_enhancements": [
-            {"type": "summary_generation", "timestamp": "2025-12-01T10:05:00Z"},
-            {"type": "bullet_point_rewrite", "timestamp": "2025-12-01T10:15:00Z"}
-        ],
-        "ats_history": [
-            {"score": 65, "timestamp": "2025-12-01T10:00:00Z"},
-            {"score": 78, "timestamp": "2025-12-01T10:30:00Z"},
-            {"score": 85, "timestamp": "2025-12-06T15:30:00Z"}
-        ]
-    }
+    from firebase_admin import firestore
+    from app.firebase import resume_maker_app
+    from datetime import datetime
+    
+    if not resume_maker_app:
+        raise HTTPException(status_code=503, detail="Firebase not configured")
+    
+    try:
+        db = firestore.client(app=resume_maker_app)
+        
+        # Get the resume document
+        doc = db.collection('resumes').document(resume_id).get()
+        
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Resume not found")
+        
+        data = doc.to_dict()
+        
+        # Get user email from owner_uid (correct field name)
+        user_id = data.get('owner_uid', '') or data.get('user_id', '')
+        user_email = data.get('user_email', '')
+        
+        if not user_email and user_id:
+            try:
+                user_doc = db.collection('users').document(user_id).get()
+                if user_doc.exists:
+                    user_data = user_doc.to_dict()
+                    user_email = user_data.get('email', 'Unknown')
+            except:
+                user_email = 'Unknown'
+        
+        # Parse dates
+        created_at = data.get('created_at')
+        updated_at = data.get('updated_at')
+        
+        if hasattr(created_at, 'timestamp'):
+            created_at = datetime.utcfromtimestamp(created_at.timestamp()).isoformat() + 'Z'
+        else:
+            created_at = str(created_at) if created_at else datetime.utcnow().isoformat() + 'Z'
+            
+        if hasattr(updated_at, 'timestamp'):
+            updated_at = datetime.utcfromtimestamp(updated_at.timestamp()).isoformat() + 'Z'
+        else:
+            updated_at = str(updated_at) if updated_at else datetime.utcnow().isoformat() + 'Z'
+        
+        # Get contact info (correct field name)
+        contact = data.get('contact_info', {}) or data.get('contact', {})
+        if not isinstance(contact, dict):
+            contact = {}
+        
+        # Get title from contact name or original filename
+        title = contact.get('name', '') or data.get('original_filename', '') or 'Untitled Resume'
+        
+        # Get template (correct field name)
+        template = data.get('template', 'resume_1') or data.get('template_id', 'resume_1')
+        
+        # Get score (correct field name)
+        score = data.get('latest_score') or data.get('ats_score', 0) or 0
+        
+        # Count sections - handle skills as dict or list
+        experience = data.get('experience', [])
+        education = data.get('education', [])
+        skills = data.get('skills', [])
+        projects = data.get('projects', [])
+        
+        # Count skills properly - can be dict {category: [items]} or list [{category, items}]
+        if isinstance(skills, dict):
+            skills_count = sum(len(v) if isinstance(v, list) else 1 for v in skills.values())
+        elif isinstance(skills, list):
+            skills_count = len(skills)
+        else:
+            skills_count = 0
+        
+        return {
+            "id": doc.id,
+            "user_id": user_id,
+            "user_email": user_email or 'Unknown',
+            "title": title,
+            "created_at": created_at,
+            "updated_at": updated_at,
+            "score": int(score) if score else 0,
+            "version": data.get('version', 1),
+            "template_id": template,
+            "contact": contact,
+            "summary": data.get('summary', ''),
+            "content_summary": {
+                "experience_count": len(experience) if isinstance(experience, list) else 0,
+                "education_count": len(education) if isinstance(education, list) else 0,
+                "skills_count": skills_count,
+                "projects_count": len(projects) if isinstance(projects, list) else 0
+            },
+            # Full data for preview
+            "experience": experience,
+            "education": education,
+            "skills": skills,
+            "projects": projects
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Error fetching resume {resume_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/resumes/{resume_id}")
 async def delete_resume(resume_id: str):
     """
     Admin delete resume.
     """
-    # In a real app, this would delete from Firestore/SQL
-    return {"status": "success", "message": f"Resume {resume_id} deleted"}
+    from firebase_admin import firestore
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        raise HTTPException(status_code=503, detail="Firebase not configured")
+    
+    try:
+        db = firestore.client(app=resume_maker_app)
+        db.collection('resumes').document(resume_id).delete()
+        return {"status": "success", "message": f"Resume {resume_id} deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/resumes/{resume_id}/preview")
+async def preview_resume_pdf(resume_id: str):
+    """
+    Generate a PDF preview URL for the resume.
+    Returns a URL that can be used to view/download the PDF.
+    """
+    from firebase_admin import firestore
+    from app.firebase import resume_maker_app
+    
+    if not resume_maker_app:
+        raise HTTPException(status_code=503, detail="Firebase not configured")
+    
+    try:
+        db = firestore.client(app=resume_maker_app)
+        
+        # Get the resume document
+        doc = db.collection('resumes').document(resume_id).get()
+        
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Resume not found")
+        
+        data = doc.to_dict()
+        template_id = data.get('template_id', 'resume_1')
+        
+        # Return the preview URL (this uses the existing resume preview endpoint)
+        # The frontend can use this to render the PDF
+        return {
+            "resume_id": resume_id,
+            "template_id": template_id,
+            "preview_url": f"/api/resumes/{resume_id}/preview?template_id={template_id}",
+            "pdf_url": f"/api/resumes/{resume_id}/pdf?template_id={template_id}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # --- Template Management ---

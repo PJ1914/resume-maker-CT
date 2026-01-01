@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { adminService } from '@/services/admin.service'
 import {
@@ -12,7 +13,10 @@ import {
     DollarSign,
     Clock,
     BarChart3,
-    PieChart
+    PieChart,
+    Eye,
+    Radio,
+    RefreshCw
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import {
@@ -33,26 +37,47 @@ import {
     AreaChart
 } from 'recharts'
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 
 export default function AdminDashboardPage() {
-    const { data: stats, isLoading: statsLoading } = useQuery({
+    const [activeIndex, setActiveIndex] = useState<number | null>(null)
+    const [isRefreshingAll, setIsRefreshingAll] = useState(false)
+
+    const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
         queryKey: ['admin-stats'],
         queryFn: adminService.getStats,
-        refetchInterval: 30000 // Refetch every 30 seconds
+        // Manual refresh only - no auto-refresh
     })
 
-    const { data: logs } = useQuery({
+    const { data: logs, refetch: refetchLogs } = useQuery({
         queryKey: ['admin-logs'],
         queryFn: adminService.getLogs,
-        refetchInterval: 10000 // Refetch every 10 seconds
+        // Manual refresh only - no auto-refresh
     })
 
-    const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    const { data: analytics, isLoading: analyticsLoading, refetch: refetchAnalytics } = useQuery({
         queryKey: ['admin-analytics'],
         queryFn: () => adminService.getAnalytics(30), // Last 30 days
-        refetchInterval: 60000 // Refetch every minute
+        // Manual refresh only - no auto-refresh
     })
+
+    const { data: liveUsersData, refetch: refetchLiveUsers, isFetching: isRefreshingLiveUsers } = useQuery({
+        queryKey: ['admin-live-users'],
+        queryFn: () => adminService.getLiveUsers(60), // Users active in last 60 mins (1 hour)
+        // Manual refresh only - no auto-refresh
+    })
+
+    // Refresh all data
+    const handleRefreshAll = async () => {
+        setIsRefreshingAll(true)
+        await Promise.all([
+            refetchStats(),
+            refetchLogs(),
+            refetchAnalytics(),
+            refetchLiveUsers()
+        ])
+        setIsRefreshingAll(false)
+    }
 
     const container = {
         hidden: { opacity: 0 },
@@ -96,7 +121,7 @@ export default function AdminDashboardPage() {
                             </div>
                         ))}
                     </div>
-                    
+
                     {/* Charts */}
                     <div className="grid md:grid-cols-2 gap-6">
                         {[1, 2].map((i) => (
@@ -117,9 +142,19 @@ export default function AdminDashboardPage() {
     return (
         <div className="space-y-8">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-                <p className="text-gray-400 mt-1">Real-time system performance and analytics</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+                    <p className="text-gray-400 mt-1">System performance and analytics</p>
+                </div>
+                <button
+                    onClick={handleRefreshAll}
+                    disabled={isRefreshingAll}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 rounded-lg text-sm font-medium text-white transition-all disabled:opacity-50"
+                >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshingAll ? 'animate-spin text-blue-400' : ''}`} />
+                    {isRefreshingAll ? 'Refreshing...' : 'Refresh All'}
+                </button>
             </div>
 
             {/* Key Stats */}
@@ -189,6 +224,85 @@ export default function AdminDashboardPage() {
                 </motion.div>
             </div>
 
+            {/* Live Users Section */}
+            <div className="bg-[#0a0a0a] rounded-xl border border-white/10 p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Radio className="h-5 w-5 text-green-400 animate-pulse" />
+                        Live Users
+                        <span className="ml-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">
+                            {liveUsersData?.count || 0} online
+                        </span>
+                    </h2>
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs text-gray-500">
+                            Last hour • Manual refresh
+                        </span>
+                        <button
+                            onClick={() => refetchLiveUsers()}
+                            disabled={isRefreshingLiveUsers}
+                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-green-500/30 transition-all disabled:opacity-50"
+                            title="Refresh now"
+                        >
+                            <RefreshCw className={`h-4 w-4 text-gray-400 ${isRefreshingLiveUsers ? 'animate-spin text-green-400' : ''}`} />
+                        </button>
+                    </div>
+                </div>
+
+                {liveUsersData?.live_users?.length ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {liveUsersData.live_users.slice(0, 12).map((user: any) => (
+                            <div
+                                key={user.uid}
+                                className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10 hover:border-green-500/30 transition-colors"
+                            >
+                                <div className="relative">
+                                    {user.photo_url ? (
+                                        <img
+                                            src={user.photo_url}
+                                            alt={user.display_name || 'User'}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                            {(user.email || 'U')[0].toUpperCase()}
+                                        </div>
+                                    )}
+                                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-[#0a0a0a] rounded-full" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-white truncate">
+                                        {user.display_name || user.email?.split('@')[0] || 'Anonymous'}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[10px] text-green-400">
+                                            {user.minutes_ago === 0 ? 'Just now' : `${user.minutes_ago}m ago`}
+                                        </span>
+                                        <span className="text-[10px] text-gray-600">•</span>
+                                        <span className="text-[10px] text-gray-500 capitalize">
+                                            {user.provider?.replace('.com', '')}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8">
+                        <Eye className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+                        <p className="text-gray-400">No users online right now</p>
+                        <p className="text-xs text-gray-600 mt-1">Users active in the last 15 minutes will appear here</p>
+                    </div>
+                )}
+
+                {(liveUsersData?.count || 0) > 12 && (
+                    <p className="text-center text-xs text-gray-500 mt-4">
+                        + {(liveUsersData?.count || 0) - 12} more users online
+                    </p>
+                )}
+            </div>
+
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* User Growth Chart */}
@@ -201,14 +315,14 @@ export default function AdminDashboardPage() {
                         <AreaChart data={analytics?.user_growth || []}>
                             <defs>
                                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                             <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 12 }} />
                             <YAxis stroke="#666" tick={{ fontSize: 12 }} />
-                            <Tooltip 
+                            <Tooltip
                                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
                                 labelStyle={{ color: '#fff' }}
                             />
@@ -228,7 +342,7 @@ export default function AdminDashboardPage() {
                             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                             <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 12 }} />
                             <YAxis stroke="#666" tick={{ fontSize: 12 }} />
-                            <Tooltip 
+                            <Tooltip
                                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
                                 labelStyle={{ color: '#fff' }}
                             />
@@ -245,27 +359,72 @@ export default function AdminDashboardPage() {
                         <PieChart className="h-5 w-5 text-purple-400" />
                         Credit Usage by Feature
                     </h2>
-                    <ResponsiveContainer width="100%" height={250}>
-                        <RePieChart>
-                            <Pie
-                                data={analytics?.credit_usage || []}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={(entry: any) => `${entry.feature}: ${((entry.percent || 0) * 100).toFixed(0)}%`}
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="credits"
-                            >
-                                {(analytics?.credit_usage || []).map((entry: any, index: number) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-                            />
-                        </RePieChart>
-                    </ResponsiveContainer>
+                    <div className="flex items-center gap-6">
+                        {/* Donut Chart */}
+                        <div className="w-40 h-40 flex-shrink-0">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <RePieChart>
+                                    <Pie
+                                        data={analytics?.credit_usage || []}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={35}
+                                        outerRadius={60}
+                                        paddingAngle={2}
+                                        dataKey="credits"
+                                        onClick={(data, index) => setActiveIndex(activeIndex === index ? null : index)}
+                                    >
+                                        {(analytics?.credit_usage || []).map((entry: any, index: number) => (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={COLORS[index % COLORS.length]}
+                                                opacity={activeIndex === null || activeIndex === index ? 1 : 0.3}
+                                                stroke={activeIndex === index ? '#fff' : 'transparent'}
+                                                strokeWidth={activeIndex === index ? 2 : 0}
+                                                cursor="pointer"
+                                            />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
+                                        formatter={(value: any, name: any, props: any) => [`${value} credits`, props.payload.feature]}
+                                    />
+                                </RePieChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Legend */}
+                        <div className="flex-1 space-y-1 max-h-48 overflow-y-auto">
+                            {(analytics?.credit_usage || []).map((item: any, index: number) => {
+                                const total = (analytics?.credit_usage || []).reduce((sum: number, i: any) => sum + (i.credits || 0), 0)
+                                const percent = total > 0 ? ((item.credits || 0) / total * 100).toFixed(0) : 0
+                                const isActive = activeIndex === index
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all ${isActive ? 'bg-white/10 ring-1 ring-white/20' :
+                                            activeIndex !== null ? 'opacity-40' : 'hover:bg-white/5'
+                                            }`}
+                                        onClick={() => setActiveIndex(isActive ? null : index)}
+                                    >
+                                        <div
+                                            className={`w-3 h-3 rounded-full flex-shrink-0 transition-transform ${isActive ? 'scale-125' : ''}`}
+                                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                        />
+                                        <span className={`text-sm flex-1 truncate ${isActive ? 'text-white font-medium' : 'text-gray-300'}`}>
+                                            {item.feature}
+                                        </span>
+                                        <span className={`text-sm font-medium ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                                            {percent}%
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                            {(!analytics?.credit_usage || analytics.credit_usage.length === 0) && (
+                                <p className="text-sm text-gray-500">No usage data yet</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Top Templates */}
@@ -279,7 +438,7 @@ export default function AdminDashboardPage() {
                             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                             <XAxis type="number" stroke="#666" tick={{ fontSize: 12 }} />
                             <YAxis dataKey="template" type="category" stroke="#666" tick={{ fontSize: 12 }} width={100} />
-                            <Tooltip 
+                            <Tooltip
                                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
                                 labelStyle={{ color: '#fff' }}
                             />
@@ -329,10 +488,10 @@ export default function AdminDashboardPage() {
                                 <span className="font-bold text-white">{analytics?.platform_stats?.resumes || 0}</span>
                             </div>
                             <div className="w-full bg-gray-800 rounded-full h-2">
-                                <div 
+                                <div
                                     className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                                    style={{ 
-                                        width: `${((analytics?.platform_stats?.resumes || 0) / (analytics?.platform_stats?.total || 1) * 100)}%` 
+                                    style={{
+                                        width: `${((analytics?.platform_stats?.resumes || 0) / (analytics?.platform_stats?.total || 1) * 100)}%`
                                     }}
                                 />
                             </div>
@@ -343,10 +502,10 @@ export default function AdminDashboardPage() {
                                 <span className="font-bold text-white">{analytics?.platform_stats?.portfolios || 0}</span>
                             </div>
                             <div className="w-full bg-gray-800 rounded-full h-2">
-                                <div 
+                                <div
                                     className="bg-teal-500 h-2 rounded-full transition-all duration-500"
-                                    style={{ 
-                                        width: `${((analytics?.platform_stats?.portfolios || 0) / (analytics?.platform_stats?.total || 1) * 100)}%` 
+                                    style={{
+                                        width: `${((analytics?.platform_stats?.portfolios || 0) / (analytics?.platform_stats?.total || 1) * 100)}%`
                                     }}
                                 />
                             </div>
@@ -357,10 +516,10 @@ export default function AdminDashboardPage() {
                                 <span className="font-bold text-white">{analytics?.platform_stats?.interviews || 0}</span>
                             </div>
                             <div className="w-full bg-gray-800 rounded-full h-2">
-                                <div 
+                                <div
                                     className="bg-purple-500 h-2 rounded-full transition-all duration-500"
-                                    style={{ 
-                                        width: `${((analytics?.platform_stats?.interviews || 0) / (analytics?.platform_stats?.total || 1) * 100)}%` 
+                                    style={{
+                                        width: `${((analytics?.platform_stats?.interviews || 0) / (analytics?.platform_stats?.total || 1) * 100)}%`
                                     }}
                                 />
                             </div>
@@ -387,7 +546,7 @@ export default function AdminDashboardPage() {
                             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                             <XAxis dataKey="hour" stroke="#666" tick={{ fontSize: 12 }} />
                             <YAxis stroke="#666" tick={{ fontSize: 12 }} />
-                            <Tooltip 
+                            <Tooltip
                                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
                                 labelStyle={{ color: '#fff' }}
                             />
