@@ -31,10 +31,11 @@ export interface AnalyticsData {
 }
 
 export const adminService = {
-    getStats: async (): Promise<DashboardStats> => {
+    getStats: async (forceRefresh: boolean = false): Promise<DashboardStats> => {
         const token = localStorage.getItem('authToken')
         const response = await axios.get(`${API_URL}/api/admin/stats`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
+            params: { force_refresh: forceRefresh }
         })
         return response.data
     },

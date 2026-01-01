@@ -290,7 +290,7 @@ export default function LandingPage() {
                     />
                   </span>
                   <br />
-                  with AI
+                  with Prativeda
                 </motion.h1>
 
                 <motion.p
@@ -301,7 +301,7 @@ export default function LandingPage() {
                 >
                   Score Higher. Get Noticed. Get Hired.
                   <br />
-                  Neural-powered optimization for the modern job market.
+                  Professional LaTeX typesetting meets AI-powered optimization for pixel-perfect, ATS-friendly resumes.
                 </motion.p>
 
                 {/* CTA Buttons */}
@@ -868,6 +868,159 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* LaTeX Quality Section */}
+        <section className="py-20 sm:py-32 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-b from-secondary-50 to-white dark:from-black/20 dark:to-transparent">
+          <div className="container mx-auto max-w-7xl">
+            <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center">
+              {/* Left: Content */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+              >
+                <div className="mb-6 sm:mb-8">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-900 dark:bg-white/10 backdrop-blur-xl rounded-full border border-secondary-200 dark:border-white/10 mb-6">
+                    <Code2 className="w-4 h-4 text-white dark:text-white" />
+                    <span className="text-sm font-medium text-white dark:text-white">LaTeX Powered</span>
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 tracking-tight text-secondary-900 dark:text-white">
+                    Professional-Grade
+                    <br />
+                    Typography
+                  </h2>
+                  <p className="text-lg sm:text-xl text-secondary-600 dark:text-white/60 font-light leading-relaxed mb-8">
+                    Unlike basic word processors, Prativeda uses LaTeX—the gold standard in academic and professional publishing—to render your resume with pixel-perfect precision.
+                  </p>
+                </div>
+
+                <div className="space-y-6">
+                  {[
+                    {
+                      icon: Sparkles,
+                      title: 'Mathematically Perfect Spacing',
+                      desc: 'LaTeX algorithms ensure optimal line breaks, kerning, and whitespace distribution for maximum readability.'
+                    },
+                    {
+                      icon: FileText,
+                      title: 'Publication-Quality Output',
+                      desc: 'The same typesetting system used by IEEE, ACM, and top academic journals for professional documents.'
+                    },
+                    {
+                      icon: Zap,
+                      title: 'ATS-Optimized Rendering',
+                      desc: 'Clean, parseable PDF output that ATS systems can read perfectly while maintaining visual excellence.'
+                    },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-100px' }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex gap-4 p-4 bg-white dark:bg-white/5 rounded-xl border border-secondary-200 dark:border-white/5 shadow-sm dark:shadow-none hover:border-secondary-300 dark:hover:border-white/10 transition-colors"
+                    >
+                      <div className="flex-shrink-0 pt-1">
+                        <div className="p-2 bg-secondary-900 dark:bg-white rounded-lg">
+                          <item.icon className="h-5 w-5 text-white dark:text-black" />
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-secondary-900 dark:text-white mb-1">{item.title}</h4>
+                        <p className="text-secondary-500 dark:text-white/60 text-sm leading-relaxed">{item.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Right: Visual Comparison */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                className="relative"
+              >
+                <div className="relative bg-white dark:bg-zinc-900 rounded-2xl border border-secondary-200 dark:border-white/10 p-8 shadow-2xl">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-secondary-200 dark:border-white/10">
+                    <div>
+                      <div className="text-xs text-secondary-500 dark:text-white/40 mb-1">Document Quality</div>
+                      <div className="font-bold text-secondary-900 dark:text-white">LaTeX vs Word Processor</div>
+                    </div>
+                    <div className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+                      LaTeX Winner
+                    </div>
+                  </div>
+
+                  {/* Comparison Bars */}
+                  <div className="space-y-6">
+                    {[
+                      { metric: 'Typography Quality', latex: 98, word: 65 },
+                      { metric: 'ATS Compatibility', latex: 95, word: 72 },
+                      { metric: 'Professional Appeal', latex: 97, word: 68 },
+                      { metric: 'Consistency', latex: 99, word: 70 },
+                    ].map((item, i) => (
+                      <div key={i}>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-secondary-700 dark:text-white/70">{item.metric}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {/* LaTeX Bar */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-secondary-500 dark:text-white/40 w-16">LaTeX</span>
+                            <div className="flex-1 h-3 bg-secondary-100 dark:bg-white/10 rounded-full overflow-hidden">
+                              <motion.div
+                                className="h-full bg-gradient-to-r from-secondary-900 to-secondary-700 dark:from-white dark:to-white/80 rounded-full"
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${item.latex}%` }}
+                                viewport={{ once: true, margin: '-100px' }}
+                                transition={{ delay: i * 0.1, duration: 1 }}
+                              />
+                            </div>
+                            <span className="text-xs font-bold text-secondary-900 dark:text-white w-8">{item.latex}%</span>
+                          </div>
+                          {/* Word Bar */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-secondary-500 dark:text-white/40 w-16">Word</span>
+                            <div className="flex-1 h-3 bg-secondary-100 dark:bg-white/10 rounded-full overflow-hidden">
+                              <motion.div
+                                className="h-full bg-secondary-300 dark:bg-white/30 rounded-full"
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${item.word}%` }}
+                                viewport={{ once: true, margin: '-100px' }}
+                                transition={{ delay: i * 0.1, duration: 1 }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-secondary-500 dark:text-white/40 w-8">{item.word}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer Note */}
+                  <div className="mt-6 pt-4 border-t border-secondary-200 dark:border-white/10">
+                    <p className="text-xs text-secondary-500 dark:text-white/40 leading-relaxed">
+                      <strong className="text-secondary-700 dark:text-white/60">Why LaTeX?</strong> Used by scientists, researchers, and professionals worldwide for documents that demand precision. Your resume deserves the same quality.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Floating Badge */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ delay: 0.5 }}
+                  className="absolute -top-4 -right-4 bg-secondary-900 dark:bg-white text-white dark:text-black px-4 py-2 rounded-full shadow-lg text-sm font-bold"
+                >
+                  Industry Standard
+                </motion.div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
         {/* Portfolio & Hosting Section */}
         <section className="py-20 sm:py-32 px-4 sm:px-6 relative border-t border-secondary-200 dark:border-white/10 overflow-hidden">
           <div className="container mx-auto max-w-7xl">
@@ -1251,12 +1404,16 @@ export default function LandingPage() {
 
             <div
               ref={scrollRef}
-              className="flex gap-6 overflow-x-auto pb-10 px-4 no-scrollbar scroll-smooth"
+              className="flex gap-6 overflow-x-auto pb-10 px-4 scroll-smooth scrollbar-hide"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                scrollBehavior: isPaused ? 'auto' : 'unset'
+              }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
               onTouchStart={() => setIsPaused(true)}
               onTouchEnd={() => setIsPaused(false)}
-              style={{ scrollBehavior: isPaused ? 'auto' : 'unset' }} // 'auto' for user touch, 'unset' for js smooth scroll
             >
               {(displayStories.length > 0 ? displayStories : [
                 { name: 'Loading Success Stories...', role: 'Please wait', company: '...', text: 'Fetching real user data...' },

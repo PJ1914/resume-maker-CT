@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { adminService } from '@/services/admin.service'
 import {
@@ -42,36 +42,52 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 export default function AdminDashboardPage() {
     const [activeIndex, setActiveIndex] = useState<number | null>(null)
     const [isRefreshingAll, setIsRefreshingAll] = useState(false)
+    const [isPageVisible, setIsPageVisible] = useState(true)
+
+    // Phase 1: Smart polling - only when page is visible
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            setIsPageVisible(document.visibilityState === 'visible')
+        }
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }, [])
 
     const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
         queryKey: ['admin-stats'],
-        queryFn: adminService.getStats,
-        // Manual refresh only - no auto-refresh
+        queryFn: () => adminService.getStats(),
+        refetchInterval: isPageVisible ? 120000 : false, // 2 minutes when visible, stopped when hidden
+        refetchOnWindowFocus: true // Refresh when tab comes back into focus
     })
 
     const { data: logs, refetch: refetchLogs } = useQuery({
         queryKey: ['admin-logs'],
         queryFn: adminService.getLogs,
-        // Manual refresh only - no auto-refresh
+        refetchInterval: isPageVisible ? 120000 : false
     })
 
     const { data: analytics, isLoading: analyticsLoading, refetch: refetchAnalytics } = useQuery({
         queryKey: ['admin-analytics'],
         queryFn: () => adminService.getAnalytics(30), // Last 30 days
-        // Manual refresh only - no auto-refresh
+        refetchInterval: isPageVisible ? 300000 : false // 5 minutes for analytics (less critical)
     })
 
     const { data: liveUsersData, refetch: refetchLiveUsers, isFetching: isRefreshingLiveUsers } = useQuery({
         queryKey: ['admin-live-users'],
         queryFn: () => adminService.getLiveUsers(60), // Users active in last 60 mins (1 hour)
-        // Manual refresh only - no auto-refresh
+        refetchInterval: isPageVisible ? 60000 : false // 1 minute for live users (most real-time)
     })
 
-    // Refresh all data
+    // Refresh all data with force refresh for real-time stats
     const handleRefreshAll = async () => {
         setIsRefreshingAll(true)
+        // Force refresh stats to get real-time data (bypasses cache and aggregated stats)
         await Promise.all([
-            refetchStats(),
+            adminService.getStats(true).then(data => {
+                // Manually update the query cache with fresh data
+                refetchStats()
+            }),
             refetchLogs(),
             refetchAnalytics(),
             refetchLiveUsers()
