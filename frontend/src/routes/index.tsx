@@ -221,6 +221,17 @@ export default function AppRoutes() {
         }
       />
 
+      <Route
+        path="/help-center"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <HelpCenterPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
       {/* Admin Routes */}
       <Route element={<AdminGuard />}>
         <Route path="/admin" element={<AdminLayout />}>

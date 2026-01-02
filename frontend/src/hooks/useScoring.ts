@@ -26,14 +26,14 @@ export function useScoreResume() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ resumeId, preferGemini = true }: { resumeId: string; preferGemini?: boolean }) =>
-      resumeService.scoreResume(resumeId, preferGemini),
+    mutationFn: ({ resumeId, preferGemini = true, jobDescription }: { resumeId: string; preferGemini?: boolean; jobDescription?: string }) =>
+      resumeService.scoreResume(resumeId, preferGemini, true, jobDescription),
     onSuccess: (data, variables) => {
       // Directly update the cache with the new score from POST response
       // This ensures we show the correct score immediately without refetching
       console.log('[useScoreResume] Score received:', data.scoring_method, 'Total:', data.total_score);
       queryClient.setQueryData(scoringKeys.score(variables.resumeId), data);
-      
+
       // Update credits balance immediately if credits were deducted
       if (data.credits_used && data.credits_used > 0) {
         // Immediate UI update
@@ -47,11 +47,11 @@ export function useScoreResume() {
           }
           return oldData;
         });
-        
+
         // Refetch fresh data from server in background (no await)
-        queryClient.invalidateQueries({ queryKey: creditKeys.balance() }).catch(() => {});
+        queryClient.invalidateQueries({ queryKey: creditKeys.balance() }).catch(() => { });
       }
-      
+
       toast.success('ATS score calculated successfully!');
     },
     // Don't handle error here - let the component handle it for custom modal support

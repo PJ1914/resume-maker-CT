@@ -181,6 +181,13 @@ export const resumeService = {
   },
 
   /**
+   * Tailor resume for a specific job description using AI
+   */
+  async tailorResume(resumeId: string, data: { job_description: string; job_role?: string; company?: string }): Promise<any> {
+    return apiClient.post(`/api/resumes/${resumeId}/tailor`, data)
+  },
+
+  /**
    * Create a new version of the resume
    */
   async createVersion(resumeId: string, data: { job_role?: string; company?: string; resume_json: any }): Promise<any> {

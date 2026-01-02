@@ -23,7 +23,7 @@ import {
 } from '../services/resume-editor.service';
 import { resumeService } from '../services/resume.service';
 import { VersionSidebar } from '../components/versions/VersionSidebar';
-import { History, Target, X, CheckCircle, Briefcase } from 'lucide-react';
+import { History, Target, X, CheckCircle, Briefcase, RefreshCw, Eye, Download, Sparkles } from 'lucide-react';
 
 import { normalizeDate } from '../utils/dateUtils';
 import { ContactSection } from '../components/editor/ContactSection';
@@ -1067,25 +1067,25 @@ export const ResumeEditorPage: React.FC = () => {
   const getExistingSectionTypes = (): SectionType[] => {
     const existing: SectionType[] = ['contact', 'summary', 'experience', 'education', 'skills', 'projects'];
 
-    if (resumeData.certifications && resumeData.certifications.length > 0) {
+    if (resumeData.certifications) {
       existing.push('certifications');
     }
-    if (resumeData.achievements && resumeData.achievements.length > 0) {
+    if (resumeData.achievements) {
       existing.push('achievements');
     }
-    if (resumeData.hackathons && resumeData.hackathons.length > 0) {
+    if (resumeData.hackathons) {
       existing.push('hackathons');
     }
-    if (resumeData.workshops && resumeData.workshops.length > 0) {
+    if (resumeData.workshops) {
       existing.push('workshops');
     }
-    if (resumeData.publications && resumeData.publications.length > 0) {
+    if (resumeData.publications) {
       existing.push('publications');
     }
-    if (resumeData.volunteer && resumeData.volunteer.length > 0) {
+    if (resumeData.volunteer) {
       existing.push('volunteer');
     }
-    if (resumeData.languages && resumeData.languages.length > 0) {
+    if (resumeData.languages) {
       existing.push('languages');
     }
 
@@ -1197,35 +1197,7 @@ export const ResumeEditorPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
       {/* Version Viewing Banner */}
-      {viewingVersionId && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-4 py-2 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-            <History className="h-4 w-4" />
-            <span className="text-sm font-medium">Viewing Historical Version</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                console.log("Restore logic placeholder");
-                alert("Restore feature coming soon!");
-              }}
-              className="text-xs px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-md transition-colors font-medium opacity-50 cursor-not-allowed"
-              title="Coming Soon"
-            >
-              Restore This Version
-            </button>
-            <button
-              onClick={() => {
-                setViewingVersionId(null);
-                window.location.href = `/editor/${resumeId}`;
-              }}
-              className="text-xs px-3 py-1 border border-amber-300 hover:bg-amber-100 text-amber-900 rounded-md transition-colors font-medium bg-white"
-            >
-              Exit View
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Header */}
       <div className="bg-white dark:bg-secondary-900 border-b border-secondary-200 dark:border-secondary-800 sticky top-0 z-10">
@@ -1262,112 +1234,123 @@ export const ResumeEditorPage: React.FC = () => {
 
             {/* Actions */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              {/* Refresh/Reparse Button */}
-              <button
-                onClick={handleReparse}
-                disabled={reparsing}
-                className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2"
-                title="Re-parse resume from original file"
-              >
-                <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${reparsing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span className="whitespace-nowrap">{reparsing ? 'Refreshing...' : 'Refresh'}</span>
-              </button>
 
-              <button
-                onClick={() => setShowExportModal(true)}
-                className="btn-primary text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2"
-              >
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <span className="whitespace-nowrap">Export</span>
-              </button>
-
-              {resumeId && <InterviewPrepButton resumeId={resumeId} className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2 bg-transparent text-secondary-600 border-secondary-200 hover:bg-secondary-50" />}
-
-              <button
-                onClick={() => setShowPreview(!showPreview)}
-                className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2"
-              >
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span className="whitespace-nowrap">{showPreview ? 'Hide' : 'Preview'}</span>
-              </button>
-
-              <button
-                onClick={() => setShowTargetModal(true)}
-                className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
-                title="Optimize for a specific Job Description"
-              >
-                <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="whitespace-nowrap hidden lg:inline">Target Job</span>
-              </button>
-
-              <button
-                onClick={() => setShowVersionHistory(true)}
-                className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 flex items-center gap-1.5 sm:gap-2"
-                title="View Version History"
-              >
-                <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="whitespace-nowrap hidden lg:inline">History</span>
-              </button>
-
-              {showPreview && (
+              {/* Utility Group */}
+              <div className="hidden sm:flex items-center bg-gray-100 dark:bg-secondary-800/50 p-1 rounded-lg border border-gray-200 dark:border-secondary-700/50">
                 <button
-                  onClick={handlePrint}
-                  className="btn-outline text-xs sm:text-sm flex-1 sm:flex-none justify-center px-3 py-2 hidden sm:flex items-center gap-1.5 sm:gap-2"
+                  onClick={handleReparse}
+                  disabled={reparsing}
+                  className="p-1.5 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 hover:bg-white dark:hover:bg-secondary-700 rounded-md transition-all disabled:opacity-50"
+                  title="Refresh / Reparse"
                 >
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                  </svg>
-                  Print
+                  <RefreshCw className={`w-4 h-4 ${reparsing ? 'animate-spin' : ''}`} />
                 </button>
+                <div className="w-px h-4 bg-gray-300 dark:bg-secondary-700 mx-1"></div>
+                <button
+                  onClick={() => setShowVersionHistory(true)}
+                  className="p-1.5 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 hover:bg-white dark:hover:bg-secondary-700 rounded-md transition-all"
+                  title="Version History"
+                >
+                  <History className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-gray-300 dark:bg-secondary-700 mx-1"></div>
+                <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className={`p-1.5 rounded-md transition-all flex items-center gap-2 ${showPreview ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-sm' : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 hover:bg-white dark:hover:bg-secondary-700'}`}
+                  title="Toggle Preview"
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Mobile Utilities (visible only on small screens) */}
+              <div className="flex sm:hidden items-center gap-2">
+                <button onClick={handleReparse} className="p-2 border rounded-lg"><RefreshCw className="w-4 h-4" /></button>
+                <button onClick={() => setShowVersionHistory(true)} className="p-2 border rounded-lg"><History className="w-4 h-4" /></button>
+                <button onClick={() => setShowPreview(!showPreview)} className="p-2 border rounded-lg"><Eye className="w-4 h-4" /></button>
+              </div>
+
+              {/* Separator - As requested */}
+              <div className="hidden lg:block w-px h-8 bg-secondary-200 dark:bg-secondary-700 mx-1"></div>
+
+              {/* Historical Version Badge & Controls */}
+              {viewingVersionId && (
+                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-1 pr-2 mr-2">
+                  <span className="text-xs font-medium text-amber-800 dark:text-amber-200 flex items-center gap-1 px-2">
+                    <History className="h-3.5 w-3.5" />
+                    <span className="hidden xl:inline">Viewing History</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      console.log("Restore logic placeholder");
+                      alert("Restore feature coming soon!");
+                    }}
+                    className="px-2 py-1 text-xs bg-white dark:bg-secondary-800 text-amber-700 dark:text-amber-300 rounded shadow-sm border border-amber-100 dark:border-amber-900 opacity-60 cursor-not-allowed hidden sm:block"
+                  >
+                    Restore
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewingVersionId(null);
+                      window.location.href = `/editor/${resumeId}`;
+                    }}
+                    className="p-1 hover:bg-amber-200 dark:hover:bg-amber-800 rounded-md text-amber-700 dark:text-amber-300 transition-colors"
+                    title="Exit View"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               )}
 
+              {/* Main Actions */}
+              {resumeId && (
+                <div className="flex items-center gap-2">
+                  {/* Interview Prep - Clean Style */}
+                  <InterviewPrepButton
+                    resumeId={resumeId}
+                    className="px-3 py-2 text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-200 dark:border-purple-800 rounded-lg transition-all flex items-center gap-2"
+                  />
+                </div>
+              )}
+
+              {/* Target Job - Gradient Premium Style */}
+              <button
+                onClick={() => setShowTargetModal(true)}
+                className="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 rounded-lg shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all flex items-center gap-2"
+              >
+                <Target className="w-4 h-4" />
+                <span className="hidden sm:inline">Target Job</span>
+                <span className="sm:hidden">Target</span>
+              </button>
+
+              {/* Export - Primary Utility Style */}
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="px-4 py-2 text-sm font-medium text-white bg-secondary-900 dark:bg-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 rounded-lg shadow-md transition-all flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Export</span>
+              </button>
+
               {/* Save Status */}
-              <div className="hidden sm:flex items-center gap-2 ml-2">
+              <div className="hidden lg:flex items-center gap-2 ml-2 border-l pl-3 border-secondary-200 dark:border-secondary-700 h-8">
                 {saveStatus === 'saving' && (
-                  <span className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 flex items-center gap-2">
-                    <svg
-                      className="animate-spin h-3 w-3 sm:h-4 sm:w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
+                  <span className="text-xs text-secondary-500 flex items-center gap-1.5">
+                    <RefreshCw className="w-3 h-3 animate-spin" />
                     Saving...
                   </span>
                 )}
                 {saveStatus === 'saved' && (
-                  <span className="text-xs sm:text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
-                    <svg className="w-3 h-3 sm:h-4 sm:w-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                  <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1.5">
+                    <CheckCircle className="w-3 h-3" />
                     Saved
                   </span>
                 )}
                 {saveStatus === 'error' && (
-                  <span className="text-xs sm:text-sm text-red-600 dark:text-red-400">Save failed</span>
+                  <span className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                    <X className="w-3 h-3" />
+                    Failed
+                  </span>
                 )}
               </div>
             </div>
@@ -1427,7 +1410,7 @@ export const ResumeEditorPage: React.FC = () => {
             />
 
             {/* Certifications Section */}
-            {(resumeData.certifications && resumeData.certifications.length > 0) && (
+            {resumeData.certifications && (
               <CertificationsSection
                 certifications={resumeData.certifications}
                 onChange={(certifications) =>
@@ -1437,7 +1420,7 @@ export const ResumeEditorPage: React.FC = () => {
             )}
 
             {/* Achievements Section */}
-            {(resumeData.achievements && resumeData.achievements.length > 0) && (
+            {resumeData.achievements && (
               <AchievementsSection
                 achievements={resumeData.achievements}
                 onChange={(achievements) =>
@@ -1447,7 +1430,7 @@ export const ResumeEditorPage: React.FC = () => {
             )}
 
             {/* Hackathons Section */}
-            {(resumeData.hackathons && resumeData.hackathons.length > 0) && (
+            {resumeData.hackathons && (
               <HackathonsSection
                 hackathons={resumeData.hackathons}
                 onChange={(hackathons) =>
@@ -1457,7 +1440,7 @@ export const ResumeEditorPage: React.FC = () => {
             )}
 
             {/* Workshops Section */}
-            {(resumeData.workshops && resumeData.workshops.length > 0) && (
+            {resumeData.workshops && (
               <WorkshopsSection
                 workshops={resumeData.workshops}
                 onChange={(workshops) =>
@@ -1467,7 +1450,7 @@ export const ResumeEditorPage: React.FC = () => {
             )}
 
             {/* Publications Section */}
-            {(resumeData.publications && resumeData.publications.length > 0) && (
+            {resumeData.publications && (
               <PublicationsSection
                 publications={resumeData.publications}
                 onChange={(publications) =>
@@ -1477,7 +1460,7 @@ export const ResumeEditorPage: React.FC = () => {
             )}
 
             {/* Volunteer Section */}
-            {(resumeData.volunteer && resumeData.volunteer.length > 0) && (
+            {resumeData.volunteer && (
               <VolunteerSection
                 volunteer={resumeData.volunteer}
                 onChange={(volunteer) =>
@@ -1487,7 +1470,7 @@ export const ResumeEditorPage: React.FC = () => {
             )}
 
             {/* Languages Section */}
-            {(resumeData.languages && resumeData.languages.length > 0) && (
+            {resumeData.languages && (
               <LanguagesSection
                 languages={resumeData.languages}
                 onChange={(languages) =>
@@ -1712,7 +1695,7 @@ export const ResumeEditorPage: React.FC = () => {
               <div className="bg-purple-50 dark:bg-purple-900/10 p-4 rounded-lg flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-purple-800 dark:text-purple-200">
-                  <strong>Automated Versioning:</strong> We will analyze your resume against this JD and automatically save a new version titled "{targetRole || 'Target Job'}" so you can track your tailored resumes.
+                  <strong>AI Resume Tailoring:</strong> We will completely rewrite and restructure your resume to perfectly match this Job Description. This creates a new version titled "{targetRole || 'Target Job'}" that effectively versions your resume for this specific application.
                 </div>
               </div>
 
@@ -1722,7 +1705,7 @@ export const ResumeEditorPage: React.FC = () => {
                   <CreditWarning balance={userBalance} cost={5} />
                   {userBalance >= 5 && (
                     <p className="mt-2 text-xs text-secondary-500 text-center">
-                      Analysis costs 5 credits. Versioning is free.
+                      Tailoring costs 5 credits. Versioning is free.
                     </p>
                   )}
                 </div>
@@ -1741,28 +1724,29 @@ export const ResumeEditorPage: React.FC = () => {
                   if (!targetJD.trim() || !resumeId) return;
 
                   if (userBalance !== null && userBalance < 5) {
-                    toast.error("Insufficient credits for analysis");
+                    toast.error("Insufficient credits for tailoring");
                     return;
                   }
 
                   setAnalyzingTarget(true);
                   try {
-                    // 1. Analysis
-                    await resumeService.scoreResume(resumeId, true, false, targetJD); // Skip cache for new JD
-
-                    // 2. Auto-save Version
-                    await resumeService.createVersion(resumeId, {
-                      resume_json: resumeData, // Save CURRENT state
+                    // 1. AI Tailoring
+                    const tailoredVersion = await resumeService.tailorResume(resumeId, {
+                      job_description: targetJD,
                       job_role: targetRole || "Target Job",
-                      company: "JD Analysis"
+                      company: "Tailored Version"
                     });
+
+                    // 2. Load Tailored Version into Editor (Auto-load)
+                    if (tailoredVersion && tailoredVersion.resume_json) {
+                      setResumeData(tailoredVersion.resume_json);
+                    }
 
                     // 3. Close & Notify
                     setShowTargetModal(false);
-                    setShowVersionHistory(true); // Open history to show it worked
                     setTargetJD('');
                     setTargetRole('');
-                    toast.success("Resume analyzed and version created!");
+                    toast.success("Resume tailored and versioned successfully!");
 
                     // Refresh balance
                     creditService.getBalance().then(b => setUserBalance(b.balance));
@@ -1772,7 +1756,7 @@ export const ResumeEditorPage: React.FC = () => {
                     if (e?.response?.status === 402) {
                       toast.error("Insufficient credits.");
                     } else {
-                      toast.error("Analysis failed. Please try again.");
+                      toast.error("Tailoring failed. Please try again.");
                     }
                   } finally {
                     setAnalyzingTarget(false);
@@ -1784,12 +1768,12 @@ export const ResumeEditorPage: React.FC = () => {
                 {analyzingTarget ? (
                   <>
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                    Analyzing...
+                    Tailoring Resume...
                   </>
                 ) : (
                   <>
                     <Target className="h-4 w-4" />
-                    Analyze & Save Version
+                    Tailor & Version
                   </>
                 )}
               </button>

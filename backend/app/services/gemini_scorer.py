@@ -25,7 +25,7 @@ class GeminiATSScorer:
         load_dotenv()  # Ensure .env is loaded
         
         self.api_key = os.getenv('GEMINI_API_KEY')
-        self.model_name = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
+        self.model_name = os.getenv('GEMINI_MODEL', 'gemini-2.0-flash-exp')
         
         logging.info("[GeminiATSScorer] GEMINI_AVAILABLE=%s, API_KEY exists=%s", GEMINI_AVAILABLE, bool(self.api_key))
         

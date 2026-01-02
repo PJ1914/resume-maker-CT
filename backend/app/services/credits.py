@@ -284,23 +284,32 @@ def get_user_credits(user_id: str, user_email: str = None, _skip_bonus_check: bo
                 should_reset = True
             
             if should_reset and data.get("subscription_tier", "free") == "free":
-                # Reset monthly credits
+                # Reset monthly credits logic:
+                # Expire previous free credits (limit to FREE_MONTHLY_CREDITS) and add new ones
+                # This ensures purchased credits are kept, but free credits don't accumulate beyond 10
+                current_balance = data.get("balance", 0)
+                
+                # We deduct up to 10 credits (the old free ones)
+                # If balance is 5, we deduct 5 (5->0). Add 10 -> 10.
+                # If balance is 15 (10 free + 5 paid), deduct 10 (15->5). Add 10 -> 15.
+                amount_to_expire = min(current_balance, FREE_MONTHLY_CREDITS)
+                new_balance = current_balance - amount_to_expire + FREE_MONTHLY_CREDITS
+                
                 balance_ref = db.collection('users').document(user_id)\
                                .collection('credits').document('balance')
                 
                 balance_ref.update({
-                    "balance": firestore.Increment(FREE_MONTHLY_CREDITS),
-                    "total_earned": firestore.Increment(FREE_MONTHLY_CREDITS),
+                    "balance": new_balance,
+                    "total_earned": firestore.Increment(FREE_MONTHLY_CREDITS), # We count the new grant as earned
                     "last_reset": now,
                     "updated_at": now,
                 })
                 
                 # Record transaction
-                new_balance = data.get("balance", 0) + FREE_MONTHLY_CREDITS
                 transaction_data = {
                     "type": CreditTransactionType.MONTHLY_RESET.value,
-                    "amount": FREE_MONTHLY_CREDITS,
-                    "description": f"Monthly free credits ({now.strftime('%B %Y')})",
+                    "amount": FREE_MONTHLY_CREDITS - amount_to_expire, # Net change
+                    "description": f"Monthly reset: Expired {amount_to_expire} old, Added {FREE_MONTHLY_CREDITS} new",
                     "balance_after": new_balance,
                     "timestamp": now,
                 }
@@ -308,12 +317,60 @@ def get_user_credits(user_id: str, user_email: str = None, _skip_bonus_check: bo
                 db.collection('users').document(user_id)\
                   .collection('credit_transactions').add(transaction_data)
                 
-                logging.info("Reset monthly credits for %s: +%s credits", user_id, FREE_MONTHLY_CREDITS)
+                logging.info("Reset monthly credits for %s: %s -> %s", user_id, current_balance, new_balance)
                 
                 # Update data for return
                 data["balance"] = new_balance
                 data["total_earned"] = data.get("total_earned", 0) + FREE_MONTHLY_CREDITS
                 data["last_reset"] = now
+
+            # Check for December 2025 Bonus Expiry (After Jan 1, 2026)
+            # This logic runs automatically when user checks credits
+            if now.year >= 2026:
+                bonus_doc = db.collection('users').document(user_id)\
+                              .collection('credits').document('december_2025_bonus').get()
+                
+                if bonus_doc.exists:
+                    bonus_data = bonus_doc.to_dict()
+                    # Check if already expired
+                    if not bonus_data.get("expired", False):
+                        # Expire the bonus
+                        current_balance = data.get("balance", 0)
+                        bonus_amount = bonus_data.get("amount", DECEMBER_2025_BONUS)
+                        
+                        # Deduct bonus (don't go below 0)
+                        deduction = min(current_balance, bonus_amount)
+                        new_balance = current_balance - deduction
+                        
+                        balance_ref = db.collection('users').document(user_id)\
+                                       .collection('credits').document('balance')
+                        
+                        balance_ref.update({
+                            "balance": new_balance,
+                            "updated_at": now,
+                        })
+                        
+                        # Mark as expired
+                        db.collection('users').document(user_id)\
+                          .collection('credits').document('december_2025_bonus').update({
+                              "expired": True,
+                              "expired_at": now
+                          })
+                        
+                        # Record transaction
+                        if deduction > 0:
+                            transaction_data = {
+                                "type": "EXPIRATION",
+                                "amount": -deduction,
+                                "description": "December 2025 Bonus Expired",
+                                "balance_after": new_balance,
+                                "timestamp": now,
+                            }
+                            db.collection('users').document(user_id)\
+                              .collection('credit_transactions').add(transaction_data)
+                        
+                        # Update data for return
+                        data["balance"] = new_balance
             
             # Check and apply December 2025 bonus (only if not already skipping to prevent recursion)
             if not _skip_bonus_check and should_give_december_bonus(user_id):

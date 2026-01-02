@@ -13,6 +13,7 @@ import {
   Cpu,
   Sparkles,
   RefreshCw,
+  Briefcase,
 } from 'lucide-react'
 import { useResume, useDeleteResume } from '@/hooks/useResumes'
 import { API_URL } from '@/config/firebase'
@@ -40,6 +41,7 @@ export default function ResumeDetailPage() {
   const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false)
   const [reparsing, setReparsing] = useState(false)
   const [useAIScorer, setUseAIScorer] = useState(true) // Toggle between prativeda AI and Local scorer
+  const [jobDescription, setJobDescription] = useState('')
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const initialScorerSet = useRef(false)
 
@@ -99,7 +101,7 @@ export default function ResumeDetailPage() {
     console.log('Scoring with preferGemini:', useGemini, 'skipCache:', skipCache)
 
     scoreResume(
-      { resumeId: id, preferGemini: useGemini },
+      { resumeId: id, preferGemini: useGemini, jobDescription: jobDescription },
       {
         onSuccess: (data) => {
           console.log('Score completed successfully, method:', data?.scoring_method, 'score:', data?.total_score)
@@ -640,6 +642,25 @@ export default function ResumeDetailPage() {
                   </div>
                 )}
               </div>
+
+              {/* Job Description Input (AI Only) */}
+              {useAIScorer && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1.5 flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    Target Job Description (Optional)
+                  </label>
+                  <textarea
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    placeholder="Paste the job description here for tailored ATS scoring..."
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-secondary-300 dark:border-secondary-700 bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[100px] resize-y placeholder:text-secondary-400"
+                  />
+                  <p className="mt-1 text-xs text-secondary-500">
+                    Adding a JD helps us check keyword matching and relevance.
+                  </p>
+                </div>
+              )}
 
               <button
                 onClick={() => handleCheckScore()}

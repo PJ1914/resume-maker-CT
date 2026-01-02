@@ -30,12 +30,7 @@ def is_user_admin(user_email: str, user_id: str) -> bool:
     logging.info("[ADMIN CHECK] Checking admin for email=%s, uid=%s, environment=%s", 
                  user_email, user_id, settings.ENVIRONMENT)
     
-    # In development mode, grant admin access to everyone for testing
-    if settings.ENVIRONMENT == "development":
-        logging.info("[DEV] Admin check for %s: True (DEV MODE)", user_email)
-        return True
-    
-    # Check system admin list first
+    # Check system admin list first (hardcoded fallback)
     if user_email.lower() in [e.lower() for e in SYSTEM_ADMINS]:
         return True
     
@@ -48,19 +43,37 @@ def is_user_admin(user_email: str, user_id: str) -> bool:
         db = firestore.client(app=resume_maker_app)
         
         # Check if user is in admins collection with 5-second timeout
+        # First try by User ID (UID)
         admin_doc = db.collection('admins').document(user_id).get(timeout=5.0)
         
         if admin_doc.exists:
             data = admin_doc.to_dict()
-            return data.get('is_admin', False) and data.get('active', True)
+            if data.get('is_admin', False) and data.get('active', True):
+                return True
         
+        # Fallback: Check by email if UID lookup failed
+        # This handles cases where the document ID might not match the UID
+        if user_email:
+            # Note: Email comparison should be case-insensitive in a real world, 
+            # but Firestore queries are case-sensitive. 
+            # We assume the stored email matches the auth email case.
+            query = db.collection('admins').where('email', '==', user_email).limit(1)
+            docs = query.stream()
+            
+            for doc in docs:
+                data = doc.to_dict()
+                if data.get('is_admin', False) and data.get('active', True):
+                    logging.info(f"Admin Access Granted via Email Lookup for {user_email}")
+                    return True
+            
         return False
     except Exception as e:
         error_str = str(e).lower()
         # If Firestore is unavailable, allow admin access for development
         if any(x in error_str for x in ['503', 'unavailable', 'timeout', 'socket', 'connect']):
-            logging.warning(f"⚠️ FIRESTORE OFFLINE - Granting admin access for development mode")
-            return True  # Offline fallback
+            logging.warning(f"⚠️ FIRESTORE OFFLINE - Granting admin access for development mode (DISABLED for safety)")
+            # return True  # Offline fallback - DISABLED to prevent accidental admin access
+            return False
         logging.exception("Error checking admin status")
         return False
 
