@@ -31,7 +31,9 @@ class FeatureType(str, Enum):
     DEPLOY_NETLIFY = "deploy_netlify"
     PORTFOLIO_TEMPLATE_UNLOCK = "portfolio_template_unlock"
     # Interview Prep Features
-    INTERVIEW_GENERATE_SESSION = "interview_generate_session"
+    INTERVIEW_GENERATE_TECHNICAL = "interview_generate_technical"
+    INTERVIEW_GENERATE_HR = "interview_generate_hr"
+    INTERVIEW_GENERATE_SESSION = "interview_generate_session"  # Deprecated - for backward compatibility
     INTERVIEW_REGENERATE_ANSWER = "interview_regenerate_answer"
     INTERVIEW_REGENERATE_SESSION = "interview_regenerate_session"
     INTERVIEW_EXPORT_PDF = "interview_export_pdf"
@@ -50,10 +52,12 @@ FEATURE_COSTS = {
     FeatureType.DEPLOY_VERCEL: 7,
     FeatureType.DEPLOY_NETLIFY: 5,
     FeatureType.PORTFOLIO_TEMPLATE_UNLOCK: 0,  # Variable cost, set dynamically
-    # Interview Prep Costs
-    FeatureType.INTERVIEW_GENERATE_SESSION: 3,
+    # Interview Prep Costs (5 credits per category)
+    FeatureType.INTERVIEW_GENERATE_TECHNICAL: 5,  # 10 technical questions + answers
+    FeatureType.INTERVIEW_GENERATE_HR: 5,  # 10 HR/behavioral questions + answers
+    FeatureType.INTERVIEW_GENERATE_SESSION: 5,  # Deprecated - default to 5 for backward compatibility
     FeatureType.INTERVIEW_REGENERATE_ANSWER: 1,
-    FeatureType.INTERVIEW_REGENERATE_SESSION: 3,
+    FeatureType.INTERVIEW_REGENERATE_SESSION: 5,  # Updated from 3 to 5
     FeatureType.INTERVIEW_EXPORT_PDF: 1,
 }
 

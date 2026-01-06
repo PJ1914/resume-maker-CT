@@ -231,9 +231,24 @@ export default function ResumesPage() {
                     )}
 
                     {resume.status === 'ERROR' && (
-                      <div className="mt-3 flex items-center gap-2 text-sm text-danger-600">
-                        <AlertCircle className="h-4 w-4" />
-                        <span>Processing failed. Please try uploading again.</span>
+                      <div className="mt-3 flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-sm text-danger-600 dark:text-danger-400">
+                          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                          <span className="font-medium">Processing failed</span>
+                        </div>
+                        {resume.error_message && (
+                          <p className="text-xs text-secondary-600 dark:text-secondary-400 ml-6">
+                            {resume.error_message}
+                          </p>
+                        )}
+                        <button
+                          onClick={() => {
+                            handleDeleteClick(resume.resume_id, resume.original_filename);
+                          }}
+                          className="text-xs text-primary-600 dark:text-primary-400 hover:underline ml-6 text-left"
+                        >
+                          Delete and try again
+                        </button>
                       </div>
                     )}
                   </div>

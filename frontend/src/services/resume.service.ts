@@ -17,6 +17,7 @@ export interface ResumeListItem {
   created_at: string
   latest_score: number | null
   projects?: any[] | null
+  error_message?: string | null  // Error message if parsing/upload failed
 }
 
 export interface ResumeDetail {
@@ -38,6 +39,7 @@ export interface ResumeDetail {
   education: any[] | null
   layout_type: string | null
   latest_score: number | null
+  error_message?: string | null  // Error message if parsing/upload failed
   template: string | null
   error_message: string | null
 }

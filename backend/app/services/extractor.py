@@ -655,6 +655,10 @@ class DOCXExtractor:
             
             full_text = '\n'.join(text_parts)
             
+            # Validate extraction
+            if not full_text or len(full_text.strip()) < 10:
+                raise Exception("Extracted text is empty or too short. File may be corrupted or password-protected.")
+            
             # Extract core properties if available
             metadata = {}
             try:
@@ -678,7 +682,14 @@ class DOCXExtractor:
             }
             
         except Exception as e:
-            raise Exception(f"DOCX extraction failed: {str(e)}")
+            # Provide more detailed error message
+            error_msg = str(e)
+            if 'BadZipFile' in error_msg or 'not a zip file' in error_msg.lower():
+                raise Exception("File is not a valid DOCX file. It may be corrupted or in an older DOC format.")
+            elif 'password' in error_msg.lower() or 'encrypted' in error_msg.lower():
+                raise Exception("File appears to be password-protected. Please upload an unprotected version.")
+            else:
+                raise Exception(f"DOCX extraction failed: {error_msg}")
     
     @staticmethod
     def extract_with_formatting(file_content: bytes) -> Dict[str, any]:

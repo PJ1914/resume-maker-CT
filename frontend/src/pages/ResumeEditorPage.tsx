@@ -1,6 +1,6 @@
 /**
  * Resume Editor Page
- * Main page for editing resume data with autosave
+ * Main page for editing resume data with manual save
  * Now supports dynamic sections from Gemini parser
  */
 
@@ -907,28 +907,24 @@ export const ResumeEditorPage: React.FC = () => {
     loadResume();
   }, [user, resumeId, versionIdParam]);
 
-  // Autosave with debounce
-  useEffect(() => {
+  // Manual save function
+  const handleManualSave = async () => {
     if (!user || !resumeId || loading || viewingVersionId) return;
 
-    const timer = setTimeout(async () => {
-      try {
-        setSaveStatus('saving');
-        // Normalize dates before saving
-        const normalizedResume = normalizeDateFieldsInResume(resumeData);
-        await saveResume(user.uid, resumeId, normalizedResume);
-        setSaveStatus('saved');
-        // Small delay to ensure Firestore write propagates before refreshing preview
-        setTimeout(() => setLastSaved(Date.now()), 500);
-        setTimeout(() => setSaveStatus(null), 2000);
-      } catch (err) {
-        console.error('Autosave failed:', err);
-        setSaveStatus('error');
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [resumeData, user, resumeId, loading]);
+    try {
+      setSaveStatus('saving');
+      // Normalize dates before saving
+      const normalizedResume = normalizeDateFieldsInResume(resumeData);
+      await saveResume(user.uid, resumeId, normalizedResume);
+      setSaveStatus('saved');
+      // Small delay to ensure Firestore write propagates before refreshing preview
+      setTimeout(() => setLastSaved(Date.now()), 500);
+      setTimeout(() => setSaveStatus(null), 2000);
+    } catch (err) {
+      console.error('Manual save failed:', err);
+      setSaveStatus('error');
+    }
+  };
 
   // Fetch balance for Target Job Analysis
   useEffect(() => {
@@ -1330,6 +1326,21 @@ export const ResumeEditorPage: React.FC = () => {
               >
                 <Download className="w-4 h-4" />
                 <span className="hidden sm:inline">Export</span>
+              </button>
+
+              {/* Save - Manual Save Button */}
+              <button
+                onClick={handleManualSave}
+                disabled={saveStatus === 'saving' || !!viewingVersionId}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed rounded-lg shadow-md transition-all flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span className="hidden sm:inline">
+                  {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save'}
+                </span>
+                <span className="sm:hidden">
+                  {saveStatus === 'saving' ? '...' : saveStatus === 'saved' ? '✓' : 'Save'}
+                </span>
               </button>
 
               {/* Save Status */}

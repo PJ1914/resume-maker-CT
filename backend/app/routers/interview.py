@@ -15,18 +15,28 @@ async def generate_interview(
 ):
     """
     Generate interview questions and answers based on resume and role.
+    Costs 5 credits per category (Technical and/or HR).
     """
     user_id = current_user['uid']
+    user_email = current_user.get('email', '')
     
-    # 1. Credit Check
-    if not has_sufficient_credits(user_id, FeatureType.INTERVIEW_GENERATE_SESSION):
-        balance_data = get_user_credits(user_id)
-        balance = balance_data.get('balance', 0)
+    # Calculate required credits based on selected question types
+    required_credits = 0
+    if 'technical' in request.question_types:
+        required_credits += 5
+    if 'hr' in request.question_types:
+        required_credits += 5
+    
+    # 1. Credit Check for total required
+    balance_data = get_user_credits(user_id, user_email)
+    balance = balance_data.get('balance', 0)
+    
+    if balance < required_credits:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED, 
             detail={
                 "message": "Insufficient credits",
-                "required": 3,
+                "required": required_credits,
                 "balance": balance
             }
         )
@@ -44,14 +54,19 @@ async def generate_interview(
         # 3. Save Session
         session_id = InterviewService.save_session(session)
         
-        # 4. Deduct Credits
-        deduct_credits(user_id, FeatureType.INTERVIEW_GENERATE_SESSION, f"Generated Interview for {request.role}")
+        # 4. Deduct Credits per category selected
+        if 'technical' in request.question_types:
+            deduct_credits(user_id, FeatureType.INTERVIEW_GENERATE_TECHNICAL, 
+                          f"Generated Technical Interview for {request.role}", user_email)
+        if 'hr' in request.question_types:
+            deduct_credits(user_id, FeatureType.INTERVIEW_GENERATE_HR, 
+                          f"Generated HR Interview for {request.role}", user_email)
         
         return {
             "session_id": session_id,
             "technical": session.technical_questions,
             "hr": session.hr_questions,
-            "credits_used": session.credits_used
+            "credits_used": required_credits  # Return actual credits charged
         }
         
     except ValueError as ve:

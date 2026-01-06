@@ -224,7 +224,22 @@ async def upload_direct(
             detail=f"Invalid file extension. Allowed: {', '.join(allowed_extensions)}"
         )
 
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
+    # Normalize content type based on extension (browsers send different MIME types)
+    normalized_content_type = file.content_type
+    if file_ext == '.docx':
+        # DOCX files can come as application/octet-stream, application/x-zip-compressed, etc.
+        normalized_content_type = ResumeFileType.DOCX.value
+        logging.info(f"Normalized DOCX content type from {file.content_type} to {normalized_content_type}")
+    elif file_ext == '.doc':
+        normalized_content_type = ResumeFileType.DOC.value
+        logging.info(f"Normalized DOC content type from {file.content_type} to {normalized_content_type}")
+    elif file_ext == '.pdf':
+        normalized_content_type = ResumeFileType.PDF.value
+    elif file_ext in ['.tex', '.txt']:
+        normalized_content_type = ResumeFileType.PLAIN.value
+    
+    # Validate normalized content type
+    if normalized_content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid content type. Allowed: {', '.join(ALLOWED_CONTENT_TYPES)}"
@@ -291,13 +306,13 @@ async def upload_direct(
 
     await loop.run_in_executor(None, _upload_sync)
     
-    # Create metadata
+    # Create metadata with normalized content type
     metadata = ResumeMetadata(
         resume_id=resume_id,
         owner_uid=user_id,
         filename=file.filename or "resume.pdf",
         original_filename=file.filename or "resume.pdf",
-        content_type=file.content_type or "application/pdf",
+        content_type=normalized_content_type,  # Use normalized content type
         file_size=file_size,
         storage_path=storage_path,
         status=ResumeStatus.UPLOADED,
@@ -313,13 +328,14 @@ async def upload_direct(
         )
     
     # Trigger parsing in background
-    logging.info("Triggering background parsing for resume %s (storage_path=%s, filename=%s)", resume_id, storage_path, file.filename)
+    logging.info("Triggering background parsing for resume %s (storage_path=%s, filename=%s, content_type=%s)", 
+                 resume_id, storage_path, file.filename, normalized_content_type)
     background_tasks.add_task(
         process_resume_parsing,
         resume_id=resume_id,
         uid=user_id,
         storage_path=storage_path,
-        content_type=file.content_type or "application/pdf",
+        content_type=normalized_content_type,  # Use normalized content type
         filename=file.filename or ''
     )
     logging.info("Background task added for resume %s", resume_id)
