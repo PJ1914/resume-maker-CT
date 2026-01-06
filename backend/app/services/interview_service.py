@@ -72,7 +72,7 @@ Respond in JSON ONLY with this structure:
 
         # 3. Call Gemini
         # Using the configured model from settings, or fallback to 1.5-flash if appropriate
-        model_name = settings.GEMINI_MODEL if hasattr(settings, 'GEMINI_MODEL') else "gemini-1.5-flash"
+        model_name = settings.GEMINI_MODEL if hasattr(settings, 'GEMINI_MODEL') else "gemini-2.0-flash-exp"
         model = genai.GenerativeModel(model_name)
         
         logger.info(f"Generating interview Q&A for user {user_id}, role {role}")

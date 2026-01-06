@@ -20,6 +20,7 @@ from app.schemas.resume import (
     CreateResumeVersionRequest,
     ResumeVersionResponse,
     ResumeVersionDetailResponse,
+    TailorResumeRequest,
 )
 from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
 from app.services.storage import (
@@ -223,7 +224,22 @@ async def upload_direct(
             detail=f"Invalid file extension. Allowed: {', '.join(allowed_extensions)}"
         )
 
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
+    # Normalize content type based on extension (browsers send different MIME types)
+    normalized_content_type = file.content_type
+    if file_ext == '.docx':
+        # DOCX files can come as application/octet-stream, application/x-zip-compressed, etc.
+        normalized_content_type = ResumeFileType.DOCX.value
+        logging.info(f"Normalized DOCX content type from {file.content_type} to {normalized_content_type}")
+    elif file_ext == '.doc':
+        normalized_content_type = ResumeFileType.DOC.value
+        logging.info(f"Normalized DOC content type from {file.content_type} to {normalized_content_type}")
+    elif file_ext == '.pdf':
+        normalized_content_type = ResumeFileType.PDF.value
+    elif file_ext in ['.tex', '.txt']:
+        normalized_content_type = ResumeFileType.PLAIN.value
+    
+    # Validate normalized content type
+    if normalized_content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid content type. Allowed: {', '.join(ALLOWED_CONTENT_TYPES)}"
@@ -290,13 +306,13 @@ async def upload_direct(
 
     await loop.run_in_executor(None, _upload_sync)
     
-    # Create metadata
+    # Create metadata with normalized content type
     metadata = ResumeMetadata(
         resume_id=resume_id,
         owner_uid=user_id,
         filename=file.filename or "resume.pdf",
         original_filename=file.filename or "resume.pdf",
-        content_type=file.content_type or "application/pdf",
+        content_type=normalized_content_type,  # Use normalized content type
         file_size=file_size,
         storage_path=storage_path,
         status=ResumeStatus.UPLOADED,
@@ -312,13 +328,14 @@ async def upload_direct(
         )
     
     # Trigger parsing in background
-    logging.info("Triggering background parsing for resume %s (storage_path=%s, filename=%s)", resume_id, storage_path, file.filename)
+    logging.info("Triggering background parsing for resume %s (storage_path=%s, filename=%s, content_type=%s)", 
+                 resume_id, storage_path, file.filename, normalized_content_type)
     background_tasks.add_task(
         process_resume_parsing,
         resume_id=resume_id,
         uid=user_id,
         storage_path=storage_path,
-        content_type=file.content_type or "application/pdf",
+        content_type=normalized_content_type,  # Use normalized content type
         filename=file.filename or ''
     )
     logging.info("Background task added for resume %s", resume_id)
@@ -967,7 +984,12 @@ async def get_resume_version_detail(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Version not found"
         )
-    return version  # Fixed return
+    return ResumeVersionDetailResponse(
+        version_id=version['version_id'],
+        version_name=version['version_name'],
+        created_at=version['created_at'],
+        resume_json=version.get('json', {})
+    )
 
 @router.delete("/{resume_id}/versions/{version_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_version(
@@ -1042,3 +1064,91 @@ async def get_stats():
     """
     from app.services.firestore import get_platform_stats
     return get_platform_stats()
+@router.post("/{resume_id}/tailor", response_model=ResumeVersionDetailResponse)
+async def tailor_resume(
+    resume_id: str,
+    request: TailorResumeRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Tailor a resume for a specific job description using AI.
+    Creates a new version with the tailored content.
+    """
+    from app.services.firestore import get_merged_resume_data
+    from app.services.ai_generator import resume_tailor
+    from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS
+    
+    user_id = current_user["uid"]
+    
+    # 1. Verify existence & ownership
+    metadata = get_resume_metadata(resume_id, user_id)
+    if not metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+        
+    # 2. Check credits (AI tailoring cost)
+    # Using 'ai_rewrite' cost or create a new one? Let's use AI_REWRITE (2 credits) or ATS_CHECK (5 credits)?
+    # Since it's a full rewrite, let's assume it costs like an ATS check or similar.
+    # For now, let's reuse ATS_CHECK cost (5 credits) as this is high value
+    cost = FEATURE_COSTS.get(FeatureType.ATS_SCORING, 5)
+    
+    user_email = current_user.get("email", "")
+    if not has_sufficient_credits(user_id, FeatureType.ATS_SCORING, user_email):
+         raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={"message": "Insufficient credits for AI tailoring"}
+        )
+        
+    # 3. Get current resume data (merged with edits)
+    current_data = get_merged_resume_data(resume_id, user_id)
+    if not current_data:
+        raise HTTPException(status_code=404, detail="Could not retrieve resume data")
+
+    # SAFETY: Save current state as a version before anything else
+    try:
+        current_role = current_data.get('contact_info', {}).get('role') or "Original"
+        save_resume_version(
+            user_id,
+            resume_id,
+            current_data,
+            "Backup (Pre-Tailoring)",
+            "Original State"
+        )
+    except Exception as e:
+        print(f"Warning: Failed to create safety backup: {e}")
+        
+    # 4. Call AI Service
+    try:
+        tailored_json = resume_tailor.tailor_resume(current_data, request.job_description)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI generation failed: {str(e)}")
+        
+    # 5. Save as new version
+    company = request.company or "Tailored"
+    job_role = request.job_role or "Target Job"
+    
+    # Prefix role with "Tailored: " to distinguish
+    final_role = f"Tailored: {job_role}"
+    
+    version = save_resume_version(
+        user_id, 
+        resume_id, 
+        tailored_json, 
+        final_role, 
+        company
+    )
+    
+    if not version:
+        raise HTTPException(status_code=500, detail="Failed to save tailored version")
+        
+    # 6. Deduct credits
+    deduct_credits(user_id, FeatureType.ATS_SCORING, f"Resume Tailoring for {company}", user_email)
+
+    return ResumeVersionDetailResponse(
+        version_id=version['version_id'],
+        version_name=version['version_name'],
+        created_at=version['created_at'],
+        resume_json=tailored_json
+    )

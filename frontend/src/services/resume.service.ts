@@ -17,6 +17,7 @@ export interface ResumeListItem {
   created_at: string
   latest_score: number | null
   projects?: any[] | null
+  error_message?: string | null  // Error message if parsing/upload failed
 }
 
 export interface ResumeDetail {
@@ -39,7 +40,7 @@ export interface ResumeDetail {
   layout_type: string | null
   latest_score: number | null
   template: string | null
-  error_message: string | null
+  error_message?: string | null  // Error message if parsing/upload failed
 }
 
 export const resumeService = {
@@ -178,6 +179,13 @@ export const resumeService = {
    */
   async getScore(resumeId: string): Promise<any> {
     return apiClient.get(`/api/scoring/${resumeId}`)
+  },
+
+  /**
+   * Tailor resume for a specific job description using AI
+   */
+  async tailorResume(resumeId: string, data: { job_description: string; job_role?: string; company?: string }): Promise<any> {
+    return apiClient.post(`/api/resumes/${resumeId}/tailor`, data)
   },
 
   /**

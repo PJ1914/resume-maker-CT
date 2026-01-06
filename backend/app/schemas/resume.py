@@ -284,6 +284,12 @@ class CreateResumeVersionRequest(BaseModel):
     company: Optional[str] = None
     resume_json: dict
 
+class TailorResumeRequest(BaseModel):
+    """Request to tailor a resume for a job description"""
+    job_description: str
+    job_role: Optional[str] = None
+    company: Optional[str] = None
+
 class ResumeVersionResponse(BaseModel):
     """Response for created version"""
     version_id: str

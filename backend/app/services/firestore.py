@@ -2,7 +2,7 @@
 Firestore service for managing resume metadata.
 """
 from typing import List, Optional, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import threading
 from app.schemas.resume import ResumeMetadata, ResumeStatus, ResumeListItem
@@ -129,10 +129,11 @@ def get_resume_metadata(resume_id: str, user_id: str) -> Optional[ResumeMetadata
                     # If it's a Firestore Timestamp object, convert it to datetime
                     if hasattr(ts, 'timestamp'):
                         # timestamp() returns Unix timestamp in seconds
-                        data[date_field] = datetime.utcfromtimestamp(ts.timestamp())
+                        data[date_field] = datetime.utcfromtimestamp(ts.timestamp()).replace(tzinfo=timezone.utc)
                     elif isinstance(ts, datetime):
-                        # Already a datetime object, keep as is
-                        pass
+                        # Already a datetime object, ensure it has timezone
+                        if ts.tzinfo is None:
+                             data[date_field] = ts.replace(tzinfo=timezone.utc)
                     elif isinstance(ts, str):
                         # Parse ISO format string (e.g., '2025-11-20T18:41:57.311298')
                         try:
@@ -975,7 +976,7 @@ def list_resume_versions(user_id: str, resume_id: str) -> List[dict]:
             if 'created_at' in data and data['created_at']:
                 ts = data['created_at']
                 if hasattr(ts, 'timestamp'):
-                    data['created_at'] = datetime.utcfromtimestamp(ts.timestamp())
+                    data['created_at'] = datetime.utcfromtimestamp(ts.timestamp()).replace(tzinfo=timezone.utc)
             versions.append(data)
             
         return versions
@@ -1011,7 +1012,7 @@ def get_resume_version(user_id: str, resume_id: str, version_id: str) -> Optiona
         if 'created_at' in data and data['created_at']:
             ts = data['created_at']
             if hasattr(ts, 'timestamp'):
-                data['created_at'] = datetime.utcfromtimestamp(ts.timestamp())
+                data['created_at'] = datetime.utcfromtimestamp(ts.timestamp()).replace(tzinfo=timezone.utc)
                 
         return data
     except Exception as e:

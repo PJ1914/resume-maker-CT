@@ -6,6 +6,7 @@ import AIHistorySection from '@/components/profile/AIHistorySection'
 import PortfolioSection from '@/components/profile/PortfolioSection'
 import SettingsSection from '@/components/profile/SettingsSection'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 
 export default function ProfilePage() {
     return (
@@ -36,9 +37,9 @@ export default function ProfilePage() {
                     transition={{ delay: 0.8 }}
                     className="mt-12 text-center"
                 >
-                    <a href="#" className="text-sm text-secondary-500 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-white transition-colors">
+                    <Link to="/help-center" className="text-sm text-secondary-500 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-white transition-colors">
                         Need help? Visit our Support Center
-                    </a>
+                    </Link>
                 </motion.div>
             </main>
         </div>

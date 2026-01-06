@@ -46,7 +46,7 @@ def process_resume_parsing(
         filename: Original filename (for format detection)
     """
     try:
-        logger.info(f"Starting parsing for resume {resume_id}")
+        logger.info(f"Starting parsing for resume {resume_id} (content_type: {content_type}, filename: {filename})")
         
         # Update status to PARSING
         update_resume_status(resume_id, uid, ResumeStatus.PARSING)
@@ -57,6 +57,8 @@ def process_resume_parsing(
         
         if not file_content:
             raise Exception("Failed to download file from storage")
+        
+        logger.info(f"Resume {resume_id}: Downloaded {len(file_content)} bytes from storage")
         
         # Extract text from file with LaTeX detection
         extractor = ResumeExtractor()
@@ -72,11 +74,12 @@ def process_resume_parsing(
         structured_data = extraction_result.get('structured_data')  # From LaTeX parser
         is_latex = extraction_result.get('is_latex', False)
         hyperlinks = extraction_result.get('hyperlinks', [])  # From PDF extraction
+        extraction_method = extraction_result.get('extraction_method', 'unknown')
+        
+        logger.info(f"Resume {resume_id}: Extracted {len(raw_text)} chars using {extraction_method}, LaTeX: {is_latex}, Hyperlinks: {len(hyperlinks)}")
         
         if not raw_text or len(raw_text.strip()) < 50:
-            raise Exception("Extracted text is too short or empty")
-        
-        logger.info(f"Resume {resume_id}: Extracted {len(raw_text)} chars, LaTeX: {is_latex}, Hyperlinks: {len(hyperlinks)}")
+            raise Exception(f"Extracted text is too short ({len(raw_text.strip())} chars) or empty. File may be corrupted.")
         
         # Parse text using Gemini AI (with fallback)
         parser = HybridResumeParser()
@@ -115,20 +118,24 @@ def process_resume_parsing(
         process_resume_scoring(resume_id, uid, parsed_data)
         
     except Exception as e:
-        logger.error(f"Parsing failed for resume {resume_id}: {str(e)}")
+        error_message = str(e)
+        logger.error(f"Parsing failed for resume {resume_id}: {error_message}")
         import traceback
         traceback.print_exc()
         
-        # Update status to ERROR
+        # Store detailed error message in Firestore for user feedback
+        from app.services.firestore import db
         try:
-            update_resume_status(
-                resume_id,
-                uid,
-                ResumeStatus.ERROR,
-                error_message=f"Parsing failed: {str(e)}"
-            )
+            db.collection('resumes').document(resume_id).update({
+                'status': ResumeStatus.ERROR.value,
+                'error_message': error_message,
+                'error_timestamp': datetime.utcnow(),
+                'updated_at': datetime.utcnow()
+            })
         except Exception as update_error:
-            logger.error(f"Failed to update error status: {str(update_error)}")
+            logger.error(f"Failed to update error status: {update_error}")
+        
+        # Don't re-raise - background task should not crash
 
 
 def process_resume_scoring(

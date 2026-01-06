@@ -175,16 +175,17 @@ export function InterviewPrepModal({ isOpen, onClose, resumeId, onSuccess }: Int
                     </div>
 
                     {/* Credits Info */}
-                    {/* Credits Info */}
-                    {balance !== null && (balance < 10 || balance < 3) ? (
-                        <CreditWarning balance={balance} cost={3} />
+                    {balance !== null && balance < 10 ? (
+                        <CreditWarning balance={balance} cost={questionTypes.length === 2 ? 10 : 5} />
                     ) : (
                         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl flex items-start gap-3">
                             <Sparkles className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                             <div className="text-sm">
-                                <p className="font-medium text-blue-700 dark:text-blue-300">Costs 3 Credits</p>
+                                <p className="font-medium text-blue-700 dark:text-blue-300">
+                                    Costs {questionTypes.length === 2 ? '10 Credits (5 per category)' : '5 Credits per category'}
+                                </p>
                                 <p className="text-blue-600 dark:text-blue-400 mt-1">
-                                    Generates 10 questions per category with personalized answers based on your resume.
+                                    Generates 10 questions with personalized answers for each selected category.
                                 </p>
                             </div>
                         </div>

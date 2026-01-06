@@ -8,17 +8,23 @@ import {
   Upload,
   Sparkles,
   List,
+  Target,
+  Mic,
+  Briefcase,
   TrendingUp,
   Award,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Wallet
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useCreditBalance } from '@/hooks/useCredits'
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const navigate = useNavigate()
+  const navigator = useNavigate()
   const { data: resumesData, isLoading: loading } = useResumes()
+  const { data: creditData } = useCreditBalance()
 
   const resumes = resumesData || []
 
@@ -27,7 +33,7 @@ export default function DashboardPage() {
       latest_score?: number | null
       created_at?: string
     }
-    
+
     const scoredResumes = resumes.filter((r: Resume) => r.latest_score && r.latest_score > 0)
 
     return {
@@ -127,11 +133,13 @@ export default function DashboardPage() {
             <motion.div variants={item} className="bg-white dark:bg-secondary-800 rounded-2xl p-4 sm:p-6 shadow-sm border border-secondary-100 dark:border-secondary-700 transition-transform hover:scale-[1.02] sm:col-span-2 md:col-span-1">
               <div className="flex items-center gap-4 mb-2 sm:mb-3">
                 <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
-                  <Clock className="h-6 w-6 sm:h-7 sm:w-7 text-purple-600 dark:text-purple-400" />
+                  <Wallet className="h-6 w-6 sm:h-7 sm:w-7 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-bold text-secondary-900 dark:text-white">{stats.recentUploads}</div>
-                  <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 font-medium">Recent (7 days)</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-secondary-900 dark:text-white">
+                    {creditData?.is_admin ? 'Unlimited' : (creditData?.balance || 0)}
+                  </div>
+                  <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 font-medium">Credits Available</div>
                 </div>
               </div>
             </motion.div>
@@ -149,35 +157,13 @@ export default function DashboardPage() {
             Quick Actions
             <span className="text-[10px] sm:text-xs font-normal px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">Most Used</span>
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {/* Create New - Primary */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => navigate('/upload')}
-              className="group bg-white dark:bg-secondary-800 rounded-2xl p-5 sm:p-8 shadow-sm border border-secondary-100 dark:border-secondary-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-700 transition-all text-left relative overflow-hidden"
-            >
-              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
-                <Upload className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white mb-1 sm:mb-2">
-                Upload Resume
-              </h3>
-              <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed mb-3 sm:mb-4">
-                Upload existing resume for AI analysis and ATS scoring
-              </p>
-              <div className="flex items-center text-blue-600 dark:text-blue-400 font-semibold text-xs sm:text-sm">
-                Get started
-                <svg className="ml-2 h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate('/resume/create')}
-              className="group bg-gradient-to-br from-secondary-900 to-secondary-800 dark:from-blue-900/40 dark:to-purple-900/40 rounded-2xl p-5 sm:p-8 shadow-sm hover:shadow-lg border border-transparent dark:border-blue-500/30 transition-all text-left relative overflow-hidden sm:col-span-2 md:col-span-1"
+              onClick={() => navigator('/resume/create')}
+              className="group bg-gradient-to-br from-secondary-900 to-secondary-800 dark:from-blue-900/40 dark:to-purple-900/40 rounded-2xl p-5 sm:p-8 shadow-sm hover:shadow-lg border border-transparent dark:border-blue-500/30 transition-all text-left relative overflow-hidden sm:col-span-2 lg:col-span-1"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-white/10 dark:bg-white/10 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-white/20 dark:group-hover:bg-white/20 transition-colors relative z-10">
@@ -197,10 +183,107 @@ export default function DashboardPage() {
               </div>
             </motion.button>
 
+            {/* Upload Resume */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => navigate('/resumes')}
+              onClick={() => navigator('/upload')}
+              className="group bg-white dark:bg-secondary-800 rounded-2xl p-5 sm:p-8 shadow-sm border border-secondary-100 dark:border-secondary-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-700 transition-all text-left relative overflow-hidden"
+            >
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
+                <Upload className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white mb-1 sm:mb-2">
+                Upload Resume
+              </h3>
+              <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed mb-3 sm:mb-4">
+                AI analysis and scoring
+              </p>
+              <div className="flex items-center text-blue-600 dark:text-blue-400 font-semibold text-xs sm:text-sm">
+                Get started
+                <svg className="ml-2 h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </motion.button>
+
+            {/* ATS Checker */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigator('/ats-checker')}
+              className="group bg-white dark:bg-secondary-800 rounded-2xl p-5 sm:p-8 shadow-sm border border-secondary-100 dark:border-secondary-700 hover:shadow-lg hover:border-purple-200 dark:hover:border-purple-700 transition-all text-left relative overflow-hidden"
+            >
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 transition-colors">
+                <Target className="h-6 w-6 sm:h-7 sm:w-7 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white mb-1 sm:mb-2">
+                ATS Checker
+              </h3>
+              <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed mb-3 sm:mb-4">
+                Check resume vs JD
+              </p>
+              <div className="flex items-center text-purple-600 dark:text-purple-400 font-semibold text-xs sm:text-sm">
+                Check score
+                <svg className="ml-2 h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </motion.button>
+
+            {/* Interview Prep */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigator('/interview-prep')}
+              className="group bg-white dark:bg-secondary-800 rounded-2xl p-5 sm:p-8 shadow-sm border border-secondary-100 dark:border-secondary-700 hover:shadow-lg hover:border-orange-200 dark:hover:border-orange-700 transition-all text-left relative overflow-hidden"
+            >
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/40 transition-colors">
+                <Mic className="h-6 w-6 sm:h-7 sm:w-7 text-orange-600 dark:text-orange-400" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white mb-1 sm:mb-2">
+                Interview Prep
+              </h3>
+              <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed mb-3 sm:mb-4">
+                Practice with AI interviews
+              </p>
+              <div className="flex items-center text-orange-600 dark:text-orange-400 font-semibold text-xs sm:text-sm">
+                Start practice
+                <svg className="ml-2 h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </motion.button>
+
+            {/* Portfolio */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigator('/portfolio')}
+              className="group bg-white dark:bg-secondary-800 rounded-2xl p-5 sm:p-8 shadow-sm border border-secondary-100 dark:border-secondary-700 hover:shadow-lg hover:border-pink-200 dark:hover:border-pink-700 transition-all text-left relative overflow-hidden"
+            >
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-pink-100 dark:group-hover:bg-pink-900/40 transition-colors">
+                <Briefcase className="h-6 w-6 sm:h-7 sm:w-7 text-pink-600 dark:text-pink-400" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white mb-1 sm:mb-2">
+                Portfolio
+              </h3>
+              <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed mb-3 sm:mb-4">
+                Showcase your work
+              </p>
+              <div className="flex items-center text-pink-600 dark:text-pink-400 font-semibold text-xs sm:text-sm">
+                Manage
+                <svg className="ml-2 h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </motion.button>
+
+            {/* My Resumes (Compact) */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigator('/resumes')}
               className="group bg-white dark:bg-secondary-800 rounded-2xl p-5 sm:p-8 shadow-sm border border-secondary-100 dark:border-secondary-700 hover:shadow-lg hover:border-green-200 dark:hover:border-green-700 transition-all text-left relative overflow-hidden"
             >
               <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-green-100 dark:group-hover:bg-green-900/40 transition-colors">
@@ -210,10 +293,10 @@ export default function DashboardPage() {
                 My Resumes
               </h3>
               <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed mb-3 sm:mb-4">
-                View, manage, and export all your saved resumes
+                View all resumes
               </p>
               <div className="flex items-center text-green-600 dark:text-green-400 font-semibold text-xs sm:text-sm">
-                View all
+                View list
                 <svg className="ml-2 h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -263,8 +346,8 @@ export default function DashboardPage() {
                 <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <h3 className="font-bold text-secondary-900 dark:text-secondary-50 mb-1 sm:mb-2 text-sm sm:text-base">Real-time Feedback</h3>
-                <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed">Instant suggestions to improve your resume quality</p>
+                <h3 className="font-bold text-secondary-900 dark:text-secondary-50 mb-1 sm:mb-2 text-sm sm:text-base">Real-time Feedback & Versioning</h3>
+                <p className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed">Track changes and get instant suggestions</p>
               </div>
             </div>
           </div>

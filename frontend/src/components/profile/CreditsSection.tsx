@@ -12,6 +12,7 @@ export default function CreditsSection() {
     })
 
     const balance = creditData?.balance || 0
+    const isAdmin = creditData?.is_admin || false
 
     // Calculate usage percentage (assuming max is 25000 for visual purposes)
     const maxCredits = 25000
@@ -52,31 +53,38 @@ export default function CreditsSection() {
                                 <span className="animate-pulse bg-gray-200 dark:bg-white/10 h-10 w-24 rounded block" />
                             ) : (
                                 <span className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white">
-                                    {balance.toLocaleString()}
+                                    {isAdmin ? 'Unlimited' : balance.toLocaleString()}
                                 </span>
                             )}
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-500">credits</span>
+                            {!isAdmin && <span className="text-sm font-medium text-gray-500 dark:text-gray-500">credits</span>}
                         </div>
                     </div>
                 </div>
 
-                {/* Progress bar */}
-                <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                            Usage
-                        </span>
-                        <span>{Math.round(usagePercentage)}% of {maxCredits.toLocaleString()}</span>
+                {/* Progress bar or Admin Status */}
+                {isAdmin ? (
+                    <div className="flex items-center gap-2 py-1 text-sm text-yellow-600 dark:text-yellow-500 font-medium bg-yellow-50 dark:bg-yellow-900/10 px-3 rounded-lg w-fit">
+                        <Crown className="w-4 h-4" />
+                        <span>Admin Privileges Active</span>
                     </div>
-                    <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${usagePercentage}%` }}
-                            transition={{ duration: 1, ease: "easeOut" }}
-                            className="h-full rounded-full bg-yellow-500"
-                        />
+                ) : (
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center gap-1">
+                                Usage
+                            </span>
+                            <span>{Math.round(usagePercentage)}% of {maxCredits.toLocaleString()}</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${usagePercentage}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className="h-full rounded-full bg-yellow-500"
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Plan & Buy Section */}
