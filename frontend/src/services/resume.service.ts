@@ -39,9 +39,8 @@ export interface ResumeDetail {
   education: any[] | null
   layout_type: string | null
   latest_score: number | null
-  error_message?: string | null  // Error message if parsing/upload failed
   template: string | null
-  error_message: string | null
+  error_message?: string | null  // Error message if parsing/upload failed
 }
 
 export const resumeService = {
