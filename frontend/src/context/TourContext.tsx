@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from './AuthContext'
 
 interface TourStep {
     id: string
@@ -65,9 +66,15 @@ export function TourProvider({ children }: { children: ReactNode }) {
     const [currentStepIndex, setCurrentStepIndex] = useState(0)
     const navigate = useNavigate()
     const location = useLocation()
+    const { user, loading } = useAuth()
 
-    // Check for first-time user on mount
+    // Check for first-time user on mount - only if logged in
     useEffect(() => {
+        // Don't start tour if still loading auth or user is not logged in
+        if (loading || !user) {
+            return
+        }
+
         const hasSeenTour = localStorage.getItem('hasSeenTour')
         if (!hasSeenTour) {
             // Small delay to ensure app is fully loaded
@@ -75,7 +82,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
                 startTour()
             }, 1000)
         }
-    }, [])
+    }, [user, loading])
 
     const startTour = () => {
         setIsOpen(true)
