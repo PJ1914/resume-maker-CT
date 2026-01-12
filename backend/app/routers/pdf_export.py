@@ -159,6 +159,22 @@ async def export_resume_pdf(
                 
                 # Deduct credits
                 deduct_credits(user_id, FeatureType.PDF_EXPORT, f"PDF Export for resume {resume_id}")
+                
+                # Send PDF export success notification
+                try:
+                    user_email = current_user.get('email')
+                    user_name = current_user.get('name') or current_user.get('displayName') or user_email.split('@')[0] if user_email else 'User'
+                    resume_name = resume_data.get('contact_info', {}).get('name', 'Your Resume')
+                    
+                    await EmailService.send_pdf_export_success(
+                        user_email=user_email,
+                        user_name=user_name,
+                        resume_name=resume_name,
+                        template_used=request.template
+                    )
+                    logger.info(f"✅ PDF export email sent to {user_email}")
+                except Exception as email_error:
+                    logger.error(f"❌ PDF export email failed: {email_error}")
 
                 return ExportResponse(
                     success=True,

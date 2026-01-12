@@ -8,6 +8,8 @@ from app.schemas.payment import (
 from app.services.payment import payment_service
 from app.services.credits import add_credits, CreditTransactionType
 from app.dependencies import get_current_user
+from app.services.email_service import EmailService
+from app.services.email_ai_service import EmailAIService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -87,6 +89,20 @@ async def verify_payment(
         )
         
         if not verification_result.get("success"):
+            # Send failed payment notification
+            try:
+                amount = request.quantity * 10  # Assuming ₹10 per credit
+                await EmailService.send_payment_failed_notification(
+                    user_email=current_user.get('email'),
+                    user_name=current_user.get('displayName', 'Valued Customer'),
+                    amount=amount,
+                    reason=verification_result.get("message", "Payment verification failed"),
+                    order_id=request.razorpay_order_id
+                )
+                logger.info(f"✅ Payment failed notification sent to {current_user.get('email')}")
+            except Exception as email_error:
+                logger.error(f"❌ Failed payment email error: {email_error}")
+            
             raise HTTPException(
                 status_code=400,
                 detail=verification_result.get("message", "Payment verification failed")
@@ -96,6 +112,27 @@ async def verify_payment(
         new_balance = verification_result.get("new_balance", 0)
         
         logger.info(f"Payment verified for user {current_user['uid']}, credits added: {credits_added}, new balance: {new_balance}")
+        
+        # Send billing receipt email (async, non-blocking)
+        try:
+            # Get amount from order
+            amount = request.quantity * 10  # Assuming ₹10 per credit
+            
+            # Generate invoice number and send receipt
+            invoice_number = await EmailAIService.generate_invoice_number()
+            await EmailService.send_billing_receipt(
+                user_email=current_user.get('email'),
+                user_name=current_user.get('displayName', 'Valued Customer'),
+                invoice_number=invoice_number,
+                credits_purchased=credits_added,
+                amount_paid=amount,
+                transaction_id=request.razorpay_payment_id,
+                currency="INR"
+            )
+            logger.info(f"✅ Billing receipt sent to {current_user.get('email')}")
+        except Exception as email_error:
+            # Don't fail payment if email fails
+            logger.error(f"❌ Failed to send billing receipt: {email_error}")
         
         return VerifyPaymentResponse(
             success=True,

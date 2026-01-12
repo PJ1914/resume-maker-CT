@@ -13,6 +13,7 @@ from app.services.gemini_scorer import HybridScorer
 from app.services.cache import get_cached_score, set_cached_score
 from app.services.audit import log_scoring_request, check_rate_limit
 from app.services.credits import has_sufficient_credits, deduct_credits, FeatureType, FEATURE_COSTS, get_user_credits
+from app.services.email_service import EmailService
 from app.config import settings
 import logging
 
@@ -398,6 +399,26 @@ async def score_resume(
             update_resume_latest_score(resume_id, uid, score_result.get('total_score', 0))
         except Exception as e:
             logger.warning(f"Failed to update latest_score: {e}")
+        
+        # Send high ATS score notification if score >= 80
+        total_score = score_result.get('total_score', 0)
+        if total_score >= 80:
+            try:
+                user_email = current_user.get('email')
+                user_name = current_user.get('name') or current_user.get('displayName') or user_email.split('@')[0] if user_email else 'User'
+                resume_name = resume_data.get('contact_info', {}).get('name', 'Your Resume')
+                rating = score_result.get('rating', 'Excellent')
+                
+                await EmailService.send_high_ats_score_notification(
+                    user_email=user_email,
+                    user_name=user_name,
+                    resume_name=resume_name,
+                    ats_score=total_score,
+                    rating=rating
+                )
+                logger.info(f"✅ High ATS score email sent to {user_email} (score: {total_score})")
+            except Exception as email_error:
+                logger.error(f"❌ High ATS score email failed: {email_error}")
         
         # Add resume_id and cached flag
         score_result['resume_id'] = resume_id
