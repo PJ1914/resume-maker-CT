@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { FileText, Linkedin, Twitter, Instagram } from 'lucide-react'
+import { Linkedin, Twitter, Instagram } from 'lucide-react'
+import { BrandLogo } from '../BrandLogo'
 
 export function PublicFooter() {
     return (
@@ -8,11 +9,14 @@ export function PublicFooter() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
                     {/* Brand Column */}
                     <div>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="h-10 w-10 bg-secondary-900 dark:bg-white rounded-lg flex items-center justify-center">
-                                <FileText className="h-6 w-6 text-white dark:text-black" />
-                            </div>
-                            <span className="text-xl font-bold">prativeda</span>
+                        <div className="mb-6">
+                            <Link to="/" className="cursor-pointer inline-block">
+                                <BrandLogo
+                                    iconClassName="h-10 sm:h-12 w-auto"
+                                    textClassName="text-2xl font-bold"
+                                    subTextClassName="text-xs font-medium tracking-wider uppercase"
+                                />
+                            </Link>
                         </div>
                         <p className="text-secondary-600 dark:text-white/60 text-sm leading-relaxed mb-6 lg:mb-4">
                             Build your perfect resume with AI-powered optimization and ATS-friendly templates.

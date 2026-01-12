@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { BrandLogo } from '../BrandLogo'
 
 export default function AdminLayout() {
     const { signOut, user } = useAuth()
@@ -84,12 +85,7 @@ export default function AdminLayout() {
                 className={`bg-black border-r border-white/10 fixed md:static inset-y-0 left-0 z-50 h-full overflow-hidden flex flex-col`}
             >
                 <div className="p-6 flex items-center justify-between">
-                    <div className="flex items-center gap-3 font-bold text-xl text-white">
-                        <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center text-black">
-                            <Shield className="h-5 w-5" />
-                        </div>
-                        <span className="tracking-tight">Prativeda</span>
-                    </div>
+                    <BrandLogo variant="light" iconClassName="h-8 w-auto" />
                     <button
                         onClick={() => setIsSidebarOpen(false)}
                         className="md:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"

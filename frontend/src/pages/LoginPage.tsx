@@ -6,6 +6,7 @@ import {
   FieldType,
 } from '@/components/ui/modern-animated-sign-in';
 import { useAuth } from '@/context/AuthContext';
+import { BrandLogo } from '@/components/BrandLogo';
 import {
   FileText,
   Sparkles,
@@ -204,7 +205,14 @@ export default function LoginPage() {
       {/* Left Side */}
       <span className='flex flex-col justify-center w-1/2 max-lg:hidden relative'>
         <Ripple mainCircleSize={100} />
-        <TechOrbitDisplay iconsArray={iconsArray} text="Prativeda" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
+          <BrandLogo
+            className="flex-col !gap-1"
+            iconClassName="h-12 w-auto"
+            textClassName="text-lg font-bold"
+          />
+        </div>
+        <TechOrbitDisplay iconsArray={iconsArray} text="" />
       </span>
 
       {/* Right Side */}

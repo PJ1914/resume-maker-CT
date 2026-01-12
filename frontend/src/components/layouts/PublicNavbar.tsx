@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { FileText, User, LogOut, ChevronDown, CheckCircle, Zap, Layout, Mic, Users, MessageSquare, PenTool, BookOpen, HelpCircle, Menu, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import toast from 'react-hot-toast'
+import { BrandLogo } from '../BrandLogo'
 
 export function PublicNavbar({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) {
     const navigate = useNavigate()
@@ -39,14 +40,9 @@ export function PublicNavbar({ onMobileMenuClick }: { onMobileMenuClick?: () => 
                     <motion.div
                         whileHover={{ scale: 1.05 }}
                         onClick={() => navigate('/')}
-                        className="flex items-center gap-1.5 sm:gap-3 cursor-pointer"
+                        className="cursor-pointer"
                     >
-                        <div className="relative h-8 w-8 sm:h-8 sm:w-8 bg-secondary-900 dark:bg-white rounded-lg flex items-center justify-center group text-white dark:text-black">
-                            <FileText className="h-5 w-5 sm:h-5 sm:w-5 relative z-10" />
-                        </div>
-                        <span className="text-base sm:text-xl font-bold tracking-tight text-secondary-900 dark:text-white">
-                            prativeda
-                        </span>
+                        <BrandLogo />
                     </motion.div>
 
                     {/* Desktop Navigation */}

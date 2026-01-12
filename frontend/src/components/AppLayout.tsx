@@ -17,6 +17,7 @@ import {
   MessageSquare,
 } from 'lucide-react'
 import CreditBalance from './CreditBalance'
+import { BrandLogo } from './BrandLogo'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
@@ -64,13 +65,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
 
-              <Link to="/" className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-primary-900 flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-primary-900 dark:text-white hidden sm:inline-block">
-                  Prativeda
-                </span>
+              <Link to="/" className="flex items-center">
+                <BrandLogo
+                  iconClassName="h-8 w-auto"
+                  textClassName="text-xl font-bold hidden sm:block"
+                  subTextClassName="text-[10px] font-medium tracking-wider uppercase hidden sm:block"
+                />
               </Link>
             </div>
 
