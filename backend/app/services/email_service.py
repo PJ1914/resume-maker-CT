@@ -277,8 +277,8 @@ class EmailService:
                 "ai_message": ai_message,
                 "dashboard_url": "https://prativeda.codetapasya.com/dashboard",
                 "current_year": str(datetime.now().year),
-                "unsubscribe_url": "https://prativeda.codetapasya.com/unsubscribe",
-                "privacy_url": "https://prativeda.codetapasya.com/privacy",
+                "unsubscribe_url": "https://prativeda.codetapasya.com/profile",
+                "privacy_url": "https://prativeda.codetapasya.com/privacy-policy",
                 "help_url": "https://prativeda.codetapasya.com/help"
             }
         )
@@ -431,7 +431,7 @@ class EmailService:
                 "location": location,
                 "ip_address": ip_address,
                 "timestamp": datetime.now().strftime("%B %d, %Y at %H:%M:%S UTC"),
-                "secure_account_url": "https://prativeda.codetapasya.com/settings"
+                "secure_account_url": "https://prativeda.codetapasya.com/profile"
             }
         )
     
@@ -476,7 +476,7 @@ class EmailService:
                 "notification_type": "Low Credit Warning",
                 "name": user_name,
                 "body_text": f"Your credit balance is low ({remaining_credits} credits remaining). Prativeda offers flexible credit packs to keep you moving forward - invest in your career success today.",
-                "action_url": "https://prativeda.codetapasya.com/credits",
+                "action_url": "https://prativeda.codetapasya.com/credits/purchase",
                 "action_text": "View Credit Packs"
             }
         )
@@ -525,7 +525,7 @@ class EmailService:
                 "reason": reason,
                 "order_id": order_id,
                 "message": f"Your payment of ₹{amount:.2f} could not be processed: {reason}. Prativeda's support team is here to help resolve this.",
-                "retry_url": "https://prativeda.codetapasya.com/credits",
+                "retry_url": "https://prativeda.codetapasya.com/credits/purchase",
                 "support_email": "billing-prativeda@codetapasya.com",
                 "date": datetime.now().strftime("%B %d, %Y")
             }
@@ -592,7 +592,7 @@ class EmailService:
                 "location": "Third-party Integration",
                 "ip_address": "N/A",
                 "timestamp": datetime.now().strftime("%B %d, %Y at %H:%M:%S UTC"),
-                "secure_account_url": "https://prativeda.codetapasya.com/settings"
+                "secure_account_url": "https://prativeda.codetapasya.com/profile"
             }
         )
     
