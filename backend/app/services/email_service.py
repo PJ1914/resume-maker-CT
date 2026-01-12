@@ -56,8 +56,7 @@ class EmailService:
                     settings.EMAIL_API_URL,
                     json={
                         "type": email_type,
-                        "recipient": recipient,
-                        "metadata": metadata
+                        "recipients": [{"email": recipient, "metadata": metadata}],
                     },
                     timeout=timeout
                 )
