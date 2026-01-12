@@ -10,7 +10,96 @@ from datetime import datetime
 import logging
 from app.config import settings
 
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
+
+
+class AIEmailPersonalizer:
+    """AI-powered email content personalization using Gemini."""
+    
+    _model = None
+    
+    @classmethod
+    def _init_gemini(cls):
+        """Initialize Gemini model if not already initialized."""
+        if cls._model is None and GEMINI_AVAILABLE and settings.GEMINI_API_KEY:
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+            cls._model = genai.GenerativeModel(settings.GEMINI_MODEL)
+    
+    @classmethod
+    async def personalize_resume_feedback(cls, resume_name: str, ats_score: Optional[int] = None) -> str:
+        """Generate personalized resume feedback."""
+        cls._init_gemini()
+        if cls._model is None:
+            return f"Your resume '{resume_name}' has been processed successfully."
+        
+        try:
+            score_context = f" with an ATS score of {ats_score}/100" if ats_score else ""
+            prompt = f"""Generate a brief, professional 2-sentence feedback for a resume named '{resume_name}'{score_context}.
+Focus on what makes a good resume. Be encouraging but specific.
+Keep it under 40 words. No emojis."""
+            
+            response = cls._model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"AI personalization failed: {e}")
+            return f"Your resume '{resume_name}' has been processed{score_context}."
+    
+    @classmethod
+    async def personalize_interview_feedback(cls, role: str, question_count: int) -> str:
+        """Generate personalized interview completion feedback."""
+        cls._init_gemini()
+        if cls._model is None:
+            return f"Your {role} interview prep session with {question_count} questions is complete."
+        
+        try:
+            prompt = f"""Generate a brief, professional 2-sentence encouragement for someone who completed {question_count} {role} interview prep questions.
+Focus on next steps and confidence building. Keep it under 40 words. No emojis."""
+            
+            response = cls._model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"AI personalization failed: {e}")
+            return f"Your {role} interview prep session with {question_count} questions is complete."
+    
+    @classmethod
+    async def personalize_portfolio_tip(cls, template_name: str) -> str:
+        """Generate personalized portfolio success tip."""
+        cls._init_gemini()
+        if cls._model is None:
+            return f"Your portfolio using {template_name} template is now live."
+        
+        try:
+            prompt = f"""Generate a brief, professional 2-sentence tip for someone who just deployed a portfolio using '{template_name}' template.
+Focus on maximizing impact and sharing strategies. Keep it under 40 words. No emojis."""
+            
+            response = cls._model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"AI personalization failed: {e}")
+            return f"Your portfolio using {template_name} template is now live."
+    
+    @classmethod
+    async def personalize_welcome_message(cls, user_name: str) -> str:
+        """Generate personalized welcome message."""
+        cls._init_gemini()
+        if cls._model is None:
+            return "Welcome to Prativeda. Start building your professional resume today."
+        
+        try:
+            prompt = f"""Generate a brief, professional 2-sentence welcome message for a new user named {user_name} joining a resume building platform.
+Focus on their career journey ahead. Keep it under 40 words. No emojis."""
+            
+            response = cls._model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"AI personalization failed: {e}")
+            return "Welcome to Prativeda. Start building your professional resume today."
 
 
 class EmailService:
@@ -168,15 +257,20 @@ class EmailService:
         """
         Triggered: After user signup.
         """
+        # AI-personalized welcome message
+        ai_message = await AIEmailPersonalizer.personalize_welcome_message(user_name)
+        
         return await EmailService.send_email(
             email_type="welcome",
             recipient=user_email,
             metadata={
                 "name": user_name,
-                "app_name": "Prativeda Resume Maker",
-                "login_url": "https://prativeda.com/login",
-                "support_email": "support-prativeda@codetapasya.com",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "ai_message": ai_message,
+                "dashboard_url": "https://prativeda.com/dashboard",
+                "current_year": str(datetime.now().year),
+                "unsubscribe_url": "https://prativeda.com/unsubscribe",
+                "privacy_url": "https://prativeda.com/privacy",
+                "help_url": "https://prativeda.com/support"
             }
         )
     
@@ -221,23 +315,19 @@ class EmailService:
         """
         Triggered: After resume parsing completes.
         """
-        metadata = {
-            "name": user_name,
-            "resume_name": resume_name,
-            "dashboard_url": "https://prativeda.com/resumes",
-            "date": datetime.now().strftime("%B %d, %Y")
-        }
-        
-        if ats_score:
-            metadata["ats_score"] = str(ats_score)
-            metadata["message"] = f"Your resume '{resume_name}' has been processed with an ATS score of {ats_score}/100."
-        else:
-            metadata["message"] = f"Your resume '{resume_name}' has been processed successfully."
+        # AI-personalized feedback
+        body_text = await AIEmailPersonalizer.personalize_resume_feedback(resume_name, ats_score)
         
         return await EmailService.send_email(
             email_type="noreply",
             recipient=user_email,
-            metadata=metadata
+            metadata={
+                "notification_type": "Resume Ready",
+                "name": user_name,
+                "body_text": body_text,
+                "action_url": "https://prativeda.com/resumes",
+                "action_text": "View Resume"
+            }
         )
     
     @staticmethod
@@ -250,16 +340,18 @@ class EmailService:
         """
         Triggered: After interview session completes.
         """
+        # AI-personalized feedback
+        body_text = await AIEmailPersonalizer.personalize_interview_feedback(role, question_count)
+        
         return await EmailService.send_email(
             email_type="noreply",
             recipient=user_email,
             metadata={
+                "notification_type": "Interview Complete",
                 "name": user_name,
-                "role": role,
-                "question_count": str(question_count),
-                "message": f"Your {role} interview prep session with {question_count} questions is complete!",
-                "dashboard_url": "https://prativeda.com/interview-prep",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "body_text": body_text,
+                "action_url": "https://prativeda.com/interview-prep",
+                "action_text": "View Results"
             }
         )
     
@@ -273,15 +365,18 @@ class EmailService:
         """
         Triggered: After portfolio deployment succeeds.
         """
+        # AI-personalized tip
+        body_text = await AIEmailPersonalizer.personalize_portfolio_tip(template_name)
+        
         return await EmailService.send_email(
             email_type="noreply",
             recipient=user_email,
             metadata={
+                "notification_type": "Portfolio Deployed",
                 "name": user_name,
-                "portfolio_url": portfolio_url,
-                "template": template_name,
-                "message": f"Your portfolio is now live at {portfolio_url}",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "body_text": body_text + f" Visit it at {portfolio_url}",
+                "action_url": portfolio_url,
+                "action_text": "Visit Portfolio"
             }
         )
     
@@ -301,9 +396,10 @@ class EmailService:
             metadata={
                 "name": user_name,
                 "ticket_id": ticket_id,
-                "message": message[:200],  # Truncate long messages
-                "support_url": "https://prativeda.com/support",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "ticket_status": "Received",
+                "ticket_subject": "Support Request Received",
+                "agent_response_body": f"We have received your support request. Our team will review your message and respond within 24-48 hours.\n\nYour message: {message[:200]}",
+                "agent_name": "Prativeda Support Team"
             }
         )
     
@@ -311,21 +407,22 @@ class EmailService:
     async def send_security_alert(
         user_email: str,
         user_name: str,
-        alert_type: str,
-        alert_message: str
+        device_name: str = "Unknown Device",
+        location: str = "Unknown Location",
+        ip_address: str = "Unknown IP"
     ) -> bool:
         """
-        Triggered: Security events (password change, suspicious login, etc.)
+        Triggered: Security events (new login detected)
         """
         return await EmailService.send_email(
             email_type="security",
             recipient=user_email,
             metadata={
-                "name": user_name,
-                "alert_type": alert_type,
-                "message": alert_message,
-                "date": datetime.now().strftime("%B %d, %Y %H:%M:%S"),
-                "support_email": "security-prativeda@codetapasya.com"
+                "device_name": device_name,
+                "location": location,
+                "ip_address": ip_address,
+                "timestamp": datetime.now().strftime("%B %d, %Y at %H:%M:%S UTC"),
+                "secure_account_url": "https://prativeda.com/security"
             }
         )
     
@@ -346,11 +443,11 @@ class EmailService:
             recipient=user_email,
             metadata={
                 "name": user_name,
-                "subject": subject,
-                "message": message[:500],  # Truncate long messages
-                "response_time": "24-48 hours",
-                "support_email": "support-prativeda@codetapasya.com",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "ticket_id": f"TICK-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "ticket_status": "Open",
+                "ticket_subject": subject,
+                "agent_response_body": f"Thank you for contacting us. We have received your message and will respond within 24-48 hours.\n\nYour inquiry: {message[:500]}",
+                "agent_name": "Prativeda Support Team"
             }
         )
     
@@ -367,11 +464,11 @@ class EmailService:
             email_type="noreply",
             recipient=user_email,
             metadata={
+                "notification_type": "Low Credit Warning",
                 "name": user_name,
-                "remaining_credits": str(remaining_credits),
-                "message": f"Your credit balance is low ({remaining_credits} credits remaining). Top up to continue using premium features.",
-                "purchase_url": "https://prativeda.com/credits",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "body_text": f"Your credit balance is low ({remaining_credits} credits remaining). Top up now to continue using premium features without interruption.",
+                "action_url": "https://prativeda.com/credits",
+                "action_text": "Buy Credits"
             }
         )
     
@@ -390,13 +487,11 @@ class EmailService:
             email_type="noreply",
             recipient=user_email,
             metadata={
+                "notification_type": "High ATS Score Achievement",
                 "name": user_name,
-                "resume_name": resume_name,
-                "ats_score": str(ats_score),
-                "rating": rating,
-                "message": f"🎉 Congratulations! Your resume '{resume_name}' achieved an excellent ATS score of {ats_score}/100 ({rating})!",
-                "share_url": "https://prativeda.com/resumes",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "body_text": f"Congratulations! Your resume '{resume_name}' achieved an excellent ATS score of {ats_score}/100 ({rating}). Your resume is highly optimized for applicant tracking systems.",
+                "action_url": "https://prativeda.com/resumes",
+                "action_text": "View Resume"
             }
         )
     
@@ -441,12 +536,11 @@ class EmailService:
             email_type="noreply",
             recipient=user_email,
             metadata={
+                "notification_type": "PDF Export Complete",
                 "name": user_name,
-                "resume_name": resume_name,
-                "template": template_used,
-                "message": f"Your resume '{resume_name}' has been exported successfully using {template_used} template.",
-                "download_url": "https://prativeda.com/resumes",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "body_text": f"Your resume '{resume_name}' has been exported successfully using {template_used} template. Download it now and start applying!",
+                "action_url": "https://prativeda.com/resumes",
+                "action_text": "Download Resume"
             }
         )
     
@@ -464,12 +558,11 @@ class EmailService:
             email_type="noreply",
             recipient=user_email,
             metadata={
+                "notification_type": "Monthly Credits Reset",
                 "name": user_name,
-                "new_credits": str(new_credits),
-                "total_balance": str(total_balance),
-                "message": f"Your monthly free credits have been refreshed! {new_credits} new credits added. Total balance: {total_balance} credits.",
-                "dashboard_url": "https://prativeda.com/dashboard",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "body_text": f"Your monthly free credits have been refreshed! {new_credits} new credits added. Your total balance is now {total_balance} credits.",
+                "action_url": "https://prativeda.com/dashboard",
+                "action_text": "View Dashboard"
             }
         )
     
@@ -486,12 +579,11 @@ class EmailService:
             email_type="security",
             recipient=user_email,
             metadata={
-                "name": user_name,
-                "platform": platform.title(),
-                "message": f"Your {platform.title()} account has been successfully connected to Prativeda Resume Maker.",
-                "connected_at": datetime.now().strftime("%B %d, %Y %H:%M:%S"),
-                "security_url": "https://prativeda.com/settings",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "device_name": f"{platform.title()} Connection",
+                "location": "Third-party Integration",
+                "ip_address": "N/A",
+                "timestamp": datetime.now().strftime("%B %d, %Y at %H:%M:%S UTC"),
+                "secure_account_url": "https://prativeda.com/settings"
             }
         )
     
@@ -509,11 +601,10 @@ class EmailService:
             email_type="noreply",
             recipient=user_email,
             metadata={
+                "notification_type": "Template Unlocked",
                 "name": user_name,
-                "template_name": template_name,
-                "tier": tier.upper(),
-                "message": f"🎨 You've unlocked the {template_name} ({tier.upper()}) portfolio template!",
-                "portfolio_url": "https://prativeda.com/portfolio",
-                "date": datetime.now().strftime("%B %d, %Y")
+                "body_text": f"You've unlocked the {template_name} ({tier.upper()}) portfolio template. Start building your professional portfolio now.",
+                "action_url": "https://prativeda.com/portfolio",
+                "action_text": "Build Portfolio"
             }
         )
