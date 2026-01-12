@@ -4,6 +4,7 @@ Handles both automated and manual email sending via AWS SES API.
 """
 
 import httpx
+import json
 from typing import Dict, List, Optional
 from datetime import datetime
 import logging
@@ -51,13 +52,26 @@ class EmailService:
             return True
         
         try:
+            # Prepare payload - Lambda expects 'body' key (API Gateway format)
+            payload = {
+                "type": email_type,
+                "recipients": [{"email": recipient, "metadata": metadata}]
+            }
+            
+            # Wrap in 'body' to match Lambda's expected format
+            lambda_payload = {
+                "body": json.dumps(payload)  # Lambda expects body as JSON string
+            }
+            
+            # Debug logging
+            logger.info(f"📤 Sending email request to Lambda:")
+            logger.info(f"   URL: {settings.EMAIL_API_URL}")
+            logger.info(f"   Payload: {payload}")
+            
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     settings.EMAIL_API_URL,
-                    json={
-                        "type": email_type,
-                        "recipients": [{"email": recipient, "metadata": metadata}],
-                    },
+                    json=lambda_payload,
                     timeout=timeout
                 )
                 
@@ -100,13 +114,21 @@ class EmailService:
             Dict with success/failure counts
         """
         try:
+            # Prepare payload
+            payload = {
+                "type": email_type,
+                "recipients": recipients
+            }
+            
+            # Wrap in 'body' to match Lambda's expected format
+            lambda_payload = {
+                "body": json.dumps(payload)
+            }
+            
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     settings.EMAIL_API_URL,
-                    json={
-                        "type": email_type,
-                        "recipients": recipients
-                    },
+                    json=lambda_payload,
                     timeout=timeout
                 )
                 
