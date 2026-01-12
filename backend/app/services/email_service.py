@@ -33,73 +33,82 @@ class AIEmailPersonalizer:
     
     @classmethod
     async def personalize_resume_feedback(cls, resume_name: str, ats_score: Optional[int] = None) -> str:
-        """Generate personalized resume feedback."""
+        """Generate personalized resume feedback that emphasizes Prativeda's partnership."""
         cls._init_gemini()
         if cls._model is None:
-            return f"Your resume '{resume_name}' has been processed successfully."
+            score_text = f" and scored {ats_score}/100 on ATS compatibility" if ats_score else ""
+            return f"Your resume '{resume_name}' is ready{score_text}. Prativeda's AI has analyzed it - check your dashboard for detailed improvement suggestions."
         
         try:
             score_context = f" with an ATS score of {ats_score}/100" if ats_score else ""
-            prompt = f"""Generate a brief, professional 2-sentence feedback for a resume named '{resume_name}'{score_context}.
-Focus on what makes a good resume. Be encouraging but specific.
-Keep it under 40 words. No emojis."""
+            prompt = f"""Write 2-3 sentences about resume '{resume_name}'{score_context} being processed by Prativeda.
+Tone: Supportive partner helping their career.
+Mention: Prativeda's AI analyzed it, specific insights await in dashboard, next steps (improve score/download/create portfolio).
+Keep under 60 words. No emojis. Personal and actionable."""
             
             response = cls._model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
             logger.error(f"AI personalization failed: {e}")
-            return f"Your resume '{resume_name}' has been processed{score_context}."
+            score_text = f" and scored {ats_score}/100" if ats_score else ""
+            return f"Your resume '{resume_name}' is ready{score_text}. Prativeda's AI has analyzed it - check your dashboard for detailed improvement suggestions."
     
     @classmethod
     async def personalize_interview_feedback(cls, role: str, question_count: int) -> str:
-        """Generate personalized interview completion feedback."""
+        """Generate interview feedback emphasizing Prativeda's support."""
         cls._init_gemini()
         if cls._model is None:
-            return f"Your {role} interview prep session with {question_count} questions is complete."
+            return f"You've completed {question_count} {role} interview questions with Prativeda. Review your performance insights and keep practicing - we're here to help you ace that interview."
         
         try:
-            prompt = f"""Generate a brief, professional 2-sentence encouragement for someone who completed {question_count} {role} interview prep questions.
-Focus on next steps and confidence building. Keep it under 40 words. No emojis."""
+            prompt = f"""Write 2 sentences congratulating completion of {question_count} {role} interview prep questions on Prativeda.
+Tone: Encouraging coach supporting interview success.
+Mention: Performance analysis ready, keep practicing with Prativeda, confidence building.
+Keep under 50 words. No emojis. Motivational and supportive."""
             
             response = cls._model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
             logger.error(f"AI personalization failed: {e}")
-            return f"Your {role} interview prep session with {question_count} questions is complete."
+            return f"You've completed {question_count} {role} interview questions with Prativeda. Review your performance insights and keep practicing - we're here to help you ace that interview."
     
     @classmethod
     async def personalize_portfolio_tip(cls, template_name: str) -> str:
-        """Generate personalized portfolio success tip."""
+        """Generate portfolio success tip emphasizing Prativeda's platform."""
         cls._init_gemini()
         if cls._model is None:
-            return f"Your portfolio using {template_name} template is now live."
+            return f"Prativeda just deployed your portfolio with the {template_name} template. Share it on LinkedIn and let recruiters discover your professional brand."
         
         try:
-            prompt = f"""Generate a brief, professional 2-sentence tip for someone who just deployed a portfolio using '{template_name}' template.
-Focus on maximizing impact and sharing strategies. Keep it under 40 words. No emojis."""
+            prompt = f"""Write 2 sentences celebrating portfolio deployment using '{template_name}' template on Prativeda.
+Tone: Proud partner in their success.
+Mention: Share on LinkedIn/social media, update resume with portfolio URL, Prativeda made it easy.
+Keep under 50 words. No emojis. Encouraging and actionable."""
             
             response = cls._model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
             logger.error(f"AI personalization failed: {e}")
-            return f"Your portfolio using {template_name} template is now live."
+            return f"Prativeda just deployed your portfolio with the {template_name} template. Share it on LinkedIn and let recruiters discover your professional brand."
     
     @classmethod
     async def personalize_welcome_message(cls, user_name: str) -> str:
-        """Generate personalized welcome message."""
+        """Generate personalized welcome message that builds relationship."""
         cls._init_gemini()
         if cls._model is None:
-            return "Welcome to Prativeda. Start building your professional resume today."
+            return f"Hello {user_name}, Prativeda is your partner in building a standout career. Together, we'll craft resumes that open doors to your dream opportunities."
         
         try:
-            prompt = f"""Generate a brief, professional 2-sentence welcome message for a new user named {user_name} joining a resume building platform.
-Focus on their career journey ahead. Keep it under 40 words. No emojis."""
+            prompt = f"""Write a warm, professional 2-sentence welcome for {user_name} joining Prativeda - an AI-powered resume builder, ATS scorer, and portfolio creator.
+Tone: Build a partnership relationship. Emphasize we're here to support their career growth journey.
+Services: Resume building, ATS optimization, AI interview prep, portfolio generation.
+Keep under 50 words. No emojis. Make it personal and encouraging."""
             
             response = cls._model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
             logger.error(f"AI personalization failed: {e}")
-            return "Welcome to Prativeda. Start building your professional resume today."
+            return f"Hello {user_name}, Prativeda is your partner in building a standout career. Together, we'll craft resumes that open doors to your dream opportunities."
 
 
 class EmailService:
@@ -266,11 +275,11 @@ class EmailService:
             metadata={
                 "name": user_name,
                 "ai_message": ai_message,
-                "dashboard_url": "https://prativeda.com/dashboard",
+                "dashboard_url": "https://prativeda.codetapasya.com/dashboard",
                 "current_year": str(datetime.now().year),
-                "unsubscribe_url": "https://prativeda.com/unsubscribe",
-                "privacy_url": "https://prativeda.com/privacy",
-                "help_url": "https://prativeda.com/support"
+                "unsubscribe_url": "https://prativeda.codetapasya.com/unsubscribe",
+                "privacy_url": "https://prativeda.codetapasya.com/privacy",
+                "help_url": "https://prativeda.codetapasya.com/help"
             }
         )
     
@@ -325,7 +334,7 @@ class EmailService:
                 "notification_type": "Resume Ready",
                 "name": user_name,
                 "body_text": body_text,
-                "action_url": "https://prativeda.com/resumes",
+                "action_url": "https://prativeda.codetapasya.com/resumes",
                 "action_text": "View Resume"
             }
         )
@@ -350,7 +359,7 @@ class EmailService:
                 "notification_type": "Interview Complete",
                 "name": user_name,
                 "body_text": body_text,
-                "action_url": "https://prativeda.com/interview-prep",
+                "action_url": "https://prativeda.codetapasya.com/interview-prep",
                 "action_text": "View Results"
             }
         )
@@ -422,7 +431,7 @@ class EmailService:
                 "location": location,
                 "ip_address": ip_address,
                 "timestamp": datetime.now().strftime("%B %d, %Y at %H:%M:%S UTC"),
-                "secure_account_url": "https://prativeda.com/security"
+                "secure_account_url": "https://prativeda.codetapasya.com/settings"
             }
         )
     
@@ -466,9 +475,9 @@ class EmailService:
             metadata={
                 "notification_type": "Low Credit Warning",
                 "name": user_name,
-                "body_text": f"Your credit balance is low ({remaining_credits} credits remaining). Top up now to continue using premium features without interruption.",
-                "action_url": "https://prativeda.com/credits",
-                "action_text": "Buy Credits"
+                "body_text": f"Your credit balance is low ({remaining_credits} credits remaining). Prativeda offers flexible credit packs to keep you moving forward - invest in your career success today.",
+                "action_url": "https://prativeda.codetapasya.com/credits",
+                "action_text": "View Credit Packs"
             }
         )
     
@@ -489,9 +498,9 @@ class EmailService:
             metadata={
                 "notification_type": "High ATS Score Achievement",
                 "name": user_name,
-                "body_text": f"Congratulations! Your resume '{resume_name}' achieved an excellent ATS score of {ats_score}/100 ({rating}). Your resume is highly optimized for applicant tracking systems.",
-                "action_url": "https://prativeda.com/resumes",
-                "action_text": "View Resume"
+                "body_text": f"Congratulations! Prativeda's AI scored your resume '{resume_name}' at {ats_score}/100 ({rating}). Your resume is now highly optimized - time to apply with confidence.",
+                "action_url": "https://prativeda.codetapasya.com/resumes",
+                "action_text": "Download Resume"
             }
         )
     
@@ -515,8 +524,8 @@ class EmailService:
                 "currency_symbol": "₹",
                 "reason": reason,
                 "order_id": order_id,
-                "message": f"Your payment of ₹{amount:.2f} could not be processed: {reason}",
-                "retry_url": "https://prativeda.com/credits",
+                "message": f"Your payment of ₹{amount:.2f} could not be processed: {reason}. Prativeda's support team is here to help resolve this.",
+                "retry_url": "https://prativeda.codetapasya.com/credits",
                 "support_email": "billing-prativeda@codetapasya.com",
                 "date": datetime.now().strftime("%B %d, %Y")
             }
@@ -538,8 +547,8 @@ class EmailService:
             metadata={
                 "notification_type": "PDF Export Complete",
                 "name": user_name,
-                "body_text": f"Your resume '{resume_name}' has been exported successfully using {template_used} template. Download it now and start applying!",
-                "action_url": "https://prativeda.com/resumes",
+                "body_text": f"Prativeda generated your resume '{resume_name}' with pixel-perfect LaTeX quality using {template_used} template. Your professional document is ready to impress recruiters.",
+                "action_url": "https://prativeda.codetapasya.com/resumes",
                 "action_text": "Download Resume"
             }
         )
@@ -560,9 +569,9 @@ class EmailService:
             metadata={
                 "notification_type": "Monthly Credits Reset",
                 "name": user_name,
-                "body_text": f"Your monthly free credits have been refreshed! {new_credits} new credits added. Your total balance is now {total_balance} credits.",
-                "action_url": "https://prativeda.com/dashboard",
-                "action_text": "View Dashboard"
+                "body_text": f"Great news! Prativeda just refreshed your monthly credits. You now have {total_balance} credits to power your career growth - use them to optimize resumes, prep for interviews, or build portfolios.",
+                "action_url": "https://prativeda.codetapasya.com/dashboard",
+                "action_text": "Explore Features"
             }
         )
     
@@ -583,7 +592,7 @@ class EmailService:
                 "location": "Third-party Integration",
                 "ip_address": "N/A",
                 "timestamp": datetime.now().strftime("%B %d, %Y at %H:%M:%S UTC"),
-                "secure_account_url": "https://prativeda.com/settings"
+                "secure_account_url": "https://prativeda.codetapasya.com/settings"
             }
         )
     
@@ -603,8 +612,8 @@ class EmailService:
             metadata={
                 "notification_type": "Template Unlocked",
                 "name": user_name,
-                "body_text": f"You've unlocked the {template_name} ({tier.upper()}) portfolio template. Start building your professional portfolio now.",
-                "action_url": "https://prativeda.com/portfolio",
+                "body_text": f"You've unlocked the {template_name} ({tier.upper()}) portfolio template on Prativeda. Create a stunning professional portfolio and let your work speak volumes.",
+                "action_url": "https://prativeda.codetapasya.com/portfolio",
                 "action_text": "Build Portfolio"
             }
         )
