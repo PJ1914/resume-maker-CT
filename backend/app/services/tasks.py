@@ -15,6 +15,8 @@ from app.services.firestore import (
 )
 from app.services.storage import get_file_content
 from app.schemas.resume import ResumeStatus
+from app.services.email_service import EmailService
+from app.services.gemini_scorer import HybridScorer as ATSScorer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -113,6 +115,51 @@ def process_resume_parsing(
         update_resume_status(resume_id, uid, ResumeStatus.PARSED)
         
         logger.info(f"Parsing completed for resume {resume_id}")
+        
+        # Send resume ready notification email
+        try:
+            # Get user data from Firebase to retrieve email and name
+            from firebase_admin import auth, firestore
+            from app.firebase import resume_maker_app, codetapasya_app
+            
+            if not codetapasya_app:
+                logger.warning("Skipping resume ready email - Firebase Auth not initialized")
+            else:
+                try:
+                    user_record = auth.get_user(uid, app=codetapasya_app)
+                    user_email = user_record.email
+                    user_name = user_record.display_name or user_email.split('@')[0] if user_email else 'User'
+                    
+                    # Quick score for email (optional, don't fail if scoring fails)
+                    ats_score = None
+                    try:
+                        scorer = ATSScorer()
+                        score_result = scorer.score_resume(parsed_data)
+                        ats_score = score_result.get('total_score')
+                    except Exception as score_error:
+                        logger.warning(f"Could not calculate ATS score for email: {score_error}")
+                    
+                    # Send resume ready email asynchronously (non-blocking)
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        asyncio.create_task(EmailService.send_resume_ready_notification(
+                            user_email=user_email,
+                            user_name=user_name,
+                            resume_name=filename or 'Your Resume',
+                            ats_score=ats_score
+                        ))
+                    else:
+                        loop.run_until_complete(EmailService.send_resume_ready_notification(
+                            user_email=user_email,
+                            user_name=user_name,
+                            resume_name=filename or 'Your Resume',
+                            ats_score=ats_score
+                        ))
+                    logger.info(f"✅ Resume ready email sent to {user_email}")
+                except Exception as email_error:
+                    logger.error(f"❌ Resume ready email failed: {email_error}")
+        except Exception as e:
+            logger.warning(f"Could not send resume ready email: {e}")
         
         # Continue with scoring
         process_resume_scoring(resume_id, uid, parsed_data)

@@ -8,6 +8,15 @@ from datetime import datetime, timezone
 from enum import Enum
 import logging
 
+# Email service (lazy import to avoid circular dependencies)
+_email_service = None
+def _get_email_service():
+    global _email_service
+    if _email_service is None:
+        from app.services.email_service import EmailService
+        _email_service = EmailService
+    return _email_service
+
 class CreditTransactionType(str, Enum):
     """Types of credit transactions"""
     PURCHASE = "purchase"
@@ -323,6 +332,40 @@ def get_user_credits(user_id: str, user_email: str = None, _skip_bonus_check: bo
                 
                 logging.info("Reset monthly credits for %s: %s -> %s", user_id, current_balance, new_balance)
                 
+                # Send monthly credit reset email
+                try:
+                    import asyncio
+                    from firebase_admin import auth
+                    from app.firebase import codetapasya_app
+                    
+                    if not codetapasya_app:
+                        logging.warning("Skipping monthly reset email - Firebase Auth not initialized")
+                    else:
+                        user_record = auth.get_user(user_id, app=codetapasya_app)
+                        user_email_addr = user_record.email
+                        user_name = user_record.display_name or user_email_addr.split('@')[0] if user_email_addr else 'User'
+                        
+                        # Send monthly reset email
+                        EmailService = _get_email_service()
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            asyncio.create_task(EmailService.send_monthly_credit_reset(
+                                user_email=user_email_addr,
+                                user_name=user_name,
+                                new_credits=FREE_MONTHLY_CREDITS,
+                                total_balance=new_balance
+                            ))
+                        else:
+                            loop.run_until_complete(EmailService.send_monthly_credit_reset(
+                                user_email=user_email_addr,
+                                user_name=user_name,
+                                new_credits=FREE_MONTHLY_CREDITS,
+                                total_balance=new_balance
+                            ))
+                        logging.info(f"✅ Monthly credit reset email sent to {user_email_addr}")
+                except Exception as email_error:
+                    logging.error(f"❌ Monthly credit reset email failed: {email_error}")
+                
                 # Update data for return
                 data["balance"] = new_balance
                 data["total_earned"] = data.get("total_earned", 0) + FREE_MONTHLY_CREDITS
@@ -413,6 +456,7 @@ def get_user_credits(user_id: str, user_email: str = None, _skip_bonus_check: bo
                 "subscription_tier": "free",
                 "last_reset": now,
                 "created_at": now,
+                "welcome_email_sent": False,  # Track welcome email status
             }
             db.collection('users').document(user_id)\
               .collection('credits').document('balance').set(initial_credits)
@@ -427,6 +471,50 @@ def get_user_credits(user_id: str, user_email: str = None, _skip_bonus_check: bo
             }
             db.collection('users').document(user_id)\
               .collection('credit_transactions').add(transaction_data)
+            
+            # Send welcome email to new user
+            try:
+                # Get user data from Firebase to retrieve email and name
+                import asyncio
+                from firebase_admin import auth
+                from app.firebase import codetapasya_app
+                
+                # Skip email if Firebase Auth is not initialized
+                if not codetapasya_app:
+                    logging.warning("Skipping welcome email - Firebase Auth not initialized")
+                else:
+                    try:
+                        user_record = auth.get_user(user_id, app=codetapasya_app)
+                        user_email_addr = user_record.email
+                        user_name = user_record.display_name or user_email_addr.split('@')[0] if user_email_addr else 'User'
+                        
+                        # Send welcome email asynchronously (non-blocking)
+                        EmailService = _get_email_service()
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            # If event loop is running, schedule the coroutine
+                            asyncio.create_task(EmailService.send_welcome_email(
+                                user_email=user_email_addr,
+                                user_name=user_name
+                            ))
+                        else:
+                            # If no event loop, run synchronously
+                            loop.run_until_complete(EmailService.send_welcome_email(
+                                user_email=user_email_addr,
+                                user_name=user_name
+                            ))
+                        
+                        # Mark welcome email as sent
+                        db.collection('users').document(user_id)\
+                          .collection('credits').document('balance').update({
+                              "welcome_email_sent": True,
+                              "welcome_email_sent_at": now
+                          })
+                        logging.info(f"✅ Welcome email sent to {user_email_addr} (first login)")
+                    except Exception as email_error:
+                        logging.error(f"❌ Welcome email failed: {email_error}")
+            except Exception as e:
+                logging.warning(f"Could not send welcome email: {e}")
             
             # Record December bonus if applicable
             if bonus_given:
@@ -547,6 +635,88 @@ def deduct_credits(
             transaction = db.transaction()
             new_balance = _tx_deduct(transaction, balance_ref, cost, feature.value, description)
             logging.info("Deducted %s credits from %s. New balance: %s", cost, user_id, new_balance)
+            
+            # Send welcome email on first credit usage if not already sent
+            try:
+                balance_doc = balance_ref.get()
+                if balance_doc.exists:
+                    balance_data = balance_doc.to_dict()
+                    welcome_email_sent = balance_data.get('welcome_email_sent', False)
+                    
+                    # Send welcome email on first credit usage
+                    if not welcome_email_sent:
+                        # First time using credits - send welcome email
+                        try:
+                            import asyncio
+                            from firebase_admin import auth
+                            from app.firebase import codetapasya_app
+                            
+                            if not codetapasya_app:
+                                logging.warning("Skipping welcome email - Firebase Auth not initialized")
+                            else:
+                                user_record = auth.get_user(user_id, app=codetapasya_app)
+                                user_email_addr = user_record.email
+                                user_name = user_record.display_name or user_email_addr.split('@')[0] if user_email_addr else 'User'
+                                
+                                # Send welcome email
+                                EmailService = _get_email_service()
+                                loop = asyncio.get_event_loop()
+                                if loop.is_running():
+                                    asyncio.create_task(EmailService.send_welcome_email(
+                                        user_email=user_email_addr,
+                                        user_name=user_name
+                                    ))
+                                else:
+                                    loop.run_until_complete(EmailService.send_welcome_email(
+                                        user_email=user_email_addr,
+                                        user_name=user_name
+                                    ))
+                                
+                                # Mark as sent
+                                balance_ref.update({
+                                    "welcome_email_sent": True,
+                                    "welcome_email_sent_at": datetime.now(timezone.utc)
+                                })
+                                logging.info(f"✅ Welcome email sent to {user_email_addr} (first credit usage)")
+                        except Exception as email_error:
+                            logging.error(f"❌ Welcome email on first usage failed: {email_error}")
+                    
+                    # Send low credit warning if balance just dropped below 5
+                    current_balance_before = balance_data.get('balance', 0)
+                    if new_balance < 5 and current_balance_before >= 5:
+                        try:
+                            import asyncio
+                            from firebase_admin import auth
+                            from app.firebase import codetapasya_app
+                            
+                            if not codetapasya_app:
+                                logging.warning("Skipping low credit warning - Firebase Auth not initialized")
+                            else:
+                                user_record = auth.get_user(user_id, app=codetapasya_app)
+                                user_email_addr = user_record.email
+                                user_name = user_record.display_name or user_email_addr.split('@')[0] if user_email_addr else 'User'
+                                
+                                # Send low credit warning
+                                EmailService = _get_email_service()
+                                loop = asyncio.get_event_loop()
+                                if loop.is_running():
+                                    asyncio.create_task(EmailService.send_low_credit_warning(
+                                        user_email=user_email_addr,
+                                        user_name=user_name,
+                                        remaining_credits=new_balance
+                                    ))
+                                else:
+                                    loop.run_until_complete(EmailService.send_low_credit_warning(
+                                        user_email=user_email_addr,
+                                        user_name=user_name,
+                                        remaining_credits=new_balance
+                                    ))
+                                logging.info(f"✅ Low credit warning sent to {user_email_addr}")
+                        except Exception as email_error:
+                            logging.error(f"❌ Low credit warning failed: {email_error}")
+            except Exception as check_error:
+                logging.warning(f"Could not check welcome email status: {check_error}")
+            
             return {'success': True, 'new_balance': new_balance, 'cost': cost}
         except ValueError as ve:
             if str(ve) == "INSUFFICIENT_FUNDS":

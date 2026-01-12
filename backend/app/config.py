@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Union, Optional
-from pydantic import field_validator
+from pydantic import field_validator, Field
 
 class Settings(BaseSettings):
     # Environment
@@ -14,6 +14,19 @@ class Settings(BaseSettings):
     # Gemini API - Required for AI features
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-2.0-flash-exp"
+  
+    # AWS - For email templates (S3)
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_REGION: Optional[str] = None
+    EMAIL_TEMPLATE_S3_BUCKET: Optional[str] = None
+    EMAIL_API_URL: Optional[str] = None
+    
+    # Email Configuration - MUST be set via .env
+    EMAIL_DEV_MODE: bool = Field(
+        default=True,
+        description="Email mode: True=logs to console (dev), False=sends via SES (production)"
+    )
   
     CORS_ORIGINS: Union[str, List[str]]
     
@@ -64,6 +77,21 @@ class Settings(BaseSettings):
         if info.data.get('ENVIRONMENT') == 'production' and not v:
             field_name = info.field_name
             print(f"⚠️  WARNING: {field_name} not set. Firebase features may not work.")
+        return v
+    
+    @field_validator('EMAIL_DEV_MODE')
+    @classmethod
+    def validate_email_mode(cls, v, info):
+        """Validate email mode based on environment"""
+        environment = info.data.get('ENVIRONMENT', 'development')
+        
+        if environment == 'production' and v is True:
+            print("⚠️  WARNING: EMAIL_DEV_MODE is True in production. Emails will only be logged, not sent!")
+            print("   Set EMAIL_DEV_MODE=False in production .env to send real emails via SES")
+        
+        if environment != 'production' and v is False:
+            print("ℹ️  INFO: EMAIL_DEV_MODE is False in development. Real emails will be sent via SES")
+        
         return v
 
 settings = Settings()

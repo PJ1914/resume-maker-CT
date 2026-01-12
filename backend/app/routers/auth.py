@@ -4,6 +4,7 @@ from firebase_admin import firestore
 from app.dependencies import get_current_user
 from app.schemas.user import TokenVerifyResponse
 from app.firebase import resume_maker_app
+from app.services.email_service import EmailService
 import logging
 
 router = APIRouter()
@@ -79,6 +80,20 @@ async def store_github_token(
         }, merge=True)
         
         logger.info(f"✅ Stored GitHub token for user {user_id}")
+        
+        # Send platform connected notification
+        try:
+            user_email = current_user.get('email')
+            user_name = current_user.get('name') or current_user.get('displayName') or user_email.split('@')[0] if user_email else 'User'
+            
+            await EmailService.send_platform_connected(
+                user_email=user_email,
+                user_name=user_name,
+                platform='GitHub'
+            )
+            logger.info(f"✅ Platform connection email sent to {user_email} (GitHub)")
+        except Exception as email_error:
+            logger.error(f"❌ Platform connection email failed: {email_error}")
         
         return {"success": True, "message": "GitHub token stored successfully"}
     except Exception as e:
@@ -165,6 +180,23 @@ async def delete_github_token(
         
         logger.info(f"✅ Deleted GitHub token for user {user_id}")
         
+        # Send security alert email
+        try:
+            from app.services.email_service import EmailService
+            import asyncio
+            user_record = auth.get_user(user_id, app=codetapasya_app)
+            user_email = user_record.email
+            user_name = user_record.display_name or user_email.split('@')[0] if user_email else 'User'
+            
+            asyncio.create_task(EmailService.send_security_alert(
+                user_email=user_email,
+                user_name=user_name,
+                alert_type="GitHub Disconnected",
+                alert_message="Your GitHub account has been disconnected from Prativeda Resume Maker"
+            ))
+        except Exception as e:
+            logger.warning(f"Could not send security alert email: {e}")
+        
         return {"success": True, "message": "GitHub token deleted successfully"}
     except Exception as e:
         logger.error(f"❌ Failed to delete GitHub token: {str(e)}")
@@ -209,6 +241,20 @@ async def store_deployment_token(
         }, merge=True)
         
         logger.info(f"✅ Stored {request.platform} token for user {user_id}")
+        
+        # Send platform connected notification
+        try:
+            user_email = current_user.get('email')
+            user_name = current_user.get('name') or current_user.get('displayName') or user_email.split('@')[0] if user_email else 'User'
+            
+            await EmailService.send_platform_connected(
+                user_email=user_email,
+                user_name=user_name,
+                platform=request.platform
+            )
+            logger.info(f"✅ Platform connection email sent to {user_email} ({request.platform})")
+        except Exception as email_error:
+            logger.error(f"❌ Platform connection email failed: {email_error}")
         
         return {"success": True, "message": f"{request.platform.title()} token stored successfully"}
     except Exception as e:
@@ -293,6 +339,23 @@ async def delete_deployment_token(
         }, merge=True)
         
         logger.info(f"✅ Deleted {platform} token for user {user_id}")
+        
+        # Send security alert email
+        try:
+            from app.services.email_service import EmailService
+            import asyncio
+            user_record = auth.get_user(user_id, app=codetapasya_app)
+            user_email = user_record.email
+            user_name = user_record.display_name or user_email.split('@')[0] if user_email else 'User'
+            
+            asyncio.create_task(EmailService.send_security_alert(
+                user_email=user_email,
+                user_name=user_name,
+                alert_type=f"{platform.title()} Disconnected",
+                alert_message=f"Your {platform.title()} account has been disconnected from Prativeda Resume Maker"
+            ))
+        except Exception as e:
+            logger.warning(f"Could not send security alert email: {e}")
         
         return {"success": True, "message": f"{platform.title()} token deleted successfully"}
     except Exception as e:

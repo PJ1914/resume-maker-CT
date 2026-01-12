@@ -14,6 +14,7 @@ from app.services.portfolio_generator import PortfolioGeneratorService
 from app.services.github_deploy import GitHubDeployService
 from app.services.vercel_deploy import VercelDeployService
 from app.services.netlify_deploy import NetlifyDeployService
+from app.services.email_service import EmailService
 from app.firebase import resume_maker_app
 from firebase_admin import firestore, storage
 from google.cloud.firestore import FieldFilter
@@ -303,6 +304,23 @@ async def unlock_template(
         logger.info(f"Template {request.template_id} unlocked for user {user_id}")
         logger.info(f"Unlocked templates before: {len(unlocked) - 1}, after: {len(updated_unlocked)}")
         logger.info(f"Verified unlocked templates: {updated_unlocked}")
+        
+        # Send template unlock notification
+        try:
+            user_email = current_user.get('email')
+            user_name = current_user.get('name') or current_user.get('displayName') or user_email.split('@')[0] if user_email else 'User'
+            template_name = template_data.get('name', request.template_id)
+            tier = template_data.get('tier', 'premium')
+            
+            await EmailService.send_template_unlock_notification(
+                user_email=user_email,
+                user_name=user_name,
+                template_name=template_name,
+                tier=tier
+            )
+            logger.info(f"✅ Template unlock email sent to {user_email}")
+        except Exception as email_error:
+            logger.error(f"❌ Template unlock email failed: {email_error}")
         
         return {
             "success": True,
@@ -652,6 +670,21 @@ async def deploy_portfolio(
         
         # Deduct credits after successful deployment
         deduct_credits(user_id, feature_type, f"Deployed portfolio to {request.platform}", user_email)
+        
+        # Send portfolio deployed notification email
+        try:
+            user_name = current_user.get('name') or current_user.get('displayName') or user_email.split('@')[0]
+            template_name = session_data.get('template', 'custom')
+            
+            await EmailService.send_portfolio_deployed_notification(
+                user_email=user_email,
+                user_name=user_name,
+                portfolio_url=result.get('url'),
+                template_name=template_name
+            )
+            logger.info(f"✅ Portfolio deployed email sent to {user_email}")
+        except Exception as email_error:
+            logger.error(f"❌ Portfolio deployed email failed: {email_error}")
         
         response = {
             "success": True,

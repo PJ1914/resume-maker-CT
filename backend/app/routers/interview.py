@@ -62,6 +62,21 @@ async def generate_interview(
             deduct_credits(user_id, FeatureType.INTERVIEW_GENERATE_HR, 
                           f"Generated HR Interview for {request.role}", user_email)
         
+        # 5. Send interview complete notification email
+        try:
+            question_count = len(session.technical_questions) + len(session.hr_questions)
+            user_name = current_user.get('name') or current_user.get('displayName') or user_email.split('@')[0]
+            
+            await EmailService.send_interview_complete_notification(
+                user_email=user_email,
+                user_name=user_name,
+                role=request.role,
+                question_count=question_count
+            )
+            logger.info(f"✅ Interview complete email sent to {user_email}")
+        except Exception as email_error:
+            logger.error(f"❌ Interview complete email failed: {email_error}")
+        
         return {
             "session_id": session_id,
             "technical": session.technical_questions,
