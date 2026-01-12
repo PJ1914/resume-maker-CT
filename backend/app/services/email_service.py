@@ -52,10 +52,11 @@ class EmailService:
             return True
         
         try:
-            # Prepare payload - Lambda expects 'body' key (API Gateway format)
+            # Prepare payload - SINGLE EMAIL FORMAT (recipient as string, not array)
             payload = {
                 "type": email_type,
-                "recipients": [{"email": recipient, "metadata": metadata}]
+                "recipient": recipient,  # Single recipient (not array)
+                "metadata": metadata
             }
             
             # Wrap in 'body' to match Lambda's expected format
@@ -64,7 +65,7 @@ class EmailService:
             }
             
             # Debug logging
-            logger.info(f"📤 Sending email request to Lambda:")
+            logger.info(f"📤 Sending SINGLE email request to Lambda:")
             logger.info(f"   URL: {settings.EMAIL_API_URL}")
             logger.info(f"   Payload: {payload}")
             
@@ -114,16 +115,20 @@ class EmailService:
             Dict with success/failure counts
         """
         try:
-            # Prepare payload
+            # Prepare payload - BULK EMAIL FORMAT (recipients as array)
             payload = {
                 "type": email_type,
-                "recipients": recipients
+                "recipients": recipients  # Array of {email, metadata} objects
             }
             
             # Wrap in 'body' to match Lambda's expected format
             lambda_payload = {
                 "body": json.dumps(payload)
             }
+            
+            logger.info(f"📤 Sending BULK email request to Lambda:")
+            logger.info(f"   URL: {settings.EMAIL_API_URL}")
+            logger.info(f"   Recipients count: {len(recipients)}")
             
             async with httpx.AsyncClient() as client:
                 response = await client.post(
