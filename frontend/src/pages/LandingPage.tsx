@@ -235,9 +235,9 @@ export default function LandingPage() {
   return (
     <>
       <SEO
-        title="Prativeda – AI Resume Builder | ATS-Optimized Resumes"
-        description="Create ATS-optimized resumes with AI analysis. Get higher ATS scores, pass screening, land more interviews. Free templates + intelligent parsing."
-        keywords="resume builder, ATS scoring, AI resume, job application, resume optimization, free resume maker, CV builder, best resume templates, ATS friendly resume, online resume creator, professional CV, resume download"
+        title="Prativeda – #1 AI Resume Maker & ATS Resume Builder"
+        description="Prativeda is the best free AI Resume Maker & Builder. Create ATS-friendly resumes instantly with our advanced AI technology. Optimization, scoring, and professional templates included."
+        keywords="Prativeda, Prativeda Resume Maker, Prativeda AI, resume maker, ATS resume, AI resume, free resume builder, resume templates, resume optimization, job application, career tools, professional CV"
         url="https://prativeda.codetapasya.com"
       />
       <HomeSchema />

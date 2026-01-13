@@ -11,13 +11,13 @@ type SEOProps = {
 }
 
 const DEFAULTS = {
-  title: 'Prativeda – AI Resume Builder | ATS-Optimized Resumes',
+  title: 'Prativeda – #1 AI Resume Maker & ATS Resume Builder',
   description:
-    'Create ATS-optimized resumes with AI analysis. Get higher ATS scores, pass screening, land more interviews. Free templates + intelligent parsing by Prativeda.',
+    'Prativeda is the best free AI Resume Maker & Builder. Create ATS-friendly resumes instantly with our advanced AI technology. Optimization, scoring, and professional templates included.',
   url: 'https://prativeda.codetapasya.com',
   image: 'https://prativeda.codetapasya.com/og-resume.jpg',
   keywords:
-    'resume maker, ATS resume, AI resume, free resume builder, resume templates, resume optimization, job application, career tools, best resume builder, online resume maker, CV maker, resume format, resume examples, professional resume, download resume, PDF resume',
+    'Prativeda, Prativeda Resume Maker, Prativeda AI, resume maker, ATS resume, AI resume, free resume builder, resume templates, resume optimization, job application, career tools, best resume builder, online resume maker, CV maker, resume format, resume examples, professional resume, download resume, PDF resume',
   canonical: 'https://prativeda.codetapasya.com',
 }
 
@@ -71,9 +71,10 @@ export function HomeSchema() {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'Prativeda',
+    alternateName: ['Prativeda Resume Maker', 'Prativeda AI', 'AI Resume Builder', 'Prativeda CV Maker'],
     url: 'https://prativeda.codetapasya.com',
     description:
-      'AI-powered resume builder with ATS optimization. Create professional, ATS-friendly resumes that get results.',
+      'Prativeda is the best free AI Resume Maker & Builder. Create ATS-friendly resumes instantly with our advanced AI technology. Optimization, scoring, and professional templates included.',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'All',
     author: { '@type': 'Organization', name: 'CodeTapasya' },
