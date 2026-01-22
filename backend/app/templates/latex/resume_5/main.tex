@@ -24,6 +24,9 @@
 % \documentclass[10pt,a4paper,normalphoto]{altacv}
 
 \documentclass[10pt,a4paper]{altacv}
+
+\usepackage{hyperref} % For clickable links
+
 %% AltaCV uses the fontawesome and academicon fonts
 %% and packages. 
 %% See texdoc.net/pkg/fontawecome and http://texdoc.net/pkg/academicons for full list of symbols.
@@ -76,9 +79,9 @@
   % You can add your own with \printinfo{symbol}{detail}
   \email{\VAR{email|escape_tex}}
   \phone{\VAR{phone|escape_tex}}
-%  \homepage{www.homepage.com}
-%  \twitter{@twitterhandle}
-  \linkedin{\VAR{linkedin|escape_tex}}
+  \BLOCK{ if linkedin }\linkedin{\VAR{linkedin|escape_tex}}\BLOCK{ endif }
+  \BLOCK{ if github }\github{\VAR{github|escape_tex}}\BLOCK{ endif }
+  \BLOCK{ if portfolio }\homepage{\VAR{portfolio|escape_tex}}\BLOCK{ endif }
   %% You MUST add the academicons option to \documentclass, then compile with LuaLaTeX or XeLaTeX, if you want to use \orcid or other academicons commands.
 %   \orcid{orcid.org/0000-0000-0000-0000}
 }
@@ -165,9 +168,9 @@
 \cvsection{Education}
 
 \BLOCK{ for edu in education }
-\cvevent{\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex}}{\VAR{edu.institution|escape_tex}}{\VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } -- \BLOCK{ endif }\VAR{edu.end_date|escape_tex}}{\VAR{edu.location|escape_tex}}
+\cvevent{\VAR{edu.degree|escape_tex}\BLOCK{ if edu.field } in \VAR{edu.field|escape_tex}\BLOCK{ endif }}{\VAR{edu.school|escape_tex}}{\VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } -- \BLOCK{ endif }\VAR{edu.end_date|escape_tex}}{\VAR{edu.location|escape_tex}}
 \BLOCK{ if edu.gpa }
-GPA: \VAR{edu.gpa|escape_tex}
+\BLOCK{ if edu.grade_type }\VAR{edu.grade_type|escape_tex}\BLOCK{ else }GPA/CGPA\BLOCK{ endif }: \VAR{edu.gpa|escape_tex}\BLOCK{ if edu.grade_type == 'Percentage' }\%\BLOCK{ endif }
 \BLOCK{ endif }
 \divider
 \BLOCK{ endfor }

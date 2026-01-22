@@ -550,13 +550,13 @@ EXACT JSON STRUCTURE TO RETURN:
       "title": "Education",
       "items": [
         {{
-          "school": "University Name",
-          "degree": "B.Tech/M.S./etc",
-          "field": "Computer Science",
-          "gpa": "9.28 / 10.0",
-          "location": "City",
-          "startDate": "2022",
-          "endDate": "2026"
+          "school": "University Name OR College Name OR School Name (FULL official name)",
+          "degree": "B.Tech/M.S./B.Sc./Intermediate/SSC/etc (EXACT degree name)",
+          "field": "Computer Science/Engineering/etc (field of study - MUST extract if mentioned)",
+          "gpa": "9.28 / 10.0 OR 9.28 CGPA OR 82.9% OR 3.8/4.0 (extract EXACTLY as written with format)",
+          "location": "City, State/Country (MUST extract if mentioned - check for location near institution name)",
+          "startDate": "2022 OR Jan 2022 OR January 2022 (extract start year/date if present)",
+          "endDate": "2026 OR Present OR Expected 2026 (MUST extract - critical field)"
         }}
       ]
     }},
@@ -746,7 +746,11 @@ FINAL CHECKLIST BEFORE RETURNING:
 ✅ Awards/Honors (recognition) → "awards" section  
 ✅ Achievements (accomplishments) → "achievements" section
 ✅ Extract ALL contact info: name, email, phone, location, linkedin, github, instagram, twitter, leetcode, codechef, hackerrank, portfolio
-✅ Extract GPA/CGPA from education (e.g., "8.41/10.0" or "9.28 CGPA")
+✅ Extract GPA/CGPA from education (e.g., "8.41/10.0" or "9.28 CGPA" or "82.5%") - keep exact format
+✅ Extract LOCATION from education (usually appears near institution name like "University, City" or "College, State")
+✅ Extract BOTH startDate and endDate for education (even if only graduation year shown, try to infer start year)
+✅ Extract FIELD of study from education (Computer Science, Engineering, etc.) - very important
+✅ Use FULL institution names (e.g., "Anurag University, Hyderabad" not just "Anurag University")
 ✅ Extract project links (GitHub repos, live demos, etc.) from project descriptions
 ✅ For skills, group by category (Languages, Frameworks, Tools, Databases, etc.)
 ✅ Languages spoken (English, Hindi, etc.) → "languages" section (NOT programming languages)

@@ -132,8 +132,28 @@ class LaTeXCompiler:
         # We expect the main file to be named 'main.tex' inside the template folder
         template_file = f"{template_name}/main.tex"
 
+        # Create a FRESH Jinja2 environment every time to ensure templates are read from disk
+        # This bypasses any caching issues with the FileSystemLoader
+        fresh_env = Environment(
+            loader=FileSystemLoader(str(TEMPLATES_DIR)),
+            block_start_string='\\BLOCK{',
+            block_end_string='}',
+            variable_start_string='\\VAR{',
+            variable_end_string='}',
+            comment_start_string='\\#{',
+            comment_end_string='}',
+            line_statement_prefix=None,
+            line_comment_prefix=None,
+            trim_blocks=True,
+            lstrip_blocks=True,  # Also strip leading whitespace from blocks
+            autoescape=False,
+        )
+        fresh_env.filters['escape_tex'] = self.escape_latex
+        fresh_env.filters['escape_tex_def'] = self.escape_latex_for_def
+        fresh_env.filters['escape_url'] = self.escape_url
+
         try:
-            template = self.jinja_env.get_template(template_file)
+            template = fresh_env.get_template(template_file)
         except Exception as e:
             logger.exception(
                 "Template loading error for '%s' (file=%s, templates_dir=%s): %s",
@@ -298,7 +318,16 @@ class LaTeXCompiler:
                 if pdf_path is None or not pdf_path.exists():
                     log_file = temp_path / "main.log"
                     log_content = log_file.read_text(encoding='utf-8', errors='ignore') if log_file.exists() else "No log"
-                    raise RuntimeError(f"LaTeX compilation failed. Log:\n{log_content[:2000]}...")
+                    
+                    # Save the .tex file for debugging
+                    debug_tex_path = Path(__file__).parent.parent / "debug_main.tex"
+                    try:
+                        shutil.copy(temp_path / "main.tex", debug_tex_path)
+                        logger.error(f"Saved failed .tex file to {debug_tex_path}")
+                    except Exception as e:
+                        logger.error(f"Could not save debug .tex file: {e}")
+                    
+                    raise RuntimeError(f"LaTeX compilation failed. Log:\n{log_content[:5000]}...")
                 
                 return pdf_path.read_bytes()
 

@@ -258,22 +258,18 @@ async def extract_resume_data(
         This happens when text is copied from PDFs or other sources.
         """
         # Add space before capital letters that follow lowercase letters
-        # E.g., "TKRCollegeofEngineeringandTechnology" -> "TKRCollege of Engineering and Technology"
         text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
         
         # Add space after numbers followed by letters
-        # E.g., "May2024" -> "May 2024"
         text = re.sub(r'(\d)([A-Za-z])', r'\1 \2', text)
         
         # Add space after letters followed by numbers (for dates)
-        # E.g., "July2025" -> "July 2025"
         text = re.sub(r'([A-Za-z])(\d{4})', r'\1 \2', text)
         
         # Clean up multiple spaces
         text = re.sub(r'\s+', ' ', text)
         
         # Add space after certain punctuation if missing
-        # E.g., "email@example.com|linkedin.com" -> "email@example.com | linkedin.com"
         text = re.sub(r'([|,;])([^\s])', r'\1 \2', text)
         
         return text
@@ -290,18 +286,19 @@ async def extract_resume_data(
         max_chars = 5000
         resume_text = preprocessed_text[:max_chars]
         
-        prompt = f"""Extract resume data as JSON only (no markdown).
+        # Build the prompt using string concatenation to avoid special character issues
+        prompt = """Extract resume data as JSON only (no markdown).
 
-⚠️ IMPORTANT: This resume text may have been copied from a PDF and might have MISSING SPACES between words.
+IMPORTANT: This resume text may have been copied from a PDF and might have MISSING SPACES between words.
 For example:
 - "TKRCollegeofEngineeringandTechnology" should be parsed as "TKR College of Engineering and Technology"
-- "May2024–Jul2024" should be parsed as "May 2024 – Jul 2024"
-- "📞+919550654884|✉️email@example.com" should extract phone and email correctly
+- "May2024-Jul2024" should be parsed as "May 2024 - Jul 2024"
+- "+919550654884|email@example.com" should extract phone and email correctly
 
 Your task is to intelligently parse this text even if spacing is poor. Look for capital letters, numbers, and punctuation to identify word boundaries.
 
 RESUME TEXT:
-{resume_text}
+""" + resume_text + """
 
 CRITICAL INSTRUCTIONS FOR SKILLS EXTRACTION:
 1. Extract skills from EVERYWHERE in the resume - not just a "Skills" section
@@ -318,13 +315,35 @@ CRITICAL INSTRUCTIONS FOR SKILLS EXTRACTION:
 PARSING GUIDELINES FOR POOR SPACING:
 - Use capital letters as word boundaries (e.g., "DataScience" = "Data Science")
 - Numbers often indicate dates or GPAs
-- Punctuation like |, –, •, can separate items
+- Punctuation like |, -, or bullets can separate items
 - Email patterns: look for @ symbol
 - Phone patterns: look for + and digit sequences
 - URLs: look for linkedin.com, github.com, etc.
+- IMPORTANT: Watch out for Date & Location combined in one line: "June 2025– Present Hyderabad, India"
+  -> Extract "June 2025" as startDate
+  -> Extract "Present" as endDate
+  -> Extract "Hyderabad, India" as location
+- Handle unspaced dates: "May2024-Aug2024" -> "May 2024", "Aug 2024"
 
-Return valid JSON:
-{{"contact": {{"name": "Full Name", "email": "email@example.com", "phone": "+1234567890", "location": "City, State", "linkedin": "url", "github": "url", "leetcode": "url", "codechef": "url", "hackerrank": "url", "website": "url"}}, "summary": "summary text", "experience": [{{"company": "Company", "position": "Title", "startDate": "2020", "endDate": "2021", "description": "desc"}}], "education": [{{"school": "University", "degree": "Bachelor", "field": "Field", "year": "2020", "gpa": "3.8"}}], "skills": [{{"category": "Languages", "items": ["Python", "Java"]}}, {{"category": "Frameworks", "items": ["React", "TensorFlow"]}}, {{"category": "Databases", "items": ["MySQL"]}}, {{"category": "ML/AI", "items": ["Keras", "CNN"]}}, {{"category": "Tools", "items": ["Git", "Docker"]}}], "projects": [{{"name": "Project", "description": "desc", "link": "url", "technologies": ["tech1", "tech2"]}}], "certifications": [{{"name": "Cert", "issuer": "Org", "date": "2024"}}], "achievements": [{{"title": "Title", "description": "desc", "date": "2024"}}]}}"""
+Return valid JSON (use double braces for literal braces):
+{{"contact": {{"name": "Full Name", "email": "email@example.com", "phone": "+1234567890", "location": "City, State", "linkedin": "url", "github": "url", "leetcode": "url", "codechef": "url", "hackerrank": "url", "website": "url"}}, "summary": "summary text", "experience": [{{"company": "Company", "position": "Title", "location": "City, State", "startDate": "2020", "endDate": "2021", "description": "desc"}}], "education": [{{"school": "University", "degree": "Bachelor", "field": "Field", "startDate": "2020", "endDate": "2024", "gpa": "3.8", "location": "City"}}], "skills": [{{"category": "Languages", "items": ["Python", "Java"]}}, {{"category": "Frameworks", "items": ["React", "TensorFlow"]}}, {{"category": "Databases", "items": ["MySQL"]}}, {{"category": "ML/AI", "items": ["Keras", "CNN"]}}, {{"category": "Tools", "items": ["Git", "Docker"]}}], "projects": [{{"name": "Project", "description": "desc", "startDate": "2023", "endDate": "2024", "link": "url", "technologies": ["tech1", "tech2"]}}], "certifications": [{{"name": "Cert", "issuer": "Org", "date": "2024"}}], "achievements": [{{"title": "Title", "description": "desc", "date": "2024"}}]}}
+
+CRITICAL FOR EDUCATION DATES:
+- Education dates are often right-aligned in PDFs and may appear AFTER the section or at the end of lines
+- When you see date ranges like "2022- 2026" or "2022-2026" or "2022 - 2026":
+  * Extract BOTH years separately
+  * startDate should be the FIRST year (2022)
+  * endDate should be the SECOND year (2026)
+- Match dates to the NEAREST education entry ABOVE them in the text
+- Typical degree durations:
+  * Bachelor/Engineering (B.Tech/B.E.): 4 years (e.g., 2022-2026)
+  * Master's/M.Tech: 2 years (e.g., 2024-2026)
+  * Intermediate/12th: 2 years (e.g., 2020-2022)
+  * 3-year Bachelor's: 3 years (e.g., 2021-2024)
+  * High School/10th/SSC: Usually single year (e.g., 2020)
+- If only one year is shown (e.g., "2020"), use it as endDate and infer startDate based on degree type
+- Format: If you extract just years, return as "YYYY" (will be converted to YYYY-MM automatically)
+"""
 
         logger.info("Calling Gemini API for resume extraction")
         model = genai.GenerativeModel(settings.GEMINI_MODEL)
@@ -332,7 +351,7 @@ Return valid JSON:
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.2,
-                max_output_tokens=4000  # Increased to handle detailed resumes without truncation
+                max_output_tokens=4000
             )
         )
         
@@ -374,6 +393,188 @@ Return valid JSON:
         extracted_data = json.loads(response_text)
         logger.info(f"Successfully extracted resume data with keys: {list(extracted_data.keys())}")
         
+        # Post-process education dates to ensure consistency
+        if 'education' in extracted_data and isinstance(extracted_data['education'], list):
+            for edu in extracted_data['education']:
+                if isinstance(edu, dict):
+                    # Convert year-only format to YYYY-MM format for consistency with wizard
+                    start = edu.get('startDate', '') or edu.get('year', '')
+                    end = edu.get('endDate', '') or edu.get('year', '')
+                    degree = str(edu.get('degree', '')).lower()
+                    
+                    # Smart inference of start date based on degree type if missing
+                    if end and not start:
+                        try:
+                            # Extract 4-digit year from end date using regex to handle formats like "May 2026"
+                            end_match = re.search(r'(\d{4})', str(end))
+                            if end_match:
+                                end_year = int(end_match.group(1))
+                                if 'bachelor' in degree or 'engineering' in degree or 'b.tech' in degree or 'b.e.' in degree:
+                                    start = str(end_year - 4)  # 4-year degree
+                                elif 'master' in degree or 'm.tech' in degree or 'm.s.' in degree or 'm.sc' in degree:
+                                    start = str(end_year - 2)  # 2-year masters
+                                elif 'intermediate' in degree or '12th' in degree or 'senior' in degree:
+                                    start = str(end_year - 2)  # 2-year intermediate
+                                elif 'diploma' in degree:
+                                    start = str(end_year - 3)  # 3-year diploma
+                                else:
+                                    start = str(end_year - 1)  # Default 1 year
+                                logger.info(f"Inferred start year {start} for {degree} ending {end}")
+                        except Exception as e:
+                            logger.warning(f"Could not infer start date from end date '{end}': {str(e)}")
+                    
+                    # Normalize dates to YYYY-MM format with robust and safe parsing
+                    def normalize_date_str(d_str):
+                        if not d_str: return ''
+                        # Basic sanitization to prevent malicious payload processing
+                        d_str = str(d_str).strip().lower()
+                        d_str = re.sub(r'[^a-z0-9\s\-\/\.]', '', d_str)
+                        
+                        # 1. Extract Year (19xx or 20xx)
+                        year_match = re.search(r'\b(19|20)\d{2}\b', d_str)
+                        if not year_match:
+                            return '' # No valid year found, treat as invalid
+                        
+                        year = year_match.group(0)
+                        
+                        # 2. Extract Month
+                        # Name mapping
+                        months = {
+                            'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+                            'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12',
+                            'sept': '09'
+                        }
+                        
+                        # Check for month names
+                        for m_name, m_num in months.items():
+                            if m_name in d_str:
+                                return f"{year}-{m_num}"
+                        
+                        # Check for numeric month
+                        # Remove year to avoid matching it
+                        rem = d_str.replace(year, '').strip()
+                        # Match 1-12 specific digits
+                        num_match = re.search(r'\b(0?[1-9]|1[0-2])\b', rem)
+                        if num_match:
+                            m_num = num_match.group(1).zfill(2)
+                            return f"{year}-{m_num}"
+                            
+                        # Default to just year if no month found
+                        return year
+
+                    edu['startDate'] = normalize_date_str(start)
+                    edu['endDate'] = normalize_date_str(end)
+                    
+                    # Remove old 'year' field if present
+                    edu.pop('year', None)
+                    
+                    # Detect gradeType based on GPA value
+                    gpa = edu.get('gpa', '')
+                    if gpa:
+                        gpa_str = str(gpa).strip()
+                        # If GPA contains '%' or is > 10 (likely percentage)
+                        if '%' in gpa_str:
+                            edu['gradeType'] = 'Percentage'
+                            # Remove % symbol from value
+                            edu['gpa'] = gpa_str.replace('%', '').strip()
+                        elif '/' in gpa_str:
+                            # Extract numerator to determine if CGPA or GPA
+                            parts = gpa_str.split('/')
+                            try:
+                                max_val = float(parts[1].strip())
+                                # CGPA typically uses 10 scale, GPA typically uses 4 scale
+                                if max_val >= 10:
+                                    edu['gradeType'] = 'CGPA'
+                                else:
+                                    edu['gradeType'] = 'GPA'
+                            except:
+                                edu['gradeType'] = 'GPA'  # Default to GPA
+                        else:
+                            try:
+                                numeric_val = float(gpa_str)
+                                if numeric_val > 10:
+                                    # Likely percentage without % symbol
+                                    edu['gradeType'] = 'Percentage'
+                                elif numeric_val > 4:
+                                    # Likely CGPA (out of 10)
+                                    edu['gradeType'] = 'CGPA'
+                                else:
+                                    # Likely GPA (out of 4)
+                                    edu['gradeType'] = 'GPA'
+                            except:
+                                edu['gradeType'] = 'GPA'  # Default to GPA
+                    else:
+                        edu['gradeType'] = 'GPA'  # Default
+                    
+                    logger.info(f"Processed education: {edu.get('school', 'N/A')} - {edu.get('startDate')} to {edu.get('endDate')} - {edu.get('gradeType', 'GPA')}: {edu.get('gpa', 'N/A')}")
+        
+        
+        # Post-process Experience to normalize dates for frontend
+        if 'experience' in extracted_data and isinstance(extracted_data['experience'], list):
+            # Define date normalizer (re-defined here for scope access)
+            def normalize_exp_date(d_str):
+                if not d_str: return ''
+                d_str = str(d_str).strip().lower()
+                d_str = re.sub(r'[^a-z0-9\s\-\/\.]', '', d_str)
+                year_match = re.search(r'\b(19|20)\d{2}\b', d_str)
+                if not year_match: return ''
+                year = year_match.group(0)
+                months = {'jan':'01','feb':'02','mar':'03','apr':'04','may':'05','jun':'06','jul':'07','aug':'08','sep':'09','oct':'10','nov':'11','dec':'12','sept':'09'}
+                for m_name, m_num in months.items():
+                    if m_name in d_str: return f"{year}-{m_num}"
+                rem = d_str.replace(year, '').strip()
+                num_match = re.search(r'\b(0?[1-9]|1[0-2])\b', rem)
+                if num_match: return f"{year}-{num_match.group(1).zfill(2)}"
+                return year
+
+            for exp in extracted_data['experience']:
+                if isinstance(exp, dict):
+                    # Check for "Present" before normalization
+                    # Check for "Present" or synonyms before normalization
+                    raw_end = str(exp.get('endDate', '')).lower()
+                    # Synonyms for current employment
+                    current_keywords = ['present', 'current', 'now', 'ongoing', 'till date', 'continuing', 'progress', 'today']
+                    if any(keyword in raw_end for keyword in current_keywords):
+                        exp['current'] = True
+                        exp['endDate'] = '' # Clear end date so frontend shows "Present" or nothing
+                    else:
+                        exp['current'] = False
+                        exp['endDate'] = normalize_exp_date(exp.get('endDate', ''))
+
+                    exp['startDate'] = normalize_exp_date(exp.get('startDate', ''))
+                    logger.info(f"Processed experience: {exp.get('company', 'N/A')} - {exp.get('startDate')} to {exp.get('endDate')} (Current: {exp.get('current')})")
+
+        # Post-process Projects to normalize dates
+        if 'projects' in extracted_data and isinstance(extracted_data['projects'], list):
+             # Redefine normalizer (safety check)
+             def normalize_proj_date(d_str):
+                if not d_str: return ''
+                d_str = str(d_str).strip().lower()
+                d_str = re.sub(r'[^a-z0-9\s\-\/\.]', '', d_str)
+                year_match = re.search(r'\b(19|20)\d{2}\b', d_str)
+                if not year_match: return ''
+                year = year_match.group(0)
+                months = {'jan':'01','feb':'02','mar':'03','apr':'04','may':'05','jun':'06','jul':'07','aug':'08','sep':'09','oct':'10','nov':'11','dec':'12','sept':'09'}
+                for m_name, m_num in months.items():
+                    if m_name in d_str: return f"{year}-{m_num}"
+                rem = d_str.replace(year, '').strip()
+                num_match = re.search(r'\b(0?[1-9]|1[0-2])\b', rem)
+                if num_match: return f"{year}-{num_match.group(1).zfill(2)}"
+                return year
+
+             for proj in extracted_data['projects']:
+                if isinstance(proj, dict):
+                    # Check for "Present" synonyms
+                    raw_end = str(proj.get('endDate', '')).lower()
+                    current_keywords = ['present', 'current', 'now', 'ongoing', 'till date', 'continuing', 'progress', 'today']
+                    if any(keyword in raw_end for keyword in current_keywords):
+                        proj['endDate'] = '' 
+                    else:
+                        proj['endDate'] = normalize_proj_date(proj.get('endDate', ''))
+                        
+                    proj['startDate'] = normalize_proj_date(proj.get('startDate', ''))
+                    logger.info(f"Processed project: {proj.get('name', 'N/A')} - {proj.get('startDate')} to {proj.get('endDate')}")
+
         # FALLBACK: If skills are empty, extract from project technologies
         skills = extracted_data.get('skills', [])
         if not skills or (isinstance(skills, list) and len(skills) == 0):
@@ -424,7 +625,7 @@ class GenerateSummaryRequest(BaseModel):
     contact: dict
     experience: list
     education: list
-    skills: Union[dict, list] = []  # Accept both old dict format and new list format
+    skills: Union[dict, list] = []
     projects: list = []
     certifications: list = []
     achievements: list = []
@@ -493,8 +694,8 @@ async def generate_professional_summary(
                 # New format: [{category: '...', items: [...]}]
                 for cat in request.skills:
                     if isinstance(cat, dict) and cat.get('items'):
-                        all_skills.extend(cat['items'][:3])  # Get top 3 from each category
-                all_skills = all_skills[:5]  # Limit to top 5 overall
+                        all_skills.extend(cat['items'][:3])
+                all_skills = all_skills[:5]
             
             if all_skills:
                 context_parts.append(f"Key technical skills: {', '.join(all_skills)}")
@@ -515,45 +716,39 @@ async def generate_professional_summary(
         
         resume_context = "\n".join(context_parts)
         
-        # Create prompt for Gemini with strict structure
-        prompt = f"""PROFESSIONAL SUMMARY GENERATION
+        # Create prompt using string concatenation to avoid special character issues
+        prompt = """PROFESSIONAL SUMMARY GENERATION
 
-You are generating a Professional Resume Summary. Use ONLY the data provided below. Do NOT invent, guess, or add information.
+You are generating a Professional Resume Summary. Use ONLY the data provided below.
 
-DATA SOURCES (what you can use):
-{resume_context}
+DATA SOURCES:
+""" + resume_context + """
 
-MENTAL MODEL (how to think):
-1️⃣ Who is the candidate? → Infer role from Experience/Skills
-2️⃣ What is their foundation? → Education + core technical skills
-3️⃣ What experience do they have? → Work/Projects (type, not quantity)
-4️⃣ Which domains? → Specialization areas
-5️⃣ Seniority? → Fresher vs experienced (based on wording, NO years)
+MENTAL MODEL:
+1. Who is the candidate? (Infer role from Experience/Skills)
+2. What is their foundation? (Education + core technical skills)
+3. What experience do they have? (Work/Projects type, not quantity)
+4. Which domains? (Specialization areas)
+5. Seniority level? (Fresher vs experienced based on wording, NO years)
 
-FIXED FORMAT (DO NOT DEVIATE):
-Sentence 1: [ROLE] + [FOUNDATION] + [TYPE OF EXPERIENCE]
-Sentence 2: [SKILLS] applied to [PRACTICAL CONTEXT]
-Sentence 3: [DOMAIN KNOWLEDGE / SPECIALIZATION]
-
-TEMPLATE:
-[Role] with a [foundation] and [type of experience]. [Core skills] applied to [practical context]. Demonstrates domain knowledge in [specialization areas].
+FIXED FORMAT:
+Sentence 1: ROLE + FOUNDATION + TYPE OF EXPERIENCE
+Sentence 2: SKILLS applied to PRACTICAL CONTEXT
+Sentence 3: DOMAIN KNOWLEDGE / SPECIALIZATION
 
 STRICT RULES:
-❌ NO years, numbers, or counts
-❌ NO "expert", "highly skilled", buzzwords
-❌ NO certification names listed
-❌ NO invented information
-✅ Facts only from provided data
-✅ Neutral, professional tone
-✅ Third-person (no "I", "my", "we")
-✅ 2-3 sentences MAX
-✅ Plain text only
+- NO years, numbers, or counts
+- NO buzzwords like expert or highly skilled
+- Facts only from provided data
+- Third-person voice only
+- 2-3 sentences MAX
+- Plain text only
 
-REFERENCE EXAMPLE:
+EXAMPLE:
 Machine Learning Engineer with a strong foundation in computer science and hands-on experience developing machine learning models. Proficient in Python with practical exposure to data analysis and software development workflows. Demonstrates domain knowledge in data science, natural language processing, and computer vision.
 
-Generate the professional summary now (text only, no formatting):"""
-
+Generate the professional summary now:"""
+        
         logger.info("Generating professional summary with Gemini")
         model = genai.GenerativeModel(settings.GEMINI_MODEL)
         response = model.generate_content(

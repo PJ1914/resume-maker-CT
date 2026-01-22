@@ -26,8 +26,10 @@ export function MonthYearPicker({
 
     // Parse value (YYYY-MM) on init/change
     useEffect(() => {
+        console.log('[MonthYearPicker] Value changed:', value)
         if (value) {
             const [y, m] = value.split('-')
+            console.log('[MonthYearPicker] Parsed year:', y, 'month:', m)
             setYear(y || '')
             setMonth(m || '')
         } else {

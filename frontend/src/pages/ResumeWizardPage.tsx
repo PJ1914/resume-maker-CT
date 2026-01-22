@@ -123,6 +123,10 @@ export default function ResumeWizardPage() {
         return
       }
 
+      // Log education data before sending
+      console.log('[Wizard] Resume data being sent:', JSON.stringify(resumeData, null, 2))
+      console.log('[Wizard] Education entries:', resumeData.education)
+
       // Call API to create resume with template
       const response: any = await apiClient.post('/api/resumes/create', resumeData)
 
@@ -172,10 +176,33 @@ export default function ResumeWizardPage() {
                 console.log('Applying extracted data to wizard:', data)
                 if (data.contact) updateResumeData('contact', data.contact)
                 if (data.summary) updateResumeData('summary', data.summary)
-                if (data.experience) updateResumeData('experience', data.experience)
-                if (data.education) updateResumeData('education', data.education)
+                if (data.experience) {
+                  // Add IDs to experience entries if missing
+                  const experienceWithIds = data.experience.map((exp: any) => ({
+                    ...exp,
+                    id: exp.id || Date.now().toString() + Math.random().toString()
+                  }))
+                  updateResumeData('experience', experienceWithIds)
+                }
+                if (data.education) {
+                  // Add IDs to education entries if missing
+                  const educationWithIds = data.education.map((edu: any, idx: number) => ({
+                    ...edu,
+                    id: edu.id || `edu-${Date.now()}-${idx}`,
+                    description: edu.description || ''
+                  }))
+                  console.log('[Wizard] Education with IDs:', educationWithIds)
+                  updateResumeData('education', educationWithIds)
+                }
                 if (data.skills) updateResumeData('skills', data.skills)
-                if (data.projects) updateResumeData('projects', data.projects)
+                if (data.projects) {
+                  // Add IDs to project entries if missing
+                  const projectsWithIds = data.projects.map((proj: any) => ({
+                    ...proj,
+                    id: proj.id || Date.now().toString() + Math.random().toString()
+                  }))
+                  updateResumeData('projects', projectsWithIds)
+                }
                 if (data.certifications) updateResumeData('certifications', data.certifications)
                 if (data.languages) updateResumeData('languages', data.languages)
                 if (data.achievements) updateResumeData('achievements', data.achievements)

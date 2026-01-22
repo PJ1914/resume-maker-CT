@@ -20,10 +20,6 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%-------------------------------------------------------------------------------
-%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
-%-------------------------------------------------------------------------------
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % You can have multiple style options the legal options ones are:
 %
@@ -43,7 +39,11 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\documentclass[margin]{res}  
+\documentclass[margin]{res}
+
+%-------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%-------------------------------------------------------------------------------
 
 % Default font is the helvetica postscript font
 \usepackage{helvet}
@@ -70,12 +70,12 @@
 \BLOCK{ if email }\VAR{email|escape_tex}\BLOCK{ endif }%
 \BLOCK{ if phone }\\\VAR{phone|escape_tex}\BLOCK{ endif }%
 \BLOCK{ if location }\\\VAR{location|escape_tex}\BLOCK{ endif }%
-\BLOCK{ if linkedin }\\linkedin.com/in/\VAR{linkedin|escape_tex}\BLOCK{ endif }%
-\BLOCK{ if github }\\github.com/\VAR{github|escape_tex}\BLOCK{ endif }%
-\BLOCK{ if leetcode }\\leetcode.com/u/\VAR{leetcode|escape_tex}\BLOCK{ endif }%
-\BLOCK{ if codechef }\\codechef.com/users/\VAR{codechef|escape_tex}\BLOCK{ endif }%
-\BLOCK{ if hackerrank }\\hackerrank.com/\VAR{hackerrank|escape_tex}\BLOCK{ endif }%
-\BLOCK{ if website }\\\VAR{website|escape_url}\BLOCK{ endif }%
+\BLOCK{ if linkedin }\\\href{\VAR{linkedin}}{LinkedIn}\BLOCK{ endif }%
+\BLOCK{ if github }\\\href{\VAR{github}}{GitHub}\BLOCK{ endif }%
+\BLOCK{ if leetcode }\\\href{\VAR{leetcode}}{LeetCode}\BLOCK{ endif }%
+\BLOCK{ if codechef }\\\href{\VAR{codechef}}{CodeChef}\BLOCK{ endif }%
+\BLOCK{ if hackerrank }\\\href{\VAR{hackerrank}}{HackerRank}\BLOCK{ endif }%
+\BLOCK{ if portfolio }\\\href{\VAR{portfolio}}{Portfolio}\BLOCK{ endif }%
 }
 
 % Uncomment to add a third address
@@ -90,8 +90,8 @@
 \BLOCK{ if education }
 \section{EDUCATION}
 \BLOCK{ for edu in education }
-\textbf{\VAR{edu.institution|escape_tex}}\BLOCK{ if edu.location }, \VAR{edu.location|escape_tex}\BLOCK{ endif }\\
-{\sl \VAR{edu.degree|escape_tex}}, \VAR{edu.field|escape_tex}, \VAR{edu.end_date|escape_tex}\hfill \BLOCK{ if edu.gpa }CGPA: \VAR{edu.gpa|escape_tex}\BLOCK{ endif }
+\textbf{\VAR{edu.school|escape_tex}}\BLOCK{ if edu.location }, \VAR{edu.location|escape_tex}\BLOCK{ endif }\\
+{\sl \VAR{edu.degree|escape_tex}\BLOCK{ if edu.field }, \VAR{edu.field|escape_tex}\BLOCK{ endif }}, \VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } - \BLOCK{ endif }\VAR{edu.end_date|escape_tex}\hfill \BLOCK{ if edu.gpa }\BLOCK{ if edu.grade_type }\VAR{edu.grade_type|escape_tex}\BLOCK{ else }GPA/CGPA\BLOCK{ endif }: \VAR{edu.gpa|escape_tex}\BLOCK{ if edu.grade_type == 'Percentage' }\%\BLOCK{ endif }\BLOCK{ endif }
 \smallskip\\
 \BLOCK{ endfor }
 \BLOCK{ endif }

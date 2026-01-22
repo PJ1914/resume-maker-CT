@@ -5,11 +5,31 @@
 \documentclass{resume} % Use the custom resume.cls style 
 
 \usepackage[left=0.4 in,top=0.3 in,right=0.4 in,bottom=0.3in]{geometry} % Document margins
+\usepackage{hyperref} % For clickable links
 \newcommand{\tab}[1]{\hspace{.2667\textwidth}\rlap{#1}}
 \newcommand{\itab}[1]{\hspace{0em}\rlap{#1}}
+\renewcommand{\labelitemi}{$\vcenter{\hbox{\tiny$\bullet$}}$} % Custom small bullet
+
+% Custom command for items without bullet points
+\newcommand{\rGenericItem}[4]{
+  {\bf #1} \hfill {#2}
+  \ifthenelse{\equal{#3}{}}{}{
+   \\
+   {\em #3} \hfill {\em #4}
+  }
+  \par\smallskip
+}
 \name{\VAR{full_name|escape_tex}} % Your name 
 \address{\VAR{location|escape_tex}} % Your address 
 \address{\VAR{phone|escape_tex} \\ \VAR{email|escape_tex}} % Your phone number and email
+\address{%
+\BLOCK{ if linkedin }\href{\VAR{linkedin}}{LinkedIn}\BLOCK{ endif }%
+\BLOCK{ if github }\BLOCK{ if linkedin } $\cdot$ \BLOCK{ endif }\href{\VAR{github}}{GitHub}\BLOCK{ endif }%
+\BLOCK{ if leetcode } $\cdot$ \href{\VAR{leetcode}}{LeetCode}\BLOCK{ endif }%
+\BLOCK{ if codechef } $\cdot$ \href{\VAR{codechef}}{CodeChef}\BLOCK{ endif }%
+\BLOCK{ if hackerrank } $\cdot$ \href{\VAR{hackerrank}}{HackerRank}\BLOCK{ endif }%
+\BLOCK{ if portfolio } $\cdot$ \href{\VAR{portfolio}}{Portfolio}\BLOCK{ endif }%
+}
 
 \begin{document}  
 
@@ -18,7 +38,7 @@
 %----------------------------------------------------------------------------------------
 
 \BLOCK{ if summary }
-\begin{rSection}{OBJECTIVE}
+\begin{rSection}{Summary}
 \VAR{summary|escape_tex}
 \end{rSection}
 \BLOCK{ endif }
@@ -31,12 +51,13 @@
 \begin{rSection}{Education}
 
 \BLOCK{ for edu in education }
-{\bf \VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex}} \hfill {\VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } - \BLOCK{ endif }\VAR{edu.end_date|escape_tex}}
+{\bf \VAR{edu.degree|escape_tex}\BLOCK{ if edu.field } in \VAR{edu.field|escape_tex}\BLOCK{ endif }} \hfill {\VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } - \BLOCK{ endif }\VAR{edu.end_date|escape_tex}}
 \\ 
-\VAR{edu.institution|escape_tex}\BLOCK{ if edu.location }, \VAR{edu.location|escape_tex}\BLOCK{ endif }
+\VAR{edu.school|escape_tex}\BLOCK{ if edu.location }, \VAR{edu.location|escape_tex}\BLOCK{ endif }
 \BLOCK{ if edu.gpa }
-\\ CGPA: \VAR{edu.gpa|escape_tex}
+\\ \BLOCK{ if edu.grade_type }\VAR{edu.grade_type|escape_tex}\BLOCK{ else }GPA/CGPA\BLOCK{ endif }: \VAR{edu.gpa|escape_tex}\BLOCK{ if edu.grade_type == 'Percentage' }\%\BLOCK{ endif }
 \BLOCK{ endif }
+\BLOCK{ if not loop.last }\\[6pt]\BLOCK{ endif }
 \BLOCK{ endfor }
 
 \end{rSection} 
@@ -114,16 +135,32 @@
 \BLOCK{ endif }
 
 %----------------------------------------------------------------------------------------
+%	ACHIEVEMENTS SECTION
+%----------------------------------------------------------------------------------------
+
+\BLOCK{ if achievements and achievements|length > 0 }
+\begin{rSection}{Achievements} 
+    \BLOCK{ for ach in achievements }
+    \BLOCK{ if ach.description }
+    \begin{rSubsection}{\VAR{ach.title|escape_tex}}{\VAR{ach.date|escape_tex}}{}{}
+    \item \VAR{ach.description|escape_tex}
+    \end{rSubsection}
+    \BLOCK{ else }
+    \rGenericItem{\VAR{ach.title|escape_tex}}{\VAR{ach.date|escape_tex}}{}{}
+    \BLOCK{ endif }
+    \BLOCK{ endfor }
+\end{rSection}
+\BLOCK{ endif }
+
+%----------------------------------------------------------------------------------------
 %	CERTIFICATIONS SECTION
 %----------------------------------------------------------------------------------------
 
 \BLOCK{ if certifications and certifications|length > 0 }
 \begin{rSection}{Certifications}
-\begin{itemize}\itemsep-0.3em
     \BLOCK{ for cert in certifications }
-    \item {\bf \VAR{cert.name|escape_tex}}\BLOCK{ if cert.issuer } - \VAR{cert.issuer|escape_tex}\BLOCK{ endif } \hfill {\em \VAR{cert.date|escape_tex}}
+    \rGenericItem{\VAR{cert.name|escape_tex}}{\VAR{cert.date|escape_tex}}{\VAR{cert.issuer|escape_tex}}{}
     \BLOCK{ endfor }
-\end{itemize}
 \end{rSection}
 \BLOCK{ endif }
 
@@ -133,11 +170,9 @@
 
 \BLOCK{ if languages and languages|length > 0 }
 \begin{rSection}{Languages}
-\begin{itemize}\itemsep-0.3em
     \BLOCK{ for lang in languages }
-    \item {\bf \VAR{lang.language|escape_tex}}: \VAR{lang.proficiency|escape_tex}
+    \rGenericItem{\VAR{lang.language|escape_tex}}{\VAR{lang.proficiency|escape_tex}}{}{}
     \BLOCK{ endfor }
-\end{itemize}
 \end{rSection}
 \BLOCK{ endif }
 
@@ -145,14 +180,6 @@
 %	ACHIEVEMENTS SECTION
 %----------------------------------------------------------------------------------------
 
-\BLOCK{ if achievements and achievements|length > 0 }
-\begin{rSection}{Achievements} 
-\begin{itemize}\itemsep-0.3em
-    \BLOCK{ for ach in achievements }
-    \item {\bf \VAR{ach.title|escape_tex}}\BLOCK{ if ach.description } -- \VAR{ach.description|escape_tex}\BLOCK{ endif } \hfill {\em \VAR{ach.date|escape_tex}}
-    \BLOCK{ endfor }
-\end{itemize}
-\end{rSection}
-\BLOCK{ endif }
+
 
 \end{document}

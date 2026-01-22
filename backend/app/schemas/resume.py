@@ -63,6 +63,7 @@ class ExperienceEntry(BaseModel):
     startDate: str
     endDate: Optional[str] = None
     description: Optional[str] = None
+    current: Optional[bool] = False
 
 class EducationEntry(BaseModel):
     """Education entry"""
@@ -74,6 +75,7 @@ class EducationEntry(BaseModel):
     startDate: Optional[str] = None
     endDate: Optional[str] = None
     gpa: Optional[str] = None
+    gradeType: Optional[str] = "GPA"  # GPA, CGPA, or Percentage
     description: Optional[str] = None
 
 class SkillCategory(BaseModel):

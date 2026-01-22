@@ -32,7 +32,9 @@ export default function ResumeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: resume, isLoading: loading, refetch } = useResume(id)
-  const { data: scoreData, refetch: refetchScore } = useResumeScore(id)
+  // Only fetch score if resume exists and has a latest_score (meaning it's been scored before)
+  const hasBeenScored = resume?.latest_score !== undefined && resume?.latest_score !== null
+  const { data: scoreData, refetch: refetchScore } = useResumeScore(id, hasBeenScored)
   const { mutate: scoreResume, isPending: scoring } = useScoreResume()
   const { mutate: deleteResumeMutation } = useDeleteResume()
   const [showExportModal, setShowExportModal] = useState(false)

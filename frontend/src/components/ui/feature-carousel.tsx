@@ -17,22 +17,38 @@ interface HeroProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> 
 export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
     ({ title, subtitle, items, className, ...props }, ref) => {
         const [currentIndex, setCurrentIndex] = React.useState(Math.floor(items.length / 2));
+        const [isPaused, setIsPaused] = React.useState(false);
 
         const handleNext = React.useCallback(() => {
             setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length);
         }, [items.length]);
 
-        const handlePrev = () => {
+        const handlePrev = React.useCallback(() => {
             setCurrentIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length);
-        };
+        }, [items.length]);
+
+        // Keyboard Navigation
+        React.useEffect(() => {
+            const handleKeyDown = (e: KeyboardEvent) => {
+                if (e.key === 'ArrowLeft') {
+                    handlePrev();
+                } else if (e.key === 'ArrowRight') {
+                    handleNext();
+                }
+            };
+
+            window.addEventListener('keydown', handleKeyDown);
+            return () => window.removeEventListener('keydown', handleKeyDown);
+        }, [handleNext, handlePrev]);
 
         // Auto-advance
         React.useEffect(() => {
+            if (isPaused) return;
             const timer = setInterval(() => {
                 handleNext();
             }, 5000); // Slower for resumes
             return () => clearInterval(timer);
-        }, [handleNext]);
+        }, [handleNext, isPaused]);
 
         return (
             <div
@@ -62,7 +78,11 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
                     </div>
 
                     {/* Main Showcase Section */}
-                    <div className="relative w-full h-[400px] md:h-[500px] flex items-center justify-center">
+                    <div
+                        className="relative w-full h-[400px] md:h-[500px] flex items-center justify-center"
+                        onMouseEnter={() => setIsPaused(true)}
+                        onMouseLeave={() => setIsPaused(false)}
+                    >
                         {/* Carousel Wrapper */}
                         <div className="relative w-full h-full flex items-center justify-center [perspective:1000px]">
                             {items.map((item, index) => {
@@ -108,7 +128,7 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
                         <Button
                             variant="outline"
                             size="icon"
-                            className="absolute left-2 sm:left-8 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 z-20 bg-background/50 backdrop-blur-sm"
+                            className="absolute left-2 sm:left-8 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 z-20 bg-background/50 backdrop-blur-sm hover:bg-background/80"
                             onClick={handlePrev}
                         >
                             <ChevronLeft className="h-5 w-5" />
@@ -116,7 +136,7 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
                         <Button
                             variant="outline"
                             size="icon"
-                            className="absolute right-2 sm:right-8 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 z-20 bg-background/50 backdrop-blur-sm"
+                            className="absolute right-2 sm:right-8 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 z-20 bg-background/50 backdrop-blur-sm hover:bg-background/80"
                             onClick={handleNext}
                         >
                             <ChevronRight className="h-5 w-5" />

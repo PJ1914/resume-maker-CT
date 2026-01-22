@@ -10,6 +10,7 @@ interface EducationEntry {
   startDate: string
   endDate: string
   gpa: string
+  gradeType: string // 'GPA', 'CGPA', or 'Percentage'
   description: string
 }
 
@@ -28,6 +29,7 @@ export default function EducationStepForm({ data, onChange }: EducationStepFormP
       location: '',
       startDate: '',
       endDate: '',
+      gradeType: 'GPA',
       gpa: '',
       description: '',
     }
@@ -35,7 +37,10 @@ export default function EducationStepForm({ data, onChange }: EducationStepFormP
   }
 
   const updateEducation = (id: string, field: keyof EducationEntry, value: string) => {
-    onChange(data.map((edu) => (edu.id === id ? { ...edu, [field]: value } : edu)))
+    console.log(`[EducationForm] Updating education ${id}, field: ${field}, value: ${value}`)
+    const updated = data.map((edu) => (edu.id === id ? { ...edu, [field]: value } : edu))
+    console.log(`[EducationForm] Updated education data:`, updated.find(e => e.id === id))
+    onChange(updated)
   }
 
   const removeEducation = (id: string) => {
@@ -139,6 +144,7 @@ export default function EducationStepForm({ data, onChange }: EducationStepFormP
                 {/* Start Date */}
                 <div>
                   <MonthYearPicker
+                    key={`start-${education.id}-${education.startDate}`}
                     label="Start Date"
                     value={education.startDate}
                     onChange={(val) => updateEducation(education.id, 'startDate', val)}
@@ -148,6 +154,7 @@ export default function EducationStepForm({ data, onChange }: EducationStepFormP
                 {/* End Date */}
                 <div>
                   <MonthYearPicker
+                    key={`end-${education.id}-${education.endDate}`}
                     label="End Date (or Expected)"
                     value={education.endDate}
                     onChange={(val) => updateEducation(education.id, 'endDate', val)}
@@ -155,19 +162,34 @@ export default function EducationStepForm({ data, onChange }: EducationStepFormP
                 </div>
 
                 {/* GPA */}
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    GPA (optional)
+                    Grade Type
+                  </label>
+                  <select
+                    value={education.gradeType}
+                    onChange={(e) => updateEducation(education.id, 'gradeType', e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="GPA">GPA</option>
+                    <option value="CGPA">CGPA</option>
+                    <option value="Percentage">Percentage (%)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+                    {education.gradeType === 'Percentage' ? 'Percentage' : education.gradeType} (optional)
                   </label>
                   <input
                     type="text"
                     value={education.gpa}
                     onChange={(e) => updateEducation(education.id, 'gpa', e.target.value)}
-                    placeholder="3.8 / 4.0"
+                    placeholder={education.gradeType === 'Percentage' ? '85.5' : '3.8 / 4.0'}
                     className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-secondary-300 dark:border-secondary-700 rounded-lg text-secondary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                   <p className="text-xs text-secondary-500 dark:text-secondary-400 mt-1">
-                    Only include if 3.5 or higher
+                    {education.gradeType === 'Percentage' ? 'Enter percentage value (e.g., 85.5)' : 'Only include if 3.5 or higher'}
                   </p>
                 </div>
 

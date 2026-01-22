@@ -1,8 +1,9 @@
 \documentclass[a4paper,11pt]{article}
 
 % Packages
-\usepackage{latexsym,xcolor,float,ragged2e,wrapfig,lipsum,tabularx,titlesec,geometry,marvosym,verbatim,enumitem,fancyhdr,multicol,graphicx,mathpazo}
+\usepackage{latexsym,xcolor,float,ragged2e,wrapfig,lipsum,tabularx,titlesec,geometry,marvosym,verbatim,enumitem,fancyhdr,multicol,graphicx}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{fontawesome5}
 \usepackage[hidelinks]{hyperref}
 
@@ -30,8 +31,8 @@
 
 % Section formatting
 \titleformat{\section}{
-  \vspace{2pt}\scshape\raggedright\large
-}{}{0em}{}[\color{primaryColor}\titlerule \vspace{-6pt}]
+  \scshape\raggedright\large
+}{}{0em}{}[\color{primaryColor}\titlerule \vspace{-5pt}]
 
 % ATS-Friendly Subheading commands
 \newcommand{\resumeSubheading}[4]{
@@ -41,29 +42,18 @@
     \vspace{-2pt}
 }
 
-\newcommand{\resumeProject}[3]{
-  \item
-    \textbf{#1} \hfill {\color{secondaryColor}\small #3} \\
-    \textit{\small#2}
-    \vspace{-2pt}
-}
-
 \renewcommand{\labelitemi}{$\vcenter{\hbox{\tiny$\bullet$}}$}
-\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=12pt, itemsep=0pt, topsep=0pt, parsep=0pt]}
-\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-4pt}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=12pt, label={--}, itemsep=1pt, topsep=0pt, parsep=0pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{0pt}}
 \newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0pt, itemsep=2pt, topsep=0pt, parsep=0pt]}
-\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
-
-% Font
-\newcommand{\mainfont}{\fontfamily{ppl}\selectfont}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}\vspace{0pt}}
 
 \begin{document}
-\mainfont
 
 % --- HEADER ---
 \begin{center}
     {\Huge\textbf{\VAR{full_name|escape_tex}}} \\
-    \vspace{2pt}
+    \vspace{0pt}
     \BLOCK{ set has_contact = phone or email or linkedin or github or website or leetcode or codechef or hackerrank }
     \BLOCK{ if has_contact }
     \small{
@@ -71,19 +61,19 @@
         \faPhone\ \VAR{phone|escape_tex} \textbar{}
         \BLOCK{ endif }
         \BLOCK{ if email }
-        \faEnvelope\ \href{mailto:\VAR{email}}{\VAR{email|escape_tex}} \textbar{}
+        \faEnvelope\ \href{mailto:\VAR{email}}{Gmail} \textbar{}
         \BLOCK{ endif }
         \BLOCK{ if linkedin }
-        \faLinkedin\ \href{https://\VAR{linkedin|replace('https://', '')|replace('http://', '')}}{\VAR{linkedin|replace('https://', '')|replace('http://', '')|escape_tex}}
+        \faLinkedin\ \href{https://\VAR{linkedin|replace('https://', '')|replace('http://', '')}}{LinkedIn}
         \BLOCK{ endif }
         \BLOCK{ if github }
-        \textbar{} \faGithub\ \href{https://\VAR{github|replace('https://', '')|replace('http://', '')}}{\VAR{github|replace('https://', '')|replace('http://', '')|escape_tex}}
+        \textbar{} \faGithub\ \href{https://\VAR{github|replace('https://', '')|replace('http://', '')}}{GitHub}
         \BLOCK{ endif }
     } \\
     \BLOCK{ if website or leetcode or codechef or hackerrank }
     \small{
         \BLOCK{ if website }
-        \faGlobe\ \href{https://\VAR{website|replace('https://', '')|replace('http://', '')}}{\VAR{website|replace('https://', '')|replace('http://', '')|escape_tex}}
+        \faGlobe\ \href{https://\VAR{website|replace('https://', '')|replace('http://', '')}}{Portfolio}
         \BLOCK{ endif }
         \BLOCK{ if leetcode }
         \textbar{} \faCode\ \href{https://\VAR{leetcode|replace('https://', '')|replace('http://', '')}}{LeetCode}
@@ -102,26 +92,33 @@
     \BLOCK{ endif }
 \end{center}
 
-% --- EDUCATION ---
-\BLOCK{ if education }
-\section{Education}
-\resumeSubHeadingListStart
-\BLOCK{ for edu in education }
-    \resumeSubheading
-        {\VAR{edu.institution|escape_tex}}{\VAR{edu.location|escape_tex}}
-        {\VAR{edu.degree|escape_tex} in \VAR{edu.field|escape_tex} \BLOCK{ if edu.gpa }, GPA: \VAR{edu.gpa|escape_tex}\BLOCK{ endif }}{\VAR{edu.end_date|escape_tex}}
-\BLOCK{ endfor }
-\resumeSubHeadingListEnd
-\BLOCK{ endif }
-
 % --- SUMMARY ---
 \BLOCK{ if summary }
+\vspace{-8pt}
 \section*{Professional Summary}
 \noindent \VAR{summary|escape_tex}
 \BLOCK{ endif }
 
+% --- EDUCATION ---
+\BLOCK{ if education }
+\vspace{-6pt}
+\section{Education}
+\resumeSubHeadingListStart
+\BLOCK{ for edu in education }
+    \item
+    \textbf{\VAR{edu.school|escape_tex}}\BLOCK{ if edu.location }, \VAR{edu.location|escape_tex}\BLOCK{ endif } \hfill {\color{secondaryColor}\small \VAR{edu.start_date|escape_tex}\BLOCK{ if edu.start_date and edu.end_date } - \BLOCK{ endif }\VAR{edu.end_date|escape_tex}} \\
+    {\small \VAR{edu.degree|escape_tex}\BLOCK{ if edu.field } in \VAR{edu.field|escape_tex}\BLOCK{ endif }}
+    \BLOCK{ if edu.gpa }
+    \\
+    {\small \BLOCK{ if edu.grade_type }\VAR{edu.grade_type|escape_tex}\BLOCK{ else }GPA/CGPA\BLOCK{ endif }: \VAR{edu.gpa|escape_tex}\BLOCK{ if edu.grade_type == 'Percentage' }\%\BLOCK{ endif }}
+    \BLOCK{ endif }
+\BLOCK{ endfor }
+\resumeSubHeadingListEnd
+\BLOCK{ endif }
+
 % --- EXPERIENCE ---
 \BLOCK{ if experience }
+\vspace{-6pt}
 \section{Experience}
 \resumeSubHeadingListStart
 
@@ -146,27 +143,27 @@
 
 % --- PROJECTS ---
 \BLOCK{ if projects }
+\vspace{-6pt}
 \section{Projects}
 \resumeSubHeadingListStart
 
 \BLOCK{ for proj in projects }
-    \resumeProject
-        {\VAR{proj.name|escape_tex}}
-        {\VAR{proj.technologies|join(', ')|escape_tex}}
-        {\VAR{proj.start_date|escape_tex}\BLOCK{ if proj.start_date and proj.end_date } -- \BLOCK{ endif }\VAR{proj.end_date|escape_tex}}
-        \BLOCK{ if proj.description or proj.highlights or proj.link }
-        \resumeItemListStart
-            \BLOCK{ if proj.description }
-            \item \VAR{proj.description|escape_tex}
-            \BLOCK{ endif }
-            \BLOCK{ for highlight in proj.highlights }
-            \item \VAR{highlight|escape_tex}
-            \BLOCK{ endfor }
-            \BLOCK{ if proj.link }
-            \item \href{https://\VAR{proj.link|replace('https://', '')|replace('http://', '')}}{Project Link}
-            \BLOCK{ endif }
-        \resumeItemListEnd
+    \item
+    \textbf{\VAR{proj.name|escape_tex}} \hfill {\color{secondaryColor}\small \VAR{proj.start_date|escape_tex}\BLOCK{ if proj.start_date and proj.end_date } - \BLOCK{ endif }\VAR{proj.end_date|escape_tex}} \\
+    \BLOCK{ if proj.technologies }
+    {\small\textit{\VAR{proj.technologies|join(', ')|escape_tex}}}\BLOCK{ if proj.link } \textbar{} \href{https://\VAR{proj.link|replace('https://', '')|replace('http://', '')}}{\small\faExternalLinkAlt\ Link}\BLOCK{ endif }
+    \BLOCK{ endif }
+    \BLOCK{ if proj.description or proj.highlights }
+    \resumeItemListStart
+        \BLOCK{ if proj.description }
+        \item \VAR{proj.description|escape_tex}
         \BLOCK{ endif }
+        \BLOCK{ for highlight in proj.highlights }
+        \item \VAR{highlight|escape_tex}
+        \BLOCK{ endfor }
+    \resumeItemListEnd
+    \BLOCK{ endif }
+    \vspace{2pt}
 \BLOCK{ endfor }
 
 \resumeSubHeadingListEnd
@@ -174,6 +171,7 @@
 
 % --- TECHNICAL SKILLS ---
 \BLOCK{ if skills }
+\vspace{-6pt}
 \section{Technical Skills}
 \resumeSubHeadingListStart
     \BLOCK{ for skill in skills }
@@ -184,6 +182,7 @@
 
 % --- CERTIFICATIONS ---
 \BLOCK{ if certifications }
+\vspace{-6pt}
 \section{Certifications}
 \resumeSubHeadingListStart
     \BLOCK{ for cert in certifications }
@@ -194,6 +193,7 @@
 
 % --- LANGUAGES ---
 \BLOCK{ if languages }
+\vspace{-6pt}
 \section{Languages}
 \resumeSubHeadingListStart
     \BLOCK{ for lang in languages }
@@ -204,10 +204,21 @@
 
 % --- ACHIEVEMENTS ---
 \BLOCK{ if achievements }
+\vspace{-6pt}
 \section{Achievements}
 \resumeSubHeadingListStart
     \BLOCK{ for ach in achievements }
-    \item \textbf{\VAR{ach.title|escape_tex}}\BLOCK{ if ach.description } -- \textit{\small \VAR{ach.description|escape_tex}}\BLOCK{ endif } \hfill {\color{secondaryColor}\small \VAR{ach.date|escape_tex}}
+    \item
+    \textbf{\VAR{ach.title|escape_tex}}\BLOCK{ if ach.date } \hfill {\color{secondaryColor}\small \VAR{ach.date|escape_tex}}\BLOCK{ endif }
+    \BLOCK{ if ach.highlights }
+        \resumeItemListStart
+        \BLOCK{ for highlight in ach.highlights }
+            \item \small \VAR{highlight}
+        \BLOCK{ endfor }
+        \resumeItemListEnd
+    \BLOCK{ elif ach.description }
+         -- {\small \VAR{ach.description|escape_tex}}
+    \BLOCK{ endif }
     \BLOCK{ endfor }
 \resumeSubHeadingListEnd
 \BLOCK{ endif }

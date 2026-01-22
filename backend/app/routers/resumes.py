@@ -384,6 +384,10 @@ async def create_resume(
         normalized_skills = normalize_skills_to_list(request.skills)
         logging.info("Skills normalized: %s", normalized_skills)
         
+        # Debug education dates
+        for idx, edu in enumerate(request.education):
+            logging.info(f"Education #{idx+1}: {edu.school} - Start: {edu.startDate}, End: {edu.endDate}")
+        
         # Build sections dict safely
         sections = {
             'contact': {

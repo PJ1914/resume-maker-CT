@@ -38,6 +38,7 @@ export interface Education {
   startDate: string;
   endDate: string;
   gpa?: string;
+  gradeType?: string; // 'GPA', 'CGPA', or 'Percentage'
   honors?: string;
 }
 

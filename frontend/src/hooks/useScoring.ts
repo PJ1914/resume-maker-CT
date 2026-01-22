@@ -10,11 +10,11 @@ export const scoringKeys = {
 };
 
 // Hook to get resume score
-export function useResumeScore(resumeId: string | undefined) {
+export function useResumeScore(resumeId: string | undefined, enabled: boolean = false) {
   return useQuery({
     queryKey: scoringKeys.score(resumeId || ''),
     queryFn: () => resumeService.getScore(resumeId!),
-    enabled: !!resumeId,
+    enabled: !!resumeId && enabled, // Only fetch when explicitly enabled
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
     throwOnError: false, // Don't throw on 404, just return error in data

@@ -216,23 +216,54 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
 
     data = copy.deepcopy(resume_data)
     
+    # Helper to parse text into bullets (handling inline dashes/-)
+    def parse_text_to_bullets(text):
+        if not text: return [], ''
+        text = str(text).strip()
+        # Convert inline bullets to newlines
+        # 1. Sentence ending followed by dash/bullet: "text. - Next" -> "text.\nNext"
+        text = re.sub(r'([.!?])\s*[-•–—*]\s+', r'\1\n', text)
+        # 2. Mid-line dashes acting as bullets: " text - next" -> " text\nnext"
+        text = re.sub(r'\s+[-•–—*]\s+', r'\n', text)
+        
+        parts = re.split(r'[\n\r]+', text)
+        cleaned = [clean_bullet_text(p) for p in parts if clean_bullet_text(p)]
+        
+        if len(cleaned) > 1:
+            return [escape_latex(c) for c in cleaned], ''
+        elif len(cleaned) == 1:
+            return [], escape_latex(cleaned[0])
+        return [], ''
+
     # Structure contact info
     contact = data.get('contact', {}) or data.get('contact_info', {})
     if not isinstance(contact, dict):
         contact = {}
+    
+    # Helper to ensure URLs have protocol for LaTeX \href command
+    def ensure_url_protocol(url: str) -> str:
+        """Add https:// if URL doesn't have protocol"""
+        if not url:
+            return ''
+        url = str(url).strip()
+        if not url:
+            return ''
+        if url.startswith(('http://', 'https://')):
+            return url
+        return f'https://{url}'
     
     sanitized_contact = {
         'full_name': escape_latex(contact.get('fullName', '') or contact.get('name', '')),
         'email': escape_latex(contact.get('email', '')),
         'phone': escape_latex(contact.get('phone', '')),
         'location': escape_latex(contact.get('location', '')),
-        'linkedin': escape_latex(contact.get('linkedin', '')),
-        'github': escape_latex(contact.get('github', '')),
-        'portfolio': escape_latex(contact.get('portfolio', '')),
-        'leetcode': escape_latex(contact.get('leetcode', '')),
-        'codechef': escape_latex(contact.get('codechef', '')),
-        'hackerrank': escape_latex(contact.get('hackerrank', '')),
-        'website': escape_latex(contact.get('website', '') or contact.get('portfolio', '')),
+        'linkedin': ensure_url_protocol(contact.get('linkedin', '')),
+        'github': ensure_url_protocol(contact.get('github', '')),
+        'portfolio': ensure_url_protocol(contact.get('portfolio', '')),
+        'leetcode': ensure_url_protocol(contact.get('leetcode', '')),
+        'codechef': ensure_url_protocol(contact.get('codechef', '')),
+        'hackerrank': ensure_url_protocol(contact.get('hackerrank', '')),
+        'website': ensure_url_protocol(contact.get('website', '') or contact.get('portfolio', '')),
     }
     
     # Structure summary
@@ -246,65 +277,36 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for exp in exp_data:
             if not isinstance(exp, dict): continue
             
-            # Clean up date ranges - handle combined dates like "2024 – 2028-01"
+            # Clean up date ranges
             raw_start = exp.get('startDate', '')
             raw_end = exp.get('endDate', '')
             clean_start, clean_end = split_date_range(raw_start, raw_end)
             
-            # Determine end_date - use "Present" only if explicitly current
+            # Determine end_date
             is_current = exp.get('current', False)
-            
             if is_current:
-                # Explicitly marked as current job
                 end_date = 'Present'
             elif clean_end:
-                # Has an end date, use it
                 end_date = escape_latex(format_date(clean_end))
             else:
-                # No end date and not marked as current - leave empty
-                # (template will handle display)
                 end_date = ''
             
-            # Get raw values
+            # Use smart parser for description/highlights
             raw_description = str(exp.get('description', '') or '')
             raw_highlights = exp.get('highlights', []) or []
-            if not isinstance(raw_highlights, list):
-                raw_highlights = []
+            if not isinstance(raw_highlights, list): raw_highlights = []
             
-            # Simple approach: if we have highlights, skip description (it's often duplicated)
-            # If no highlights, use description
             final_description = ''
             all_highlights = []
             
             if raw_highlights:
-                # Use highlights only, skip description to avoid duplicates
-                seen = set()
+                # Process each existing highlight to clean/split
                 for h in raw_highlights:
-                    if not h:
-                        continue
-                    cleaned = clean_bullet_text(str(h))
-                    if not cleaned:
-                        continue
-                    key = cleaned[:50].lower().strip()
-                    if key not in seen:
-                        seen.add(key)
-                        all_highlights.append(escape_latex(cleaned))
-            elif raw_description:
-                # No highlights, try to parse description into bullets
-                # Split by newlines and bullet chars
-                parts = re.split(r'[\n\r]+', raw_description)
-                cleaned_parts = []
-                for p in parts:
-                    cleaned = clean_bullet_text(p.strip())
-                    if cleaned:
-                        cleaned_parts.append(cleaned)
-                
-                if len(cleaned_parts) > 1:
-                    # Multiple lines - treat as highlights
-                    all_highlights = [escape_latex(p) for p in cleaned_parts]
-                elif len(cleaned_parts) == 1:
-                    # Single paragraph - keep as description
-                    final_description = escape_latex(cleaned_parts[0])
+                    h_list, h_desc = parse_text_to_bullets(h)
+                    all_highlights.extend(h_list if h_list else ([h_desc] if h_desc else []))
+            else:
+                # Parse description
+                all_highlights, final_description = parse_text_to_bullets(raw_description)
             
             experience.append(SimpleNamespace(
                 position=escape_latex(exp.get('position', exp.get('title', ''))),
@@ -320,40 +322,63 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     # Structure education (convert to SimpleNamespace for dot notation)
     education = []
     edu_data = data.get('education', [])
+    logger.info(f"[prepare_template_data] Processing {len(edu_data)} education entries")
     if isinstance(edu_data, list):
-        for edu in edu_data:
+        for idx, edu in enumerate(edu_data):
             if not isinstance(edu, dict): continue
             
-            # Helper to extract just the year from a date
-            def extract_year(date_str):
-                if not date_str:
-                    return ''
-                import re
-                # Find 4-digit year
-                match = re.search(r'\d{4}', str(date_str))
-                return match.group(0) if match else str(date_str)
+            logger.info(f"[prepare_template_data] Education #{idx+1}: {edu.get('school', 'N/A')}")
+            logger.info(f"  Raw startDate: {edu.get('startDate', 'MISSING')}")
+            logger.info(f"  Raw endDate: {edu.get('endDate', 'MISSING')}")
             
-            # Get start and end dates (just years for education)
+            # Get start and end dates
             raw_start = edu.get('startDate', '')
-            raw_end = edu.get('endDate', '') or edu.get('year', '')  # Also check 'year' field
+            raw_end = edu.get('endDate', '') or edu.get('year', '')
             
-            start_year = extract_year(raw_start)
-            end_year = extract_year(raw_end)
+            clean_start, clean_end = split_date_range(raw_start, raw_end)
             
-            # Handle empty end_date - for education, show expected graduation year or Present
-            if not end_year and not start_year:
-                end_year = ''
-            elif not end_year:
-                end_year = 'Present'
+            start_formatted = escape_latex(format_date(clean_start)) if clean_start else ''
+            end_formatted = escape_latex(format_date(clean_end)) if clean_end else ''
             
+            if not end_formatted and not start_formatted:
+                end_formatted = ''
+            elif not end_formatted:
+                end_formatted = 'Expected'
+            
+            # Ensure school attribute falls back to institution key if school is missing
+            school_val = edu.get('school', '') or edu.get('institution', '')
+            
+            # Heuristic to infer grade type (Percentage vs CGPA) if missing or generic
+            raw_grade_type = edu.get('gradeType', '') or edu.get('grade_type', '')
+            raw_gpa = edu.get('gpa', '')
+            final_grade_type = raw_grade_type
+            
+            if (not final_grade_type or final_grade_type.upper() == 'GPA') and raw_gpa:
+                try:
+                    val = float(str(raw_gpa).replace('%','').split('/')[0].strip())
+                    if val > 20: # Safe threshold (some CGPAs are out of 20, but mostly 10. Percentage usually > 35)
+                        final_grade_type = 'Percentage'
+                    elif not final_grade_type and val <= 10: # Only default to CGPA if type was completely missing
+                        final_grade_type = 'CGPA'
+                except:
+                    pass
+            
+            # Default to 'GPA' only if we still have nothing
+            if not final_grade_type:
+                final_grade_type = 'GPA'
+
             education.append(SimpleNamespace(
                 degree=escape_latex(edu.get('degree', '')),
                 field=escape_latex(edu.get('field', '')),
-                institution=escape_latex(edu.get('institution', '')),
+                school=escape_latex(school_val),
+                institution=escape_latex(edu.get('institution', '') or edu.get('school', '')),
                 location=escape_latex(edu.get('location', '')),
-                start_date=start_year,
-                end_date=end_year,
+                start_date=start_formatted,
+                end_date=end_formatted,
+                startDate=start_formatted,  # Alias for compatibility
+                endDate=end_formatted,      # Alias for compatibility
                 gpa=escape_latex(edu.get('gpa', '')),
+                grade_type=escape_latex(final_grade_type),
                 honors=escape_latex(edu.get('honors', '')),
             ))
     
@@ -364,57 +389,34 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
         for proj in proj_data:
             if not isinstance(proj, dict): continue
             
-            # Clean up date ranges - handle combined dates
+            # Clean up date ranges
             raw_start = proj.get('startDate', '')
             raw_end = proj.get('endDate', '')
             clean_start, clean_end = split_date_range(raw_start, raw_end)
             
-            # Handle technologies as either string or list
+            # Handle technologies
             tech = proj.get('technologies', [])
             if isinstance(tech, str):
-                # Split comma-separated string into list
                 technologies = [escape_latex(t.strip()) for t in tech.split(',') if t.strip()]
             elif isinstance(tech, list):
                 technologies = [escape_latex(str(t)) for t in tech if t]
             else:
                 technologies = []
             
-            # Get raw values
+            # Process description/highlights using smart parser
             raw_description = str(proj.get('description', '') or '')
             raw_highlights = proj.get('highlights', []) or []
-            if not isinstance(raw_highlights, list):
-                raw_highlights = []
+            if not isinstance(raw_highlights, list): raw_highlights = []
             
-            # Simple approach: if we have highlights, skip description (it's often duplicated)
             final_description = ''
             all_highlights = []
             
             if raw_highlights:
-                # Use highlights only
-                seen = set()
                 for h in raw_highlights:
-                    if not h:
-                        continue
-                    cleaned = clean_bullet_text(str(h))
-                    if not cleaned:
-                        continue
-                    key = cleaned[:50].lower().strip()
-                    if key not in seen:
-                        seen.add(key)
-                        all_highlights.append(escape_latex(cleaned))
-            elif raw_description:
-                # No highlights, try to parse description
-                parts = re.split(r'[\n\r]+', raw_description)
-                cleaned_parts = []
-                for p in parts:
-                    cleaned = clean_bullet_text(p.strip())
-                    if cleaned:
-                        cleaned_parts.append(cleaned)
-                
-                if len(cleaned_parts) > 1:
-                    all_highlights = [escape_latex(p) for p in cleaned_parts]
-                elif len(cleaned_parts) == 1:
-                    final_description = escape_latex(cleaned_parts[0])
+                    h_list, h_desc = parse_text_to_bullets(h)
+                    all_highlights.extend(h_list if h_list else ([h_desc] if h_desc else []))
+            else:
+                all_highlights, final_description = parse_text_to_bullets(raw_description)
             
             projects.append(SimpleNamespace(
                 name=escape_latex(proj.get('name', '')),
@@ -426,38 +428,33 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
                 end_date=format_date(clean_end),
             ))
     
-    # Structure skills (convert to SimpleNamespace for dot notation to avoid dict.items() conflict)
+    # Structure skills
     skills = []
     skills_data = data.get('skills', [])
-    print(f"[DEBUG prepare_template_data] skills_data type: {type(skills_data)}, content: {skills_data}")
     
     if isinstance(skills_data, dict):
-        # Format: {technical: [...], soft: [...]}
         for category, items in skills_data.items():
             if isinstance(items, list):
-                # Filter out empty items and only add category if it has items
                 filtered_items = [escape_latex(str(item)) for item in items if item and str(item).strip()]
-                if filtered_items:  # Only add category if it has non-empty items
+                if filtered_items:
                     skills.append(SimpleNamespace(
                         category=escape_latex(category.title()),
                         items=filtered_items,
                     ))
     elif isinstance(skills_data, list):
-        # Format: [{category: "...", items: [...]}, ...]
         for skill in skills_data:
             if not isinstance(skill, dict): continue
             skill_items = skill.get('items', [])
             if not isinstance(skill_items, list): continue
             
-            # Filter out empty items and only add category if it has items
             filtered_items = [escape_latex(str(item)) for item in skill_items if item and str(item).strip()]
-            if filtered_items:  # Only add category if it has non-empty items
+            if filtered_items:
                 skills.append(SimpleNamespace(
                     category=escape_latex(skill.get('category', '')),
                     items=filtered_items,
                 ))
     
-    # Structure certifications (convert to SimpleNamespace for dot notation)
+    # Structure certifications
     certifications = []
     cert_data = data.get('certifications', [])
     if isinstance(cert_data, list):
@@ -471,7 +468,7 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
                 url=escape_latex(cert.get('url', '')),
             ))
 
-    # Structure languages (convert to SimpleNamespace for dot notation)
+    # Structure languages
     languages = []
     lang_data = data.get('languages', [])
     if isinstance(lang_data, list):
@@ -482,15 +479,23 @@ def prepare_template_data(resume_data: Dict[str, Any]) -> Dict[str, Any]:
                 proficiency=escape_latex(lang.get('proficiency', '')),
             ))
 
-    # Structure achievements (convert to SimpleNamespace for dot notation)
+    # Structure achievements
     achievements = []
     ach_data = data.get('achievements', [])
     if isinstance(ach_data, list):
         for ach in ach_data:
             if not isinstance(ach, dict): continue
+            
+            # Process description into highlights for achievements too
+            raw_description = str(ach.get('description', '') or '')
+            
+            # Use smart parser
+            all_highlights, final_description = parse_text_to_bullets(raw_description)
+            
             achievements.append(SimpleNamespace(
                 title=escape_latex(clean_bullet_text(ach.get('title', ''))),
-                description=escape_latex(clean_bullet_text(ach.get('description', ''))),
+                description=final_description,
+                highlights=all_highlights,
                 date=format_date(ach.get('date', '')),
             ))
     
