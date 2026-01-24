@@ -64,7 +64,7 @@
 % Change the bullets for itemize and rating marker
 % for \cvskill if you want to
 \renewcommand{\itemmarker}{{\small\textbullet}}
-\renewcommand{\ratingmarker}{\faCircle}
+\renewcommand{\ratingmarker}{$\circ$}
 %% sample.bib contains your publications
 %\addbibresource{sample.bib}
 
@@ -194,7 +194,7 @@
 \end{itemize}
 \BLOCK{ endfor }
 \BLOCK{ if proj.link }
-\href{\VAR{proj.link}}{\faLink\ Project Link}
+\href{\VAR{proj.link}}{[Link] Project Link}
 
 \BLOCK{ endif }
 \divider

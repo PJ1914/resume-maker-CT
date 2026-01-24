@@ -2,10 +2,13 @@ FROM python:3.10-slim
 
 # Install system dependencies including TeX Live for PDF generation
 RUN apt-get update && apt-get install -y \
-    texlive-full \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-fonts-extra \
+    texlive-xetex \
+    texlive-bibtex-extra \
     curl \
     wget \
-    unzip \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
