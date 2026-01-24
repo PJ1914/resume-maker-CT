@@ -259,7 +259,11 @@ class LaTeXCompiler:
                 # Select compilers
                 if template_name == 'resume_4':
                     compilers = ['pdflatex']
+                elif template_name in ['resume_1', 'resume_2', 'resume_3', 'resume_6', 'resume_7']:
+                    # These templates only need pdflatex (xelatex hangs on low memory)
+                    compilers = ['pdflatex']
                 else:
+                    # resume_5 might need xelatex for special fonts
                     compilers = ['pdflatex', 'xelatex']
                 
                 pdf_path = None
