@@ -648,7 +648,7 @@ export default function ResumeDetailPage() {
               {/* Job Description Input (AI Only) */}
               {useAIScorer && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1.5 flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1.5">
                     <Briefcase className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     Target Job Description (Optional)
                   </label>

@@ -8,7 +8,20 @@ RUN apt-get update && apt-get install -y \
     texlive-latex-extra \
     texlive-xetex \
     texlive-bibtex-extra \
+    fonts-font-awesome \
     curl \
+    wget \
+    unzip \
+    fontconfig \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install FontAwesome fonts manually (ensuring latest version)
+RUN mkdir -p /usr/share/fonts/truetype/font-awesome \
+    && wget -O /tmp/fontawesome.zip https://use.fontawesome.com/releases/v5.15.4/fontawesome-free-5.15.4-desktop.zip \
+    && unzip /tmp/fontawesome.zip -d /tmp/fontawesome \
+    && cp /tmp/fontawesome/fontawesome-free-5.15.4-desktop/otfs/*.otf /usr/share/fonts/truetype/font-awesome/ \
+    && fc-cache -f -v \
+    && rm -rf /tmp/fontawesome /tmp/fontawesome.zip \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Tectonic

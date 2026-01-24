@@ -795,8 +795,33 @@ export const ResumeEditorPage: React.FC = () => {
           education: data?.education?.length || 0
         });
 
-        // If no data or data is empty, fetch from API with polling
-        if (!data || !hasLocalContent) {
+        // Check for existing local content first
+        if (data && hasLocalContent) {
+          // NORMALIZE DATA (Fix for missing fields in editor)
+          if (data.education) {
+            data.education = data.education.map((edu: any) => ({
+              ...edu,
+              institution: edu.institution || edu.school || '',
+            }));
+          }
+          if (data.languages) {
+            data.languages = data.languages.map((lang: any) => ({
+              ...lang,
+              language: lang.language || lang.name || '',
+            }));
+          }
+          if (data.achievements) {
+            data.achievements = data.achievements.map((ach: any) => ({
+              ...ach,
+              title: ach.title || ach.name || '',
+              description: ach.description || ach.text || '',
+              text: ach.text || ach.description || ''
+            }));
+          }
+
+          setResumeData(data);
+          setSaveStatus('saved');
+        } else {
           try {
             const { resumeService } = await import('../services/resume.service');
 
@@ -829,7 +854,6 @@ export const ResumeEditorPage: React.FC = () => {
             });
 
             // If we have resume data with content (wizard or parsed), process it
-            // Check for contact_info (wizard) OR experience/education (parsed)
             const hasResumeData = resumeDetail && (
               resumeDetail.contact_info ||
               (resumeDetail.experience && resumeDetail.experience.length > 0) ||

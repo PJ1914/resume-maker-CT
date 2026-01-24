@@ -185,10 +185,11 @@ export default function ResumeWizardPage() {
                   updateResumeData('experience', experienceWithIds)
                 }
                 if (data.education) {
-                  // Add IDs to education entries if missing
+                  // Add IDs to education entries if missing and map fields
                   const educationWithIds = data.education.map((edu: any, idx: number) => ({
                     ...edu,
                     id: edu.id || `edu-${Date.now()}-${idx}`,
+                    institution: edu.institution || edu.school || '', // FIX: Map school to institution
                     description: edu.description || ''
                   }))
                   console.log('[Wizard] Education with IDs:', educationWithIds)
@@ -197,15 +198,38 @@ export default function ResumeWizardPage() {
                 if (data.skills) updateResumeData('skills', data.skills)
                 if (data.projects) {
                   // Add IDs to project entries if missing
-                  const projectsWithIds = data.projects.map((proj: any) => ({
+                  const projectsWithIds = data.projects.map((proj: any, idx: number) => ({
                     ...proj,
-                    id: proj.id || Date.now().toString() + Math.random().toString()
+                    id: proj.id || `proj-${Date.now()}-${idx}`
                   }))
                   updateResumeData('projects', projectsWithIds)
                 }
-                if (data.certifications) updateResumeData('certifications', data.certifications)
-                if (data.languages) updateResumeData('languages', data.languages)
-                if (data.achievements) updateResumeData('achievements', data.achievements)
+                if (data.certifications) {
+                  const certsWithIds = data.certifications.map((cert: any, idx: number) => ({
+                    ...cert,
+                    id: cert.id || `cert-${Date.now()}-${idx}`
+                  }))
+                  updateResumeData('certifications', certsWithIds)
+                }
+                if (data.languages) {
+                  // Fix: Map 'name' to 'language' for languages
+                  const langsWithIds = data.languages.map((lang: any, idx: number) => ({
+                    ...lang,
+                    id: lang.id || `lang-${Date.now()}-${idx}`,
+                    language: lang.language || lang.name || '',
+                    proficiency: lang.proficiency || 'Intermediate'
+                  }))
+                  updateResumeData('languages', langsWithIds)
+                }
+                if (data.achievements) {
+                  const achWithIds = data.achievements.map((ach: any, idx: number) => ({
+                    ...ach,
+                    id: ach.id || `ach-${Date.now()}-${idx}`,
+                    title: ach.title || ach.name || 'Achievement',
+                    description: ach.description || ach.text || ''
+                  }))
+                  updateResumeData('achievements', achWithIds)
+                }
                 toast.success('Resume data extracted! Continue to review and edit.')
               }
               // Move to next step whether data extracted or skip
