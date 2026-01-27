@@ -5,6 +5,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage[hidelinks]{hyperref}
+\usepackage{fontawesome5}
 
 % Colors
 \definecolor{primaryColor}{HTML}{\VAR{theme.primary_color|default('00008B')}}
@@ -150,7 +151,7 @@
     \item
     \textbf{\VAR{proj.name|escape_tex}} \hfill {\color{secondaryColor}\small \VAR{proj.start_date|escape_tex}\BLOCK{ if proj.start_date and proj.end_date } - \BLOCK{ endif }\VAR{proj.end_date|escape_tex}} \\
     \BLOCK{ if proj.technologies }
-    {\small\textit{\VAR{proj.technologies|join(', ')|escape_tex}}}\BLOCK{ if proj.link } \textbar{} \href{https://\VAR{proj.link|replace('https://', '')|replace('http://', '')}}{\small\faExternalLinkAlt\ Link}\BLOCK{ endif }
+    {\small\textit{\VAR{proj.technologies|join(', ')|escape_tex}}}\BLOCK{ if proj.link } \textbar{} \href{https://\VAR{proj.link|replace('https://', '')|replace('http://', '')}}{\small\faLink\ Link}\BLOCK{ endif }
     \BLOCK{ endif }
     \BLOCK{ if proj.description or proj.highlights }
     \resumeItemListStart
