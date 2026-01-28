@@ -309,7 +309,7 @@ class EmailService:
                 "product_description": f"{credits_purchased} Credits Purchase",
                 "currency_symbol": currency_symbol,
                 "amount": f"{amount_paid:.2f}",
-                "gstin_number": "29ABCDE1234F1Z5",  # Your company GSTIN
+                # "gstin_number": "29ABCDE1234F1Z5",  # Removed - Company not registered for GST yet
                 "transaction_id": transaction_id
             }
         )

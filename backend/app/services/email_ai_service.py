@@ -209,7 +209,7 @@ Required Output Format:
                 "product_description": f"{credits} Credits Purchase",
                 "currency_symbol": currency_symbol,
                 "amount": f"{amount:.2f}",
-                "gstin_number": "29ABCDE1234F1Z5",  # Your company GSTIN
+                # "gstin_number": "29ABCDE1234F1Z5",  # Removed - Company not registered for GST yet
                 "transaction_id": payment_id
             }
             

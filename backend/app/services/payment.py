@@ -33,6 +33,9 @@ class PaymentService:
         Returns:
             Dict containing order_id, amount, currency, receipt
         """
+        if not resume_maker_app:
+            raise Exception("Firebase not configured")
+            
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -47,7 +50,23 @@ class PaymentService:
                 response.raise_for_status()
                 data = response.json()
                 
-                logger.info(f"Order created: {data.get('order_id')} for user {user_id}")
+                # Store order details in Firestore for later retrieval
+                db = firestore.client(app=resume_maker_app)
+                order_id = data.get('order_id')
+                amount = data.get('amount')  # Amount in paise
+                
+                db.collection('orders').document(order_id).set({
+                    'order_id': order_id,
+                    'user_id': user_id,
+                    'amount': amount,  # Store in paise
+                    'currency': data.get('currency', 'INR'),
+                    'quantity': quantity,
+                    'plan_id': plan_id,
+                    'status': 'created',
+                    'created_at': datetime.utcnow()
+                })
+                
+                logger.info(f"Order created: {order_id} for user {user_id}, amount: ₹{amount/100:.2f}")
                 return data
                 
         except httpx.HTTPStatusError as e:

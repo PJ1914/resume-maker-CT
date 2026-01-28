@@ -115,8 +115,20 @@ async def verify_payment(
         
         # Send billing receipt email (async, non-blocking)
         try:
-            # Get amount from order
-            amount = request.quantity * 10  # Assuming ₹10 per credit
+            # Fetch actual order amount from Firestore (NOT hardcoded calculation)
+            from app.firebase import resume_maker_app
+            from firebase_admin import firestore
+            
+            db = firestore.client(app=resume_maker_app)
+            order_doc = db.collection('orders').document(request.razorpay_order_id).get()
+            
+            if order_doc.exists:
+                order_data = order_doc.to_dict()
+                amount = order_data.get('amount', 0) / 100  # Convert paise to rupees
+            else:
+                # Fallback: This shouldn't happen, but use a safe default
+                logger.warning(f"Order {request.razorpay_order_id} not found in Firestore, using fallback calculation")
+                amount = credits_added * 1.78  # Approximate ₹1.78 per credit (₹89 for 50 credits)
             
             # Generate invoice number and send receipt
             invoice_number = await EmailAIService.generate_invoice_number()
@@ -125,7 +137,7 @@ async def verify_payment(
                 user_name=current_user.get('displayName', 'Valued Customer'),
                 invoice_number=invoice_number,
                 credits_purchased=credits_added,
-                amount_paid=amount,
+                amount_paid=amount,  # Use actual amount from order
                 transaction_id=request.razorpay_payment_id,
                 currency="INR"
             )
