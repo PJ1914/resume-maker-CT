@@ -1,8 +1,85 @@
-import { Coins, Check, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Coins, Check, Sparkles, ArrowLeft, Loader2, Ticket } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useCreditBalance } from '../hooks/useCredits';
+import { useCreditBalance, useRedeemCoupon } from '../hooks/useCredits';
 import { usePaymentPlans, usePaymentFlow } from '../hooks/usePayments';
+
+const CouponRedeemSection = () => {
+  const [couponCode, setCouponCode] = useState('');
+  const { mutate: redeemCoupon, isPending, isSuccess, data: redeemData } = useRedeemCoupon();
+
+  const handleRedeem = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = couponCode.trim();
+    if (!code) return;
+    redeemCoupon(code, {
+      onSuccess: () => setCouponCode(''),
+    });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="mb-12 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/10 dark:to-indigo-900/10 rounded-2xl p-6 sm:p-8 border border-purple-200 dark:border-purple-800/30"
+    >
+      <div className="flex flex-col sm:flex-row items-start gap-6">
+        <div className="bg-purple-500 dark:bg-purple-600 rounded-full p-4 shadow-lg shadow-purple-500/20">
+          <Ticket className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-grow w-full">
+          <h3 className="text-xl font-bold text-secondary-900 dark:text-white mb-2">
+            Have a Coupon Code?
+          </h3>
+          <p className="text-secondary-600 dark:text-white/70 mb-4 leading-relaxed">
+            Enter your coupon code below to receive <strong className="text-purple-600 dark:text-purple-400">bonus credits</strong> instantly!
+          </p>
+
+          <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder="Enter coupon code"
+              disabled={isPending}
+              className="flex-grow px-4 py-3 rounded-xl bg-white dark:bg-black/40 border border-purple-200 dark:border-purple-900/30 text-secondary-900 dark:text-white placeholder-secondary-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-all font-mono tracking-wider uppercase"
+            />
+            <button
+              type="submit"
+              disabled={isPending || !couponCode.trim()}
+              className="px-6 py-3 rounded-xl font-bold bg-purple-600 dark:bg-purple-500 text-white hover:bg-purple-700 dark:hover:bg-purple-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap shadow-lg shadow-purple-500/20"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Redeeming...</span>
+                </>
+              ) : (
+                <>
+                  <Ticket className="h-4 w-4" />
+                  <span>Redeem</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {isSuccess && redeemData && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-4 py-2.5 rounded-xl border border-green-200 dark:border-green-800/30"
+            >
+              <Check className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm font-medium">{redeemData.message}</span>
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 const CreditPurchasePage = () => {
   const navigate = useNavigate();
@@ -196,7 +273,9 @@ const CreditPurchasePage = () => {
             })}
           </div>
 
-          {/* Free Monthly Credits Info */}
+          {/* Coupon Redemption Section */}
+          <CouponRedeemSection />
+
           {/* Free Monthly Credits Info */}
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 rounded-2xl p-6 sm:p-8 border border-green-200 dark:border-green-800/30">
             <div className="flex flex-col sm:flex-row items-start gap-6">

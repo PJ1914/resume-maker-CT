@@ -153,4 +153,22 @@ export const creditService = {
     // Backend returns array directly
     return Array.isArray(data) ? data : [];
   },
+
+  /**
+   * Redeem a coupon code for bonus credits
+   */
+  async redeemCoupon(couponCode: string): Promise<{ success: boolean; message: string; credits_added: number; new_balance: number }> {
+    const response = await fetch(`${API_BASE_URL}/redeem-coupon`, {
+      method: 'POST',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ coupon_code: couponCode }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to redeem coupon');
+    }
+
+    return response.json();
+  },
 };

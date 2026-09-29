@@ -111,3 +111,34 @@ export function usePurchaseCredits() {
     },
   });
 }
+
+// Hook to redeem a coupon code
+export function useRedeemCoupon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (couponCode: string) => creditService.redeemCoupon(couponCode),
+    onSuccess: (data) => {
+      // Update balance cache immediately
+      queryClient.setQueryData(creditKeys.balance(), (oldData: any) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            balance: data.new_balance,
+            total_earned: (oldData.total_earned || 0) + data.credits_added,
+          };
+        }
+        return oldData;
+      });
+
+      // Invalidate to fetch fresh data
+      queryClient.invalidateQueries({ queryKey: creditKeys.balance() });
+      queryClient.invalidateQueries({ queryKey: creditKeys.history() });
+
+      toast.success(data.message || `🎉 ${data.credits_added} credits added!`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to redeem coupon');
+    },
+  });
+}
